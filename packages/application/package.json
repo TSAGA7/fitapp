@@ -1,0 +1,9 @@
+{
+  "name": "@fitapp/application",
+  "version": "1.0.0-stage1",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "@fitapp/domain": "*" }
+}

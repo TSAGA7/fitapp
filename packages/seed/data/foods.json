@@ -1,0 +1,922 @@
+[
+  {
+    "key": "oats_dry",
+    "name": "Овсяные хлопья (сухие)",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 342,
+      "proteinG": 12.3,
+      "fatG": 6.1,
+      "carbG": 59.5,
+      "fiberG": 10.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "buckwheat_dry",
+    "name": "Гречка (сухая)",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 328,
+      "proteinG": 12.6,
+      "fatG": 3.3,
+      "carbG": 62.1,
+      "fiberG": 10.8
+    },
+    "variantGroup": "buckwheat",
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "buckwheat_cooked",
+    "name": "Гречка (варёная)",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 117,
+      "proteinG": 4.5,
+      "fatG": 1.2,
+      "carbG": 22.0,
+      "fiberG": 3.7
+    },
+    "variantGroup": "buckwheat",
+    "yieldFactor": 2.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Коэффициент выхода и значения приблизительные; уточни по своей кулинарной обработке"
+    }
+  },
+  {
+    "key": "rice_dry",
+    "name": "Рис белый (сухой)",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 349,
+      "proteinG": 6.7,
+      "fatG": 0.7,
+      "carbG": 78.9,
+      "fiberG": 1.3
+    },
+    "variantGroup": "rice",
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "rice_cooked",
+    "name": "Рис белый (варёный)",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 124,
+      "proteinG": 2.4,
+      "fatG": 0.3,
+      "carbG": 28.0,
+      "fiberG": 0.4
+    },
+    "variantGroup": "rice",
+    "yieldFactor": 2.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Коэффициент выхода и значения приблизительные; уточни по своей кулинарной обработке"
+    }
+  },
+  {
+    "key": "chicken_breast_raw",
+    "name": "Куриная грудка (сырая)",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 113,
+      "proteinG": 23.6,
+      "fatG": 1.9,
+      "carbG": 0.4,
+      "fiberG": 0.0
+    },
+    "variantGroup": "chicken_breast",
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "chicken_breast_cooked",
+    "name": "Куриная грудка (варёная)",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 156,
+      "proteinG": 31.0,
+      "fatG": 3.6,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "chicken_breast",
+    "yieldFactor": 0.75,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Коэффициент выхода и значения приблизительные; уточни по своей кулинарной обработке"
+    }
+  },
+  {
+    "key": "egg",
+    "name": "Яйцо куриное",
+    "brand": null,
+    "barcode": null,
+    "category": "eggs",
+    "basis": "raw",
+    "unit": "piece",
+    "gramsPerPiece": 55.0,
+    "per100": {
+      "kcal": 149,
+      "proteinG": 12.6,
+      "fatG": 10.6,
+      "carbG": 0.7,
+      "fiberG": 0.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "cottage_cheese_5",
+    "name": "Творог 5%",
+    "brand": null,
+    "barcode": null,
+    "category": "dairy",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 125,
+      "proteinG": 17.0,
+      "fatG": 5.0,
+      "carbG": 3.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "greek_yogurt_2",
+    "name": "Йогурт греческий 2%",
+    "brand": null,
+    "barcode": null,
+    "category": "dairy",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 74,
+      "proteinG": 10.0,
+      "fatG": 2.0,
+      "carbG": 4.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "banana",
+    "name": "Банан",
+    "brand": null,
+    "barcode": null,
+    "category": "fruits",
+    "basis": "raw",
+    "unit": "piece",
+    "gramsPerPiece": 120.0,
+    "per100": {
+      "kcal": 98,
+      "proteinG": 1.1,
+      "fatG": 0.3,
+      "carbG": 22.8,
+      "fiberG": 2.6
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "olive_oil",
+    "name": "Масло оливковое",
+    "brand": null,
+    "barcode": null,
+    "category": "fats_oils",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 900,
+      "proteinG": 0.0,
+      "fatG": 100.0,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "almonds",
+    "name": "Миндаль",
+    "brand": null,
+    "barcode": null,
+    "category": "nuts_seeds",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 622,
+      "proteinG": 21.0,
+      "fatG": 50.0,
+      "carbG": 22.0,
+      "fiberG": 12.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "whey_protein_30g",
+    "name": "Протеин сывороточный (порция 30 г)",
+    "brand": null,
+    "barcode": null,
+    "category": "supplements",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 420,
+      "proteinG": 80.0,
+      "fatG": 6.7,
+      "carbG": 10.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "turkey_breast_raw",
+    "name": "Грудка индейки (сырая)",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 114,
+      "proteinG": 23.6,
+      "fatG": 1.5,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "beef_lean_raw",
+    "name": "Говядина постная (сырая)",
+    "brand": null,
+    "barcode": null,
+    "category": "meat",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 158,
+      "proteinG": 21,
+      "fatG": 8,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "salmon_raw",
+    "name": "Сёмга/лосось (сырая)",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 208,
+      "proteinG": 20,
+      "fatG": 13.4,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "cod_raw",
+    "name": "Треска (сырая)",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 78,
+      "proteinG": 17.7,
+      "fatG": 0.7,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "tuna_canned",
+    "name": "Тунец консервированный в собственном соку",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 96,
+      "proteinG": 21,
+      "fatG": 1,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "egg_whites",
+    "name": "Яичный белок",
+    "brand": null,
+    "barcode": null,
+    "category": "eggs",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 48,
+      "proteinG": 11,
+      "fatG": 0.2,
+      "carbG": 0.7,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "kefir_1",
+    "name": "Кефир 1%",
+    "brand": null,
+    "barcode": null,
+    "category": "dairy",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 40,
+      "proteinG": 3.0,
+      "fatG": 1,
+      "carbG": 4,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "milk_25",
+    "name": "Молоко 2,5%",
+    "brand": null,
+    "barcode": null,
+    "category": "dairy",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 52,
+      "proteinG": 2.8,
+      "fatG": 2.5,
+      "carbG": 4.7,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "cheese_hard_17",
+    "name": "Сыр твёрдый 17%",
+    "brand": null,
+    "barcode": null,
+    "category": "dairy",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 250,
+      "proteinG": 28,
+      "fatG": 17,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "lentils_dry",
+    "name": "Чечевица (сухая)",
+    "brand": null,
+    "barcode": null,
+    "category": "legumes",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 295,
+      "proteinG": 24,
+      "fatG": 1.5,
+      "carbG": 46,
+      "fiberG": 11
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "chickpeas_canned",
+    "name": "Нут консервированный",
+    "brand": null,
+    "barcode": null,
+    "category": "legumes",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 120,
+      "proteinG": 7,
+      "fatG": 2.5,
+      "carbG": 17,
+      "fiberG": 6
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "pasta_dry",
+    "name": "Макароны из твёрдых сортов (сухие)",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 350,
+      "proteinG": 12,
+      "fatG": 1.5,
+      "carbG": 71,
+      "fiberG": 3
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "potato_raw",
+    "name": "Картофель (сырой)",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 77,
+      "proteinG": 2,
+      "fatG": 0.4,
+      "carbG": 16,
+      "fiberG": 2
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "rye_bread",
+    "name": "Хлеб ржаной",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 210,
+      "proteinG": 6.5,
+      "fatG": 1.2,
+      "carbG": 41,
+      "fiberG": 6
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "whole_grain_bread",
+    "name": "Хлеб цельнозерновой",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 250,
+      "proteinG": 10,
+      "fatG": 3.5,
+      "carbG": 43,
+      "fiberG": 7
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "cucumber",
+    "name": "Огурец",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 15,
+      "proteinG": 0.8,
+      "fatG": 0.1,
+      "carbG": 2.8,
+      "fiberG": 1
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "tomato",
+    "name": "Помидор",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 20,
+      "proteinG": 1.1,
+      "fatG": 0.2,
+      "carbG": 3.7,
+      "fiberG": 1.2
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "broccoli",
+    "name": "Брокколи",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 34,
+      "proteinG": 2.8,
+      "fatG": 0.4,
+      "carbG": 4.0,
+      "fiberG": 2.6
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "carrot",
+    "name": "Морковь",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 35,
+      "proteinG": 1.3,
+      "fatG": 0.1,
+      "carbG": 6.9,
+      "fiberG": 2.4
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "cabbage",
+    "name": "Капуста белокочанная",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 28,
+      "proteinG": 1.8,
+      "fatG": 0.1,
+      "carbG": 4.7,
+      "fiberG": 2
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "spinach",
+    "name": "Шпинат",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "raw",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 23,
+      "proteinG": 2.9,
+      "fatG": 0.4,
+      "carbG": 1.8,
+      "fiberG": 2.2
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "apple",
+    "name": "Яблоко",
+    "brand": null,
+    "barcode": null,
+    "category": "fruits",
+    "basis": "raw",
+    "unit": "piece",
+    "gramsPerPiece": 180,
+    "per100": {
+      "kcal": 52,
+      "proteinG": 0.3,
+      "fatG": 0.2,
+      "carbG": 14,
+      "fiberG": 2.4
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "orange",
+    "name": "Апельсин",
+    "brand": null,
+    "barcode": null,
+    "category": "fruits",
+    "basis": "raw",
+    "unit": "piece",
+    "gramsPerPiece": 150,
+    "per100": {
+      "kcal": 47,
+      "proteinG": 0.9,
+      "fatG": 0.1,
+      "carbG": 12,
+      "fiberG": 2.4
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "walnuts",
+    "name": "Грецкие орехи",
+    "brand": null,
+    "barcode": null,
+    "category": "nuts_seeds",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 654,
+      "proteinG": 15,
+      "fatG": 65,
+      "carbG": 7,
+      "fiberG": 6.7
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "peanut_butter",
+    "name": "Арахисовая паста",
+    "brand": null,
+    "barcode": null,
+    "category": "nuts_seeds",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 600,
+      "proteinG": 25,
+      "fatG": 50,
+      "carbG": 13,
+      "fiberG": 6
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  },
+  {
+    "key": "sunflower_oil",
+    "name": "Подсолнечное масло",
+    "brand": null,
+    "barcode": null,
+    "category": "fats_oils",
+    "basis": "as_sold",
+    "unit": "ml",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 899,
+      "proteinG": 0,
+      "fatG": 99.9,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    }
+  }
+]

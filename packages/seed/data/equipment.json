@@ -1,0 +1,254 @@
+[
+  {
+    "key": "dumbbells",
+    "name": "Гантели",
+    "category": "free_weights",
+    "loadType": "dumbbell",
+    "defaultStepKg": 1.0
+  },
+  {
+    "key": "barbell",
+    "name": "Штанга",
+    "category": "free_weights",
+    "loadType": "plates",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "ez_bar",
+    "name": "EZ-гриф",
+    "category": "free_weights",
+    "loadType": "plates",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "kettlebell",
+    "name": "Гиря",
+    "category": "free_weights",
+    "loadType": "dumbbell",
+    "defaultStepKg": 4.0
+  },
+  {
+    "key": "squat_rack",
+    "name": "Стойки для приседа",
+    "category": "benches_racks",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "flat_bench",
+    "name": "Скамья горизонтальная",
+    "category": "benches_racks",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "adjustable_bench",
+    "name": "Скамья регулируемая",
+    "category": "benches_racks",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "preacher_bench",
+    "name": "Скамья Скотта",
+    "category": "benches_racks",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "smith_machine",
+    "name": "Тренажёр Смита",
+    "category": "machines",
+    "loadType": "plates",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "leg_press",
+    "name": "Жим ногами (платформа)",
+    "category": "machines",
+    "loadType": "plates",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "hack_squat",
+    "name": "Гакк-тренажёр",
+    "category": "machines",
+    "loadType": "plates",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "leg_extension_machine",
+    "name": "Разгибание ног сидя",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "leg_curl_lying",
+    "name": "Сгибание ног лёжа",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "leg_curl_seated",
+    "name": "Сгибание ног сидя",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "chest_press_machine",
+    "name": "Жим от груди (тренажёр)",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "incline_press_machine",
+    "name": "Жим на наклонной (тренажёр)",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "shoulder_press_machine",
+    "name": "Жим на плечи (тренажёр)",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "pec_deck",
+    "name": "Пек-дек / баттерфляй",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "calf_raise_machine",
+    "name": "Икры (тренажёр)",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "assisted_pullup",
+    "name": "Гравитрон",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "lat_pulldown",
+    "name": "Верхний блок",
+    "category": "cable",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "seated_row_cable",
+    "name": "Нижний блок / горизонтальная тяга",
+    "category": "cable",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "cable_crossover",
+    "name": "Кроссовер",
+    "category": "cable",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "single_cable",
+    "name": "Одиночный блок",
+    "category": "cable",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "pullup_bar",
+    "name": "Турник",
+    "category": "bodyweight",
+    "loadType": "bodyweight",
+    "defaultStepKg": null
+  },
+  {
+    "key": "dip_station",
+    "name": "Брусья",
+    "category": "bodyweight",
+    "loadType": "bodyweight",
+    "defaultStepKg": null
+  },
+  {
+    "key": "back_extension_bench",
+    "name": "Скамья для гиперэкстензии",
+    "category": "accessories",
+    "loadType": "bodyweight",
+    "defaultStepKg": null
+  },
+  {
+    "key": "ab_machine",
+    "name": "Тренажёр для пресса",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 2.5
+  },
+  {
+    "key": "resistance_band",
+    "name": "Резиновые петли",
+    "category": "accessories",
+    "loadType": "band",
+    "defaultStepKg": null
+  },
+  {
+    "key": "treadmill",
+    "name": "Беговая дорожка",
+    "category": "cardio",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "exercise_bike",
+    "name": "Велотренажёр",
+    "category": "cardio",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "row_machine",
+    "name": "Тяга с упором в грудь (тренажёр)",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "lateral_raise_machine",
+    "name": "Тренажёр для махов в стороны",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "hip_abduction_machine",
+    "name": "Тренажёр для отведения бедра",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "hip_adduction_machine",
+    "name": "Тренажёр для сведения бедра",
+    "category": "machines",
+    "loadType": "stack",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "floor_mat",
+    "name": "Коврик",
+    "category": "accessories",
+    "loadType": "none",
+    "defaultStepKg": null
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "name": "@fitapp/seed",
+  "version": "1.0.0-stage1",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json", "validate": "tsx src/validate.ts" },
+  "dependencies": { "@fitapp/domain": "*" }
+}

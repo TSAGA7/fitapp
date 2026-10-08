@@ -1,0 +1,36 @@
+/* Design tokens: the single source of colors, type, radii and shadows. */
+:root {
+  --primary: #065f46;
+  --primary-700: #044c38;
+  --primary-500: #0b7a5a;
+  --primary-100: #d1fae5;
+  --primary-50: #ecfdf5;
+  --accent: #a3e635;
+  --accent-soft: #ecfccb;
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --muted-2: #94a3b8;
+  --border: #e8ecf0;
+  --success: #16a34a;
+  --success-50: #f0fdf4;
+  --warning: #f59e0b;
+  --warning-50: #fffbeb;
+  --danger: #ef4444;
+  --danger-50: #fef2f2;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-pop: 0 12px 40px rgba(15, 23, 42, 0.18);
+
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
+  --nav-h: 68px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
