@@ -29,6 +29,8 @@ import type {
   StoreName,
   UserEquipment,
   UserFood,
+  UserExercise,
+  ExerciseNote,
   WeeklySummary,
   WorkoutSession,
 } from '../model';
@@ -82,6 +84,8 @@ export interface FoodRepo extends Repo<Food> {
   findByBarcode(barcode: string): Promise<Food | undefined>;
 }
 export type UserFoodRepo = Repo<UserFood>;
+export type UserExerciseRepo = Repo<UserExercise>;
+export type ExerciseNoteRepo = Repo<ExerciseNote>;
 export interface NutritionTargetsRepo extends Repo<NutritionTargetsRecord> {
   activeOn(date: LocalDate): Promise<NutritionTargetsRecord | undefined>;
 }
@@ -141,6 +145,8 @@ export interface Repositories {
   equipment: EquipmentRepo;
   userEquipment: UserEquipmentRepo;
   exercises: ExerciseRepo;
+  userExercises: UserExerciseRepo;
+  exerciseNotes: ExerciseNoteRepo;
   foods: FoodRepo;
   userFoods: UserFoodRepo;
   nutritionTargets: NutritionTargetsRepo;

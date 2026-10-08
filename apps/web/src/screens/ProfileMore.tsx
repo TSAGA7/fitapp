@@ -5,7 +5,7 @@ import { useData } from '../app/DataContext';
 import { userFoodOf } from '../app/derive';
 import { fmt, formatDay } from '../app/format';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, EmptyState, ListItem, Segmented, Sheet, TextField } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, TextField } from '../ui';
 import { parseDecimal, ScreenHeader } from './shared';
 
 const AREA_LABELS: Record<BodyArea, string> = { shoulder: 'Плечо', elbow: 'Локоть', wrist: 'Запястье', neck: 'Шея', upper_back: 'Верх спины', lower_back: 'Поясница', hip: 'Таз', knee: 'Колено', ankle: 'Голеностоп', other: 'Другое' };
@@ -82,13 +82,22 @@ export function EquipmentScreen() {
     <main className="screen">
       <ScreenHeader title="Оборудование" back="profile" />
       {banner}
-      <p className="t-small">Отметь, что есть в твоём зале. После изменений можно пересобрать программу на вкладке «Тренировки».</p>
-      <div className="list">
+      <p className="t-small">Поставь галочку у того, что есть в твоём зале. Нажми на название, чтобы задать шаг веса. После изменений можно пересобрать программу на вкладке «Тренировки».</p>
+      <div className="stack" style={{ gap: 8 }}>
         {list.map((e) => {
           const u = userOf(e.id);
           const available = u?.available ?? true;
           return (
-            <ListItem key={e.id} icon={available ? 'check' : 'close'} lime={available} title={e.name} subtitle={u?.stepKg ? `Шаг веса ${fmt(u.stepKg, 2)} кг` : available ? 'Есть' : 'Нет'} trailing={<Button size="sm" variant="text" onClick={() => void ok((d) => setEquipmentAvailable(d, e.id, !available))}>{available ? 'Нет' : 'Есть'}</Button>} onClick={() => { setStepFor(e.id); setStep(u?.stepKg ? String(u.stepKg) : ''); }} />
+            <div key={e.id} className="eq-row">
+              <button type="button" className="check" role="checkbox" aria-checked={available} aria-label={`${e.name}: ${available ? 'есть' : 'нет'}`} onClick={() => void ok((d) => setEquipmentAvailable(d, e.id, !available))}>
+                {available && <Icon name="check" size={20} />}
+              </button>
+              <button type="button" className="eq-main" onClick={() => { setStepFor(e.id); setStep(u?.stepKg ? String(u.stepKg) : ''); }}>
+                <span className="li-title" style={{ display: 'block' }}>{e.name}</span>
+                <span className={`li-sub ${available ? 'eq-yes' : 'eq-no'}`} style={{ display: 'block' }}>{available ? 'Есть' : 'Нет'}{u?.stepKg ? ` · шаг веса ${fmt(u.stepKg, 2)} кг` : ''}</span>
+              </button>
+              <Icon name="chevronRight" size={18} />
+            </div>
           );
         })}
       </div>
@@ -184,8 +193,8 @@ export function VersionsScreen() {
   const [open, setOpen] = useState<string | null>(null);
   return (
     <main className="screen">
-      <ScreenHeader title="История версий" back="profile" />
-      <p className="t-small">Каждое изменение программы создаёт новую версию. Старые версии не меняются, поэтому видно, что и почему поменялось.</p>
+      <ScreenHeader title="История изменений программы" back="profile" />
+      <p className="t-small">Каждый раз, когда меняется программа (питание или тренировки), приложение сохраняет новую версию и причину. Старые версии не стираются. Это нужно, чтобы видеть, что и почему поменялось, и понимать, откуда взялись нынешние калории и упражнения. Смотреть здесь ничего не обязательно: раздел для справки.</p>
       {versions.length === 0 && <Card flat><EmptyState icon="history" title="Версий пока нет" text="Первая версия появится при создании программы." /></Card>}
       {versions.map((v) => {
         const c = changeOf(v.id);
@@ -202,7 +211,7 @@ export function VersionsScreen() {
                   <Button size="sm" variant="text" onClick={() => setOpen(open === v.id ? null : v.id)}>{open === v.id ? 'Скрыть изменения' : `Что изменилось (${c.diff.length})`}</Button>
                   {open === v.id && (
                     <ul className="t-small">
-                      {c.diff.map((d) => <li key={d.path}><b>{d.path}</b>: {show(d.before)} → {show(d.after)}</li>)}
+                      {c.diff.map((d) => <li key={d.path}><b>{diffLabel(d.path)}</b>: {show(d.before)} → {show(d.after)}</li>)}
                     </ul>
                   )}
                 </>
@@ -213,6 +222,26 @@ export function VersionsScreen() {
       })}
     </main>
   );
+}
+
+const NUTRITION_LABELS: Record<string, string> = { kcal: 'Калории', proteinG: 'Белок, г', fatG: 'Жиры, г', carbG: 'Углеводы, г', fiberG: 'Клетчатка, г', waterMl: 'Вода, мл' };
+const FIELD_LABELS: Record<string, string> = { sets: 'подходы', repMin: 'повторений от', repMax: 'повторений до', restSec: 'отдых, с', startWeightKg: 'стартовый вес', exerciseId: 'упражнение', variantKey: 'вариант' };
+
+/** Human wording for a diff path such as `training.a.a_1_leg_press.sets`. */
+function diffLabel(path: string): string {
+  const parts = path.split('.');
+  if (parts[0] === 'nutrition') return NUTRITION_LABELS[parts[1] ?? ''] ?? parts.slice(1).join(' ');
+  if (path === 'training.workouts') return 'Набор тренировок';
+  if (path === 'training.adaptationWeeks') return 'Недель адаптации';
+  if (path === 'training.rotation') return 'Порядок тренировок';
+  if (parts[0] === 'training') {
+    const [, workout, exercise, field] = parts;
+    const name = exercise ? exercise.replace(/^[a-z]_\d+_/, '').replace(/_/g, ' ') : '';
+    if (field) return `Тренировка ${workout?.toUpperCase()} · ${name}: ${FIELD_LABELS[field] ?? field}`;
+    if (exercise) return `Тренировка ${workout?.toUpperCase()} · ${name}`;
+    return `Тренировка ${workout?.toUpperCase()}`;
+  }
+  return path;
 }
 
 function show(v: unknown): string {

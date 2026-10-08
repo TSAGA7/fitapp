@@ -8,6 +8,8 @@ interface Slot {
   compound?: boolean;
   /** Cardio-like and timed items are not picked for ordinary slots. */
   allowTime?: boolean;
+  /** Explicit exercises (first available wins) instead of picking by pattern. */
+  keys?: readonly string[];
 }
 
 const S = (patterns: MovementPattern[], compound = false, allowTime = false): Slot => ({ patterns, compound, allowTime });
@@ -26,6 +28,9 @@ const TRI = S(['elbow_extension']);
 const KNEE_FLEX = S(['knee_flexion']);
 const KNEE_EXT = S(['knee_extension']);
 const CALF = S(['calf_raise']);
+/** Breathing / vacuum work for the transversus abdominis: only placed on purpose, never as a regular core slot. */
+export const VACUUM_KEYS = ['vacuum_standing', 'vacuum_quadruped', 'vacuum_lying', 'breathing_90_90'] as const;
+const ACTIVATION: Slot = { patterns: ['core_antiextension'], keys: ['vacuum_standing', 'vacuum_lying', 'breathing_90_90'], allowTime: true };
 const CORE_A = S(['core_antiextension', 'core_antirotation'], false, true);
 const CORE_B = S(['core_antirotation', 'core_flexion'], false, true);
 
@@ -131,13 +136,18 @@ function chooseExercise(
   const cautiousShoulder = ctx.injuries.some((i) => i.area === 'shoulder');
   let best: { ex: Exercise; score: number } | undefined;
   for (const ex of catalog) {
-    if (!slot.patterns.includes(ex.movementPattern) || usedHere.has(ex.id) || ex.deletedAt !== null) continue;
+    if (slot.keys) {
+      if (!slot.keys.includes(ex.key) || usedHere.has(ex.id) || ex.deletedAt !== null) continue;
+    } else if (!slot.patterns.includes(ex.movementPattern) || usedHere.has(ex.id) || ex.deletedAt !== null || (VACUUM_KEYS as readonly string[]).includes(ex.key)) continue;
     if (isTimedOrCardio(ex) && !slot.allowTime) continue;
     if (ex.key === 'incline_walk' || ex.key === 'bike_steady') continue;
+    if (ctx.disliked?.has(ex.id)) continue;
     const a = assessments.get(ex.id);
     if (!a || a.status === 'unavailable' || a.status === 'avoid') continue;
     if (ctx.experience === 'beginner' && ex.skillLevel >= 3) continue;
     let score = 0;
+    if (ctx.liked?.has(ex.id)) score += 2;
+    if (slot.keys) score -= slot.keys.indexOf(ex.key) * 0.1;
     if (slot.compound && ex.isCompound) score += 3;
     score -= a.risk;
     if (a.status === 'caution') score -= 1;
@@ -153,6 +163,7 @@ function chooseExercise(
 
 function whyChosen(ex: Exercise, ctx: SafetyContext, a: ExerciseAssessment, alternativesAvoided: string[]): string {
   const parts: string[] = [];
+  if ((VACUUM_KEYS as readonly string[]).includes(ex.key)) return 'активация поперечной мышцы живота перед основной работой';
   if (ex.isCompound && ctx.injuries.some((i) => i.area === 'lower_back' || i.area === 'upper_back') && ex.axialLoad <= 1) parts.push('малая осевая нагрузка на позвоночник');
   if (ex.isCompound && ctx.injuries.some((i) => i.area === 'shoulder') && (ex.jointStress.shoulder ?? 0) <= 1) parts.push('щадящая позиция плеча');
   if (ex.stabilityRequirement === 0) parts.push('опора/тренажёр: проще контролировать технику');
@@ -190,11 +201,14 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
     }
   }
 
+  // Fat loss with an abdomen focus: every workout starts with a short transversus abdominis activation (vacuum / breathing).
+  const activation = input.goal === 'fat_loss' && input.focus.some((f) => f === 'abdomen' || f === 'lower_abdomen');
+
   templates.forEach((t, wi) => {
     const usedHere = new Set<string>();
     const exercises: PlannedExercise[] = [];
     const muscles: MuscleGroup[] = [];
-    (slotLists[wi] as Slot[]).forEach((slot) => {
+    (activation ? [ACTIVATION, ...(slotLists[wi] as Slot[])] : (slotLists[wi] as Slot[])).forEach((slot) => {
       const ex = chooseExercise(slot, catalog, assessments, usedHere, usedAnywhere, input.ctx);
       if (!ex) return;
       usedHere.add(ex.id);
@@ -213,7 +227,7 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
         exerciseId: ex.id,
         variantKey: 'default',
         position,
-        sets: Math.min(ex.defaultSets, ex.isCompound ? 4 : 3),
+        sets: slot.keys ? 2 : Math.min(ex.defaultSets, ex.isCompound ? 4 : 3),
         repMin: ex.defaultRepRange.min,
         repMax: ex.defaultRepRange.max,
         rirAdaptation: adaptRir,
@@ -259,6 +273,7 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
     'Приоритет: техника → контроль → переносимость → прогрессия веса.',
     'Боль в суставе — не «жжение мышцы»: упражнение прекращается, предлагается замена; при повторении — обратиться к врачу.',
   ];
+  if (activation) notes.push('Цель — жир с акцентом на живот: каждая тренировка начинается с короткой активации поперечной мышцы (вакуум/дыхание). Спот-редукции жира не бывает — жир уходит за счёт дефицита калорий, а вакуум и планка делают корпус плотнее.');
   if (input.ctx.injuries.some((i) => i.area === 'lower_back')) notes.push('Учтена чувствительность поясницы: тяжёлая осевая нагрузка и сильное сгибание под весом не назначаются.');
   if (input.ctx.injuries.some((i) => i.area === 'shoulder')) notes.push('Учтено плечо: нейтральный хват, тренажёры и ограниченная амплитуда предпочтительнее штанги.');
 

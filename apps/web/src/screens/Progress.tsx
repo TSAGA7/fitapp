@@ -173,7 +173,7 @@ function StrengthTab() {
   if (s.strength.length === 0) {
     return (
       <Card flat>
-        <EmptyState icon="training" title="Силовых показателей пока нет" text="Они появятся после первых тренировок или после загрузки истории из Excel." action={<Button variant="secondary" icon="upload" onClick={() => go('profile/data')}>Загрузить историю</Button>} />
+        <EmptyState icon="training" title="Силовых показателей пока нет" text="Они появятся после первых записанных тренировок: вес, повторения и расчётная сила по каждому упражнению. Старые данные можно перенести через «Экспорт и импорт» (резервная копия этого приложения или Excel), но это не обязательно." action={<Button variant="secondary" icon="training" onClick={() => go('training')}>К тренировкам</Button>} />
       </Card>
     );
   }

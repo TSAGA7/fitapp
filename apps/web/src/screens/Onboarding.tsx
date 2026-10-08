@@ -4,9 +4,8 @@ import { completeOnboarding } from '../actions';
 import { useData } from '../app/DataContext';
 import { EXPERIENCE_LABELS, JOB_LABELS, SEX_LABELS } from '../app/format';
 import { setDisplayName } from '../app/prefs';
-import { Button, Chip, Icon, ProgressBar, Segmented, SelectField, Sheet, TextField } from '../ui';
+import { Button, Chip, Icon, ProgressBar, Segmented, SelectField, TextField } from '../ui';
 import { FocusPicker, GoalPicker, WeekdayPicker } from './Profile';
-import { ImportPanel } from './ImportPanel';
 import { parseDecimal } from './shared';
 
 const MEASURES: ReadonlyArray<{ type: MetricType; label: string; hint?: string }> = [
@@ -33,7 +32,6 @@ const STEPS = ['about', 'body', 'goal', 'training'] as const;
 export function Onboarding() {
   const { snapshot, act } = useData();
   const [step, setStep] = useState<number>(-1); // -1 is the welcome screen
-  const [importOpen, setImportOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -62,13 +60,8 @@ export function Onboarding() {
         </div>
         <div className="stack">
           <p style={{ opacity: 0.85, textAlign: 'center' }}>Питание, тренировки и прогресс в одном месте. Данные хранятся только на твоём устройстве и работают без интернета.</p>
-          <Button variant="accent" block onClick={() => setStep(0)}>Начать</Button>
-          <Button variant="on-dark" block onClick={() => setImportOpen(true)}>У меня есть копия или Excel</Button>
+          <Button variant="accent" block onClick={() => setStep(0)}>Ехала</Button>
         </div>
-        <Sheet open={importOpen} title="Загрузить данные" onClose={() => setImportOpen(false)}>
-          <p className="note" style={{ marginBottom: 12 }}>Если загрузишь резервную копию Fitapp, профиль восстановится. Таблицу Excel можно загрузить и до, и после настройки.</p>
-          <ImportPanel onDone={() => setImportOpen(false)} />
-        </Sheet>
       </div>
     );
   }
@@ -159,12 +152,12 @@ export function Onboarding() {
           <TextField label="Как к тебе обращаться" placeholder="Необязательно" value={name} onChange={(e) => setName(e.target.value)} hint="Имя хранится только на этом устройстве" />
           <div className="field"><span className="lbl">Пол</span><Segmented label="Пол" options={(Object.keys(SEX_LABELS) as Sex[]).map((v) => ({ value: v, label: SEX_LABELS[v] }))} value={sex} onChange={setSex} /><span className="hint">Нужен для расчёта энергии; можно не указывать.</span></div>
           <TextField label="Дата рождения" type="date" value={birth} max={snapshot.today} onChange={(e) => setBirth(e.target.value)} />
-          <TextField label="Рост" unit="см" inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="181" />
+          <TextField label="Рост" unit="см" inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} />
         </div>
       )}
       {STEPS[step] === 'body' && (
         <div className="stack-lg">
-          <TextField label="Вес сегодня" unit="кг" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="82,5" hint="Лучше всего утром, натощак" />
+          <TextField label="Вес сегодня" unit="кг" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} hint="Лучше всего утром, натощак" />
           <div className="stack">
             <h2 className="t-h3">Замеры (необязательно)</h2>
             <p className="note">Обхваты показывают изменения, которых не видно на весах. Измеряй в одно и то же время, не напрягая мышцы.</p>

@@ -65,3 +65,28 @@ export const Exercise = z.object({
   origin: z.enum(['seed', 'custom']),
 });
 export type Exercise = z.infer<typeof Exercise>;
+
+/** Personal mark on an exercise: comfortable (like) or uncomfortable (dislike). */
+export const ExercisePreferenceKind = z.enum(['like', 'dislike']);
+export type ExercisePreferenceKind = z.infer<typeof ExercisePreferenceKind>;
+export const UserExercise = z.object({
+  ...entityBase,
+  exerciseId: z.string().min(1),
+  preference: ExercisePreferenceKind,
+});
+export type UserExercise = z.infer<typeof UserExercise>;
+
+/**
+ * A comment on an exercise ("hard, watch the shoulder"). It is shown once, in the NEXT workout that
+ * contains the same exercise, and is not repeated afterwards.
+ */
+export const ExerciseNote = z.object({
+  ...entityBase,
+  exerciseId: z.string().min(1),
+  text: z.string().min(1).max(500),
+  /** Workout session in which the note was written. */
+  sessionId: z.string().min(1),
+  /** The session in which the reminder was shown. null = not shown yet. */
+  shownInSessionId: z.string().min(1).nullable(),
+});
+export type ExerciseNote = z.infer<typeof ExerciseNote>;

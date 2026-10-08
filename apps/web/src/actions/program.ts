@@ -115,8 +115,11 @@ async function gather(r: Repositories, deps: AppDeps) {
   const exercises = await r.exercises.listAll();
   const injuries = (await r.injuries.listAll()).filter((i) => i.resolvedOn === null);
   const painEvents = await r.painEvents.listAll();
+  const prefs = (await r.userExercises.listAll()).filter((u) => u.deletedAt === null);
+  const liked = new Set(prefs.filter((u) => u.preference === 'like').map((u) => u.exerciseId));
+  const disliked = new Set(prefs.filter((u) => u.preference === 'dislike').map((u) => u.exerciseId));
   const today = deps.clock.today(profile.timezone);
-  return { profile, goal, weight, equipment, userEquipment, exercises, injuries, painEvents, today };
+  return { profile, goal, weight, equipment, userEquipment, exercises, injuries, painEvents, liked, disliked, today };
 }
 
 function buildPlan(g: Awaited<ReturnType<typeof gather>>, deps: AppDeps): PlanBuildResult {
@@ -129,6 +132,8 @@ function buildPlan(g: Awaited<ReturnType<typeof gather>>, deps: AppDeps): PlanBu
       availableEquipment: availableEquipmentKeys(g.equipment, g.userEquipment),
       experience: g.profile.experience,
       now: deps.clock.now(),
+      liked: g.liked,
+      disliked: g.disliked,
     },
     daysPerWeek: days,
     goal: g.goal.type,

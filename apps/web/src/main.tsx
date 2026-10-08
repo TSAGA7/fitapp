@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';
 import './styles/screens.css';
+import './styles/glass.css';
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
@@ -18,3 +19,14 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     navigator.serviceWorker.register('./sw.js').catch(() => undefined);
   });
 }
+
+// iOS keyboard: a tap outside a field closes it, so the page can scroll to the bottom again.
+document.addEventListener('pointerdown', (e) => {
+  const active = document.activeElement as HTMLElement | null;
+  const target = e.target as HTMLElement | null;
+  if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) && target && !target.closest('input, textarea, select, label')) active.blur();
+});
+document.addEventListener('focusin', (e) => {
+  const el = e.target as HTMLElement;
+  if (/^(INPUT|TEXTAREA)$/.test(el.tagName)) setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+});

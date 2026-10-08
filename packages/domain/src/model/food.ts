@@ -33,6 +33,8 @@ const foodFields = {
   variantGroup: key.nullable(),
   yieldFactor: z.number().positive().nullable(),
   dataSource: FoodDataSource,
+  /** false = the meal planner never picks it by itself (sweets, drinks, ready meals, branded items); it can still be added by hand. */
+  autoPlan: z.boolean().default(true),
 };
 
 function foodRules(

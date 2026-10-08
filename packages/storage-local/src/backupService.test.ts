@@ -48,7 +48,7 @@ describe('export', () => {
     const { a } = await pair();
     await populate(a.s);
     const file = JSON.parse(await a.s.backup.exportJson());
-    expect(file).toMatchObject({ format: 'fitapp-backup', formatVersion: 1, schemaVersion: 1, deviceId: a.s.deviceId });
+    expect(file).toMatchObject({ format: 'fitapp-backup', formatVersion: 1, schemaVersion: 2, deviceId: a.s.deviceId });
     expect(file.stores.bodyMetrics).toHaveLength(3);
     expect(file.stores.bodyMetrics.filter((m: { deletedAt: string | null }) => m.deletedAt !== null)).toHaveLength(1);
     expect(file.stores.exercises).toHaveLength(1);
@@ -57,7 +57,7 @@ describe('export', () => {
     expect(file.stores.foods).toEqual([]);
     expect(file.stores.setLogs).toHaveLength(1);
     expect(file.stores.programVersions).toHaveLength(1);
-    expect(Object.keys(file.stores)).toHaveLength(26);
+    expect(Object.keys(file.stores)).toHaveLength(28);
     expect(await getMeta(a.s.db, META_KEYS.lastBackupAt)).toBe(file.createdAt);
   });
   it('an empty database exports a valid empty file', async () => {

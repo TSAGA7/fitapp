@@ -47,7 +47,15 @@ export interface Migration {
   upgrade?: (tx: Transaction) => Promise<void> | void;
 }
 
-export const MIGRATIONS: readonly Migration[] = [{ version: 1, description: 'Initial schema', stores: STORES_V1 }];
+export const STORES_V2: Record<string, string> = {
+  userExercises: 'id, exerciseId, updatedAt',
+  exerciseNotes: 'id, exerciseId, sessionId, updatedAt',
+};
+
+export const MIGRATIONS: readonly Migration[] = [
+  { version: 1, description: 'Initial schema', stores: STORES_V1 },
+  { version: 2, description: 'Exercise likes and notes', stores: STORES_V2 },
+];
 
 export const LATEST_VERSION = (MIGRATIONS[MIGRATIONS.length - 1] as Migration).version;
 

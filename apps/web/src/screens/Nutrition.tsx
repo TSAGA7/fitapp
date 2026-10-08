@@ -3,6 +3,7 @@ import { addDays, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek,
 import {
   acceptTargetAdjustment,
   addPlannedItem,
+  clearMealLogs,
   createCustomFood,
   createProgram,
   generateWeekPlan,
@@ -14,6 +15,7 @@ import {
   regenerateMeal,
   removePlannedItem,
   replacePlannedItem,
+  setLogAmount,
   setPlannedAmount,
   togglePlannedLock,
   undoLog,
@@ -22,6 +24,7 @@ import { useData } from '../app/DataContext';
 import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, SLOT_ORDER, userFoodOf } from '../app/derive';
 import { fmt, formatDateShort, formatDay, WEEKDAY_SHORT } from '../app/format';
 import { useCommand } from '../app/useCommand';
+import type { FoodLog } from '@fitapp/domain';
 import { Badge, Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, TextField, type ChartSeries } from '../ui';
 import { parseDecimal, ScreenHeader } from './shared';
 
@@ -76,6 +79,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const planned = plannedOf(items);
   const [slotForAdd, setSlotForAdd] = useState<MealSlot | null>(null);
   const [itemSheet, setItemSheet] = useState<PlannedItem | null>(null);
+  const [logSheet, setLogSheet] = useState<FoodLog | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
   const adjustment = useMemo(
@@ -109,9 +113,9 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
 
       <Card>
         <div className="row" style={{ gap: 18 }}>
-          <ProgressRing value={targets.kcal > 0 ? eaten.kcal / targets.kcal : 0} size={128} stroke={12}>
-            <div className="t-h2">{fmt(Math.abs(remaining), 0)}</div>
-            <div className="t-caption">{remaining >= 0 ? 'осталось ккал' : 'сверх нормы'}</div>
+          <ProgressRing value={targets.kcal > 0 ? eaten.kcal / targets.kcal : 0} size={140} stroke={11}>
+            <div className="ring-num">{fmt(Math.abs(remaining), 0)}</div>
+            <div className="ring-cap">{remaining >= 0 ? 'ккал осталось' : 'ккал сверх'}</div>
           </ProgressRing>
           <div className="grow stack">
             <Macro label="Белки" eaten={eaten.proteinG} target={targets.proteinG} color="#16a34a" />
@@ -133,16 +137,25 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
 
       {SLOT_ORDER.map((slot) => {
         const slotItems = items.filter((i) => i.slot === slot);
+        const itemIds = new Set(items.map((i) => i.id));
         const slotLogs = logs.filter((l) => l.slot === slot);
-        const unplanned = slotLogs.filter((l) => l.entryType === 'unplanned');
-        const kcal = sumMacros(slotItems.map((i) => i.plannedMacros)).kcal;
+        // Entries that are not tied to a plan item (added by hand, or whose plan item was replaced).
+        const loose = slotLogs.filter((l) => l.plannedItemId === null || !itemIds.has(l.plannedItemId));
+        const plan = sumMacros(slotItems.map((i) => i.plannedMacros));
+        const fact = eatenOf(slotLogs);
         const allDone = slotItems.length > 0 && slotItems.every((i) => logOf(i.id));
         return (
           <section key={slot} aria-label={SLOT_LABEL[slot]} className="stack">
             <div className="section-title">
               <h2 className="t-h3">{SLOT_LABEL[slot]}</h2>
-              <span className="t-small">{slotItems.length > 0 ? `${fmt(kcal, 0)} ккал` : ''}</span>
+              <span className="t-small">{slotItems.length > 0 || slotLogs.length > 0 ? `${fmt(fact.kcal, 0)} / ${fmt(plan.kcal, 0)} ккал` : ''}</span>
             </div>
+            {(slotItems.length > 0 || slotLogs.length > 0) && (
+              <div className="macro-strip" aria-label={`БЖУ: ${SLOT_LABEL[slot]}`}>
+                <MacroLine label="План" m={plan} muted />
+                <MacroLine label="Съедено" m={fact} />
+              </div>
+            )}
             {slotItems.map((i) => {
               const log = logOf(i.id);
               const name = foodName(s.foods, i.foodId);
@@ -165,14 +178,16 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
                 />
               );
             })}
-            {unplanned.map((l) => (
-              <ListItem key={l.id} icon="plus" title={l.snapshot.foodName} subtitle={`Не по плану · ${fmt(l.actualAmountG, 0)} г`} trailing={<span className="t-small">{fmt(l.macros.kcal, 0)}</span>} onClick={() => void run((d) => undoLog(d, l.id))} />
+            {loose.map((l) => (
+              <ListItem key={l.id} icon="plus" lime title={l.snapshot.foodName} subtitle={`${l.plannedItemId === null ? 'Не по плану' : 'Из прежнего плана'} · ${fmt(l.actualAmountG, 0)} г · Б ${fmt(l.macros.proteinG, 0)} Ж ${fmt(l.macros.fatG, 0)} У ${fmt(l.macros.carbG, 0)}`} trailing={<span className="t-small">{fmt(l.macros.kcal, 0)}</span>} onClick={() => setLogSheet(l)} />
             ))}
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <Button size="sm" variant="secondary" icon="plus" onClick={() => setSlotForAdd(slot)}>Добавить еду</Button>
               {slotItems.length > 0 && !allDone && <Button size="sm" variant="secondary" icon="check" disabled={busy} onClick={() => void run((d) => logMealAsPlanned(d, date, slot))}>Съел всё</Button>}
+              {slotLogs.length > 0 && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => clearMealLogs(d, date, slot))}>Сбросить отметки</Button>}
               {!isPast && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => regenerateMeal(d, date, slot, variation()))}>Переделать</Button>}
             </div>
+            {slotLogs.length > 0 && <p className="t-small">«Переделать» не трогает то, что ты уже съел. Нажми на строку, чтобы изменить граммы или убрать отметку.</p>}
           </section>
         );
       })}
@@ -184,7 +199,45 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
 
       <AddFoodSheet open={slotForAdd !== null} slot={slotForAdd ?? 'snack'} date={date} onClose={() => setSlotForAdd(null)} />
       <ItemSheet item={itemSheet} onClose={() => setItemSheet(null)} />
+      <LogSheet log={logSheet} onClose={() => setLogSheet(null)} />
     </>
+  );
+}
+
+function MacroLine({ label, m, muted }: { label: string; m: { proteinG: number; fatG: number; carbG: number }; muted?: boolean }) {
+  return (
+    <div className={`macro-line ${muted ? 'muted' : ''}`}>
+      <span className="ml-label">{label}</span>
+      <span><i className="dot" style={{ background: '#16a34a' }} /> Б {fmt(m.proteinG, 0)}</span>
+      <span><i className="dot" style={{ background: '#f59e0b' }} /> Ж {fmt(m.fatG, 0)}</span>
+      <span><i className="dot" style={{ background: '#a78bfa' }} /> У {fmt(m.carbG, 0)}</span>
+    </div>
+  );
+}
+
+function LogSheet({ log, onClose }: { log: FoodLog | null; onClose: () => void }) {
+  const { ok, banner, busy } = useCommand();
+  const [grams, setGrams] = useState('');
+  if (!log) return null;
+  const g = parseDecimal(grams);
+  const done = async (fn: Parameters<typeof ok>[0]) => {
+    if (await ok(fn)) {
+      setGrams('');
+      onClose();
+    }
+  };
+  return (
+    <Sheet open title={log.snapshot.foodName} onClose={onClose}>
+      <div className="stack">
+        {banner}
+        <p className="t-small">Записано: {fmt(log.actualAmountG, 0)} г · {fmt(log.macros.kcal, 0)} ккал · Б {fmt(log.macros.proteinG, 0)} Ж {fmt(log.macros.fatG, 0)} У {fmt(log.macros.carbG, 0)}</p>
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div className="grow"><TextField label="Правильное количество" unit="г" inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} /></div>
+          <Button variant="secondary" disabled={busy || !(g > 0)} onClick={() => void done((d) => setLogAmount(d, log.id, g))}>Изменить</Button>
+        </div>
+        <Button block variant="danger" icon="trash" disabled={busy} onClick={() => void done((d) => undoLog(d, log.id))}>Удалить запись</Button>
+      </div>
+    </Sheet>
   );
 }
 
@@ -230,18 +283,16 @@ function ItemSheet({ item, onClose }: { item: PlannedItem | null; onClose: () =>
         {banner}
         <p className="t-small">План: {fmt(item.plannedAmountG, 0)} г · {fmt(item.plannedMacros.kcal, 0)} ккал · Б {fmt(item.plannedMacros.proteinG, 0)} Ж {fmt(item.plannedMacros.fatG, 0)} У {fmt(item.plannedMacros.carbG, 0)}</p>
         {food && <p className="t-small">{food.basis === 'raw' ? 'Вес сырого продукта' : food.basis === 'cooked' ? 'Вес готового продукта' : 'Вес как на упаковке'}</p>}
-        {log ? (
-          <Button block variant="secondary" disabled={busy} onClick={() => void done((d) => undoLog(d, log.id))}>Отменить отметку</Button>
-        ) : (
-          <>
-            <Button block icon="check" disabled={busy} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'eaten' }))}>Съел как в плане</Button>
-            <div className="row" style={{ alignItems: 'flex-end' }}>
-              <div className="grow"><TextField label="Съел другое количество" unit="г" inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} /></div>
-              <Button variant="secondary" disabled={busy || !(g > 0)} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'eaten', grams: g }))}>Записать</Button>
-            </div>
-            <Button block variant="secondary" disabled={busy} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'skipped' }))}>Пропустил</Button>
-          </>
-        )}
+        {log && <p className="t-small">Сейчас: {log.entryType === 'skipped_planned' ? 'пропущено' : `съедено ${fmt(log.actualAmountG, 0)} г`}</p>}
+        <Button block icon="check" disabled={busy} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'eaten' }))}>Съел как в плане</Button>
+        <div className="row" style={{ alignItems: 'flex-end' }}>
+          <div className="grow"><TextField label="Съел другое количество" unit="г" inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} /></div>
+          <Button variant="secondary" disabled={busy || !(g > 0)} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'eaten', grams: g }))}>Записать</Button>
+        </div>
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <Button variant="secondary" disabled={busy} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'skipped' }))}>Пропустил</Button>
+          {log && <Button variant="secondary" icon="close" disabled={busy} onClick={() => void done((d) => undoLog(d, log.id))}>Убрать отметку</Button>}
+        </div>
         <div className="row" style={{ flexWrap: 'wrap' }}>
           <Button size="sm" variant="text" disabled={busy} onClick={() => void done((d) => replacePlannedItem(d, item.id, variation()))}>Заменить продукт</Button>
           <Button size="sm" variant="text" disabled={busy} onClick={() => void done((d) => togglePlannedLock(d, item.id))}>{item.locked ? 'Открепить' : 'Закрепить'}</Button>

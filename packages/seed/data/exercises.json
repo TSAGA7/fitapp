@@ -4740,5 +4740,1974 @@
         "note": null
       }
     ]
+  },
+  {
+    "key": "vacuum_standing",
+    "name": "Вакуум стоя",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Не прогибай поясницу; при головокружении остановись и подыши спокойно"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 30
+    },
+    "defaultRestSec": 30,
+    "cues": [
+      "Полный выдох до конца",
+      "Втяни живот к позвоночнику и держи",
+      "Рёбра вниз, плечи расслаблены",
+      "Грудью не дыши — вдох через рёбра"
+    ],
+    "curatedSubstituteKeys": [
+      "vacuum_quadruped",
+      "vacuum_lying",
+      "dead_bug"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "vacuum_quadruped",
+    "name": "Вакуум на четвереньках",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 0,
+      "wrist": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "wrist",
+        "note": "Если давит на запястья — опирайся на кулаки или предплечья"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 30
+    },
+    "defaultRestSec": 30,
+    "cues": [
+      "Спина ровная, не провисай",
+      "Выдохни и втяни живот к позвоночнику",
+      "Держи без задержки лишнего напряжения в шее"
+    ],
+    "curatedSubstituteKeys": [
+      "vacuum_standing",
+      "vacuum_lying",
+      "bird_dog"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "vacuum_lying",
+    "name": "Вакуум лёжа",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 30
+    },
+    "defaultRestSec": 30,
+    "cues": [
+      "Колени согнуты, стопы на полу",
+      "Выдох и втяжение живота",
+      "Поясница не отрывается от пола"
+    ],
+    "curatedSubstituteKeys": [
+      "vacuum_standing",
+      "vacuum_quadruped",
+      "dead_bug"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "breathing_90_90",
+    "name": "Диафрагмальное дыхание 90/90",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 2,
+    "defaultRepRange": {
+      "min": 30,
+      "max": 60
+    },
+    "defaultRestSec": 20,
+    "cues": [
+      "Лёжа, ноги на стуле под 90°",
+      "Вдох носом — рёбра расширяются в стороны",
+      "Долгий выдох ртом, рёбра опускаются, живот подтягивается",
+      "Поясница мягко прижата"
+    ],
+    "curatedSubstituteKeys": [
+      "vacuum_lying",
+      "vacuum_standing",
+      "dead_bug"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "heel_slide",
+    "name": "Скольжение пяткой лёжа",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 2,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 30,
+    "cues": [
+      "Поясница прижата",
+      "Сначала выдох и включение поперечной, потом движение"
+    ],
+    "curatedSubstituteKeys": [
+      "dead_bug",
+      "vacuum_lying"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "crunch_floor",
+    "name": "Скручивания на полу",
+    "movementPattern": "core_flexion",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Не тяни шею руками"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Выдох на подъёме",
+      "Подбородок от груди"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_crunch",
+      "ab_machine_crunch"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "bicycle_crunch",
+    "name": "Велосипед",
+    "movementPattern": "core_flexion",
+    "primaryMuscles": [
+      "abs",
+      "obliques"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Медленно",
+      "Локоть к противоположному колену"
+    ],
+    "curatedSubstituteKeys": [
+      "crunch_floor",
+      "reverse_crunch"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "lying_leg_raise",
+    "name": "Подъём ног лёжа",
+    "movementPattern": "core_flexion",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 2
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Поясница должна оставаться прижатой — иначе согни колени"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Поясница прижата",
+      "Опускай медленно"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_crunch",
+      "dead_bug"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "flutter_kicks",
+    "name": "Ножницы (флаттер-киксы)",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Поясница прижата; иначе подними ноги выше"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 20,
+      "max": 40
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Поясница прижата",
+      "Мелкая амплитуда"
+    ],
+    "curatedSubstituteKeys": [
+      "hollow_hold",
+      "dead_bug"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "hollow_hold",
+    "name": "Лодочка (hollow hold)",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Не отрывай поясницу от пола — упрощай вариант"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 15,
+      "max": 40
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Поясница прижата",
+      "Подбородок к груди"
+    ],
+    "curatedSubstituteKeys": [
+      "dead_bug",
+      "plank"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      },
+      {
+        "key": "tuck",
+        "label": "Со сгруппированными коленями",
+        "note": "Проще"
+      }
+    ]
+  },
+  {
+    "key": "mountain_climber",
+    "name": "Скалолаз",
+    "movementPattern": "core_antiextension",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "front_delts",
+      "quads"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "wrist": 1,
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "wrist",
+        "note": "Опирайся на кулаки при дискомфорте"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 20,
+      "max": 40
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Таз не поднимать",
+      "Колени к груди по очереди"
+    ],
+    "curatedSubstituteKeys": [
+      "plank",
+      "dead_bug"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "plank_shoulder_tap",
+    "name": "Планка с касанием плеча",
+    "movementPattern": "core_antirotation",
+    "primaryMuscles": [
+      "abs",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "front_delts"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1,
+      "wrist": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 3,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Таз не качается",
+      "Ноги шире — легче"
+    ],
+    "curatedSubstituteKeys": [
+      "plank",
+      "side_plank",
+      "bird_dog"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "cable_woodchop",
+    "name": "Дровосек на блоке",
+    "movementPattern": "core_antirotation",
+    "primaryMuscles": [
+      "obliques",
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "front_delts"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Поворот из грудного отдела, не из поясницы"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "single_cable"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_stack",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Бёдра развёрнуты в ту же сторону",
+      "Руки прямые"
+    ],
+    "curatedSubstituteKeys": [
+      "pallof_press",
+      "side_plank"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "side_crunch_cable",
+    "name": "Боковые скручивания на блоке",
+    "movementPattern": "core_antirotation",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "abs"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "single_cable"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_stack",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Сгибание вбок без поворота"
+    ],
+    "curatedSubstituteKeys": [
+      "side_plank",
+      "pallof_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "decline_crunch",
+    "name": "Скручивания на наклонной скамье",
+    "movementPattern": "core_flexion",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 2
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Малый угол; не тяни шею"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "adjustable_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Амплитуда короткая",
+      "Без рывков"
+    ],
+    "curatedSubstituteKeys": [
+      "crunch_floor",
+      "reverse_crunch"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "toe_touch_lying",
+    "name": "Касание носков лёжа",
+    "movementPattern": "core_flexion",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Ноги вверх, тянись к носкам",
+      "Выдох на подъёме"
+    ],
+    "curatedSubstituteKeys": [
+      "crunch_floor",
+      "reverse_crunch"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "bodyweight_squat",
+    "name": "Приседания с собственным весом",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1,
+      "lower_back": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колени по линии носков, глубина — комфортная"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Вес на всей стопе",
+      "Корпус прямой",
+      "Руки перед собой"
+    ],
+    "curatedSubstituteKeys": [
+      "goblet_squat_db",
+      "leg_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "wall_sit",
+    "name": "Стульчик у стены",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "knee": 2
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "При боли в коленях уменьши угол сгибания"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 20,
+      "max": 60
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Бёдра параллельно полу или выше",
+      "Спина прижата к стене"
+    ],
+    "curatedSubstituteKeys": [
+      "bodyweight_squat",
+      "leg_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "split_squat_bw",
+    "name": "Сплит-присед с собственным весом",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 2,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено не заваливать внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 14
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Корпус вертикально",
+      "Передняя пятка прижата"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_lunge_db",
+      "bodyweight_squat"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "reverse_lunge_bw",
+    "name": "Обратные выпады с собственным весом",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 14
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Шаг назад",
+      "Корпус вертикально"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_lunge_db",
+      "split_squat_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "single_leg_glute_bridge",
+    "name": "Ягодичный мост на одной ноге",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "hip": 0,
+      "lower_back": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 15
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Таз ровно",
+      "Пауза наверху"
+    ],
+    "curatedSubstituteKeys": [
+      "glute_bridge_bw",
+      "hip_thrust_barbell"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "single_leg_rdl_bw",
+    "name": "Румынская тяга на одной ноге",
+    "movementPattern": "hinge",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "lower_back"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "hip": 1,
+      "lower_back": 1,
+      "ankle": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 3,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Спина нейтральная; опирайся рукой о стену при потере баланса"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 3,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Таз назад, спина ровная",
+      "Медленно"
+    ],
+    "curatedSubstituteKeys": [
+      "rdl_db",
+      "cable_pull_through"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "superman_hold",
+    "name": "Суперман",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "lower_back",
+      "glutes"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Без переразгибания — подъём небольшой"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "time",
+    "loadUnit": "seconds",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 15,
+      "max": 30
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Подбородок к полу",
+      "Подъём невысокий"
+    ],
+    "curatedSubstituteKeys": [
+      "glute_bridge_bw",
+      "single_leg_glute_bridge"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "bodyweight_calf_raise",
+    "name": "Подъёмы на носки с собственным весом",
+    "movementPattern": "calf_raise",
+    "primaryMuscles": [
+      "calves"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "ankle": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 15,
+      "max": 25
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Пауза наверху",
+      "Опускайся медленно"
+    ],
+    "curatedSubstituteKeys": [
+      "leg_press_calf_raise",
+      "standing_calf_raise_machine"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "cable_glute_kickback",
+    "name": "Отведение ноги назад на блоке",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "hip": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Не прогибай поясницу"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "single_cable"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_stack",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Корпус неподвижен",
+      "Пауза в конце"
+    ],
+    "curatedSubstituteKeys": [
+      "glute_bridge_bw",
+      "hip_abduction_machine_ex"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "band_lateral_walk",
+    "name": "Шаги в стороны с резинкой",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Полуприсед, колени не заваливать",
+      "Шаги маленькие"
+    ],
+    "curatedSubstituteKeys": [
+      "hip_abduction_machine_ex",
+      "glute_bridge_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "hip_adduction_machine_ex",
+    "name": "Сведение бёдер в тренажёре",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "adductors"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "hip": 1,
+      "knee": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "hip_adduction_machine"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_stack",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Спина прижата",
+      "Без рывков"
+    ],
+    "curatedSubstituteKeys": [
+      "leg_press",
+      "goblet_squat_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "kettlebell_goblet_squat",
+    "name": "Гоблет-присед с гирей",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "abs"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 1,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "kettlebell"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Гиря у груди",
+      "Корпус прямой"
+    ],
+    "curatedSubstituteKeys": [
+      "goblet_squat_db",
+      "leg_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "knee_pushup",
+    "name": "Отжимания с колен",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1,
+      "wrist": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Корпус прямой от колен до головы",
+      "Локти под 45°"
+    ],
+    "curatedSubstituteKeys": [
+      "pushup",
+      "incline_pushup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "decline_pushup",
+    "name": "Отжимания с упором ног",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest",
+      "front_delts"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "elbow": 1,
+      "wrist": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Нагрузка на плечо выше — при дискомфорте верни обычные отжимания"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "flat_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 6,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Корпус жёсткий",
+      "Локти под 45°"
+    ],
+    "curatedSubstituteKeys": [
+      "pushup",
+      "incline_pushup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "pike_pushup",
+    "name": "Отжимания «домиком»",
+    "movementPattern": "vertical_push",
+    "primaryMuscles": [
+      "front_delts",
+      "side_delts"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "wrist": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Давит на плечи — иди на комфортную глубину"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 6,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Таз вверх",
+      "Голова между рук"
+    ],
+    "curatedSubstituteKeys": [
+      "shoulder_press_machine_ex",
+      "db_shoulder_press_neutral"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "diamond_pushup",
+    "name": "Отжимания узким хватом",
+    "movementPattern": "elbow_extension",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "chest"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "wrist": 2,
+      "elbow": 2,
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "elbow",
+        "note": "При дискомфорте в локтях — шире руки"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 6,
+      "max": 12
+    },
+    "defaultRestSec": 75,
+    "cues": [
+      "Локти вдоль корпуса"
+    ],
+    "curatedSubstituteKeys": [
+      "bench_dip",
+      "cable_pushdown_rope"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "prone_y_raise",
+    "name": "Подъём рук Y лёжа",
+    "movementPattern": "rear_delt_fly",
+    "primaryMuscles": [
+      "rear_delts",
+      "upper_back"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Большие пальцы вверх",
+      "Лопатки вниз и к центру"
+    ],
+    "curatedSubstituteKeys": [
+      "face_pull",
+      "reverse_pec_deck"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "incline_db_fly",
+    "name": "Разведение гантелей на наклонной",
+    "movementPattern": "chest_fly",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "front_delts"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 2,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "deep_stretch",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Не уходи глубоко в растяжение"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "dumbbells",
+        "adjustable_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_per_hand",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Локти чуть согнуты",
+      "Амплитуда комфортная"
+    ],
+    "curatedSubstituteKeys": [
+      "pec_deck_fly",
+      "cable_crossover_fly"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "concentration_curl",
+    "name": "Концентрированный подъём на бицепс",
+    "movementPattern": "elbow_flexion",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "dumbbells"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_per_hand",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Локоть упёрт в бедро"
+    ],
+    "curatedSubstituteKeys": [
+      "db_curl",
+      "hammer_curl"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "cable_hammer_curl",
+    "name": "Молотки на канате",
+    "movementPattern": "elbow_flexion",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "single_cable"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_stack",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Нейтральный хват",
+      "Локти прижаты"
+    ],
+    "curatedSubstituteKeys": [
+      "hammer_curl",
+      "cable_curl"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "wrist_curl_db",
+    "name": "Сгибание запястий с гантелью",
+    "movementPattern": "elbow_flexion",
+    "primaryMuscles": [
+      "forearms"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "wrist": 2
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "wrist",
+        "note": "Небольшой вес; при боли в запястье пропусти"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "dumbbells"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_per_hand",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Предплечье на скамье"
+    ],
+    "curatedSubstituteKeys": [
+      "hammer_curl",
+      "db_curl"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "db_pullover",
+    "name": "Пуловер с гантелью",
+    "movementPattern": "vertical_pull",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "chest",
+      "triceps"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 2,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "deep_stretch",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Большое растяжение плеча — амплитуда комфортная"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "dumbbells",
+        "flat_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Руки чуть согнуты",
+      "Грудная клетка расширена"
+    ],
+    "curatedSubstituteKeys": [
+      "straight_arm_pulldown",
+      "lat_pulldown_neutral"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "wide_cable_row",
+    "name": "Тяга блока к груди широким хватом",
+    "movementPattern": "horizontal_pull",
+    "primaryMuscles": [
+      "upper_back",
+      "rear_delts"
+    ],
+    "secondaryMuscles": [
+      "lats",
+      "biceps"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Локти не уводи слишком высоко"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "seated_row_cable"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_stack",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Лопатки сводятся",
+      "Корпус неподвижен"
+    ],
+    "curatedSubstituteKeys": [
+      "cable_row_neutral",
+      "chest_supported_row_machine"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
+  },
+  {
+    "key": "seal_row_db",
+    "name": "Тяга гантелей лёжа на скамье",
+    "movementPattern": "horizontal_pull",
+    "primaryMuscles": [
+      "upper_back",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "rear_delts",
+      "biceps"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1,
+      "lower_back": 0
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "dumbbells",
+        "adjustable_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_per_hand",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Грудь на скамье — поясница не работает",
+      "Локти вдоль корпуса"
+    ],
+    "curatedSubstituteKeys": [
+      "chest_supported_row_machine",
+      "one_arm_db_row_bench"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ]
   }
 ]

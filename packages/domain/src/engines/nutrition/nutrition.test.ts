@@ -10,7 +10,7 @@ import { generateDayPlan, generateMeal, remainingMacros, replaceFood, type PlanF
 
 const foods = rawSeedCatalog.foods.map((f) => ({
   id: f.key, name: f.name, category: f.category, basis: f.basis, per100: f.per100, unit: f.unit, gramsPerPiece: f.gramsPerPiece,
-  preference: 'ok', availability: 'always', excluded: false, maxPerDayG: null,
+  preference: 'ok', availability: 'always', excluded: false, maxPerDayG: null, autoPlan: f.autoPlan,
 })) as PlanFood[];
 
 const base = { sex: 'male' as const, ageYears: 29, heightCm: 181, weightKg: 82.5, jobActivity: 'sedentary' as const, trainingsPerWeek: 3 };
@@ -68,7 +68,8 @@ describe('meal plan', () => {
     const f = foods.map((x) => (x.category === 'poultry' ? { ...x, excluded: true } : x.id === 'salmon_raw' ? { ...x, preference: 'avoid' as const } : x));
     const plan = generateDayPlan({ targets, foods: f, seed: 'x' });
     for (const l of plan.lines) {
-      expect(l.foodId.includes('chicken') || l.foodId.includes('turkey') || l.foodId === 'salmon_raw').toBe(false);
+      const food = f.find((x) => x.id === l.foodId) as PlanFood;
+      expect(food.excluded || l.foodId === 'salmon_raw').toBe(false);
     }
   });
   it('keeps locked lines and refits only the other meals', () => {

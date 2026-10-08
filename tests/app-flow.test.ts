@@ -31,6 +31,9 @@ import {
   startWorkout,
   togglePlannedLock,
   addMetric,
+  saveExerciseNote,
+  setExercisePreference,
+  startBodyweightWorkout,
 } from '../apps/web/src/actions';
 
 const MON = '2026-10-05T09:00:00+03:00';
@@ -44,6 +47,18 @@ async function setup() {
     experience: 'intermediate', jobActivity: 'sedentary', timezone: 'Europe/Moscow',
   });
   return { rt, deps: rt.deps, clock };
+}
+
+// Starts another workout from the same planned template: copies the planned session to a new date.
+async function startBodyAgain(deps: Awaited<ReturnType<typeof setup>>['deps'], plannedId: string, clock: ReturnType<typeof createFixedClock>, at: string): Promise<string> {
+  clock.set(at);
+  const base = await deps.uow.run((r) => r.plannedSessions.get(plannedId));
+  const copy = await deps.uow.run(async (r) => {
+    const id = deps.ids.newId();
+    await r.plannedSessions.put({ ...base!, id, plannedDate: at.slice(0, 10), status: 'planned', originalDate: null, movedReason: null, createdAt: clock.now() });
+    return id;
+  });
+  return startWorkout(deps, copy);
 }
 
 describe('app flow on the real storage', () => {
@@ -277,5 +292,64 @@ describe('app flow on the real storage', () => {
     expect(s.activeVersion!.training.workouts[0]!.exercises[0]!.exerciseId).toBe('hack_squat');
     await addMetric(deps, { type: 'weight', value: 82, date: '2026-10-06' });
     expect((await loadSnapshot(deps)).weightPoints.length).toBe(2);
+  });
+  it('an exercise note is not shown in the workout where it was written', async () => {
+    const { deps } = await setup();
+    await ensureSessions(deps);
+    const s = await loadSnapshot(deps);
+    const [a] = s.plannedSessions.filter((p) => p.plannedDate >= '2026-10-05').sort((x, y) => (x.plannedDate < y.plannedDate ? -1 : 1));
+    const sid1 = await startWorkout(deps, a!.id);
+    const v1 = await loadWorkout(deps, sid1);
+    const ex = v1.exercises[0]!;
+    expect(ex.reminders).toEqual([]);
+    await saveExerciseNote(deps, { sessionId: sid1, exerciseId: ex.exercise.id, text: 'Тяжело, следи за плечом' });
+    expect((await loadWorkout(deps, sid1)).exercises[0]!.reminders).toEqual([]); // not in the same workout
+    expect((await loadWorkout(deps, sid1)).exercises[0]!.ownNote?.text).toBe('Тяжело, следи за плечом');
+    await finishWorkout(deps, sid1, null);
+
+  });
+
+  it('a note is shown in the next workout with the same exercise and not repeated in the third', async () => {
+    const { deps, clock } = await setup();
+    // two sessions of the SAME template, started by hand
+    await ensureSessions(deps);
+    const s = await loadSnapshot(deps);
+    const first = s.plannedSessions.sort((x, y) => (x.plannedDate < y.plannedDate ? -1 : 1))[0]!;
+    const sid1 = await startWorkout(deps, first.id);
+    const ex = (await loadWorkout(deps, sid1)).exercises[0]!;
+    await saveExerciseNote(deps, { sessionId: sid1, exerciseId: ex.exercise.id, text: 'Дискомфорт слева' });
+    await finishWorkout(deps, sid1, null);
+    const second = await startBodyAgain(deps, first.id, clock, '2026-10-06T09:00:00+03:00');
+    expect((await loadWorkout(deps, second)).exercises.find((e) => e.exercise.id === ex.exercise.id)?.reminders.length).toBe(1);
+    await finishWorkout(deps, second, null);
+    const third = await startBodyAgain(deps, first.id, clock, '2026-10-07T09:00:00+03:00');
+    expect((await loadWorkout(deps, third)).exercises.find((e) => e.exercise.id === ex.exercise.id)?.reminders.length).toBe(0);
+  });
+
+  it('likes and dislikes are stored and a disliked exercise leaves the rebuilt program', async () => {
+    const { deps } = await setup();
+    const s = await loadSnapshot(deps);
+    const target = s.activeVersion!.training.workouts[0]!.exercises[0]!.exerciseId;
+    await setExercisePreference(deps, target, 'dislike');
+    expect((await loadSnapshot(deps)).userExercises.find((u) => u.exerciseId === target)?.preference).toBe('dislike');
+    await rebuildTrainingPlan(deps);
+    const after = await loadSnapshot(deps);
+    expect(after.activeVersion!.training.workouts.flatMap((w) => w.exercises.map((e) => e.exerciseId))).not.toContain(target);
+    await setExercisePreference(deps, target, null);
+    expect((await loadSnapshot(deps)).userExercises.filter((u) => u.deletedAt === null)).toHaveLength(0);
+  });
+
+  it('a bodyweight workout needs no equipment, is not a part of the calendar and can be abandoned cleanly', async () => {
+    const { deps } = await setup();
+    const sid = await startBodyweightWorkout(deps);
+    const view = await loadWorkout(deps, sid);
+    expect(view.label).toBe('Со своим весом');
+    expect(view.exercises.length).toBeGreaterThanOrEqual(6);
+    expect(view.exercises.every((e) => e.exercise.equipmentRequirements.length === 0 || e.exercise.equipmentRequirements.some((g) => g.every((k) => k === 'floor_mat')))).toBe(true);
+    expect(view.exercises[0]!.plan.length).toBeGreaterThan(0);
+    expect((await loadSnapshot(deps)).plannedSessions.some((p) => p.workoutKey === 'bodyweight')).toBe(false);
+    await abandonWorkout(deps, sid);
+    const rows = await deps.uow.run((r) => r.plannedSessions.listByDateRange({ from: '2026-09-01', to: '2026-12-31' }));
+    expect(rows.some((p) => p.workoutKey === 'bodyweight')).toBe(false);
   });
 });

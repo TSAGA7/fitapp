@@ -3,3 +3,5 @@ export * from './planner';
 export * from './week';
 export * from './diff';
 export * from './pain';
+export * from './bodyweight';
+export * from './rest';

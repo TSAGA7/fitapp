@@ -11,6 +11,9 @@ import {
   addDays,
   type BodyArea,
   type Exercise,
+  type ExerciseNote,
+  type RestTrend,
+  buildBodyweightWorkout,
   type NextPrescription,
   type PainAdvice,
   type PlannedExercise,
@@ -28,7 +31,7 @@ import {
   type WorkoutSession,
   type Side,
 } from '@fitapp/domain';
-import { resolveEquipment } from '../app/derive';
+import { resolveEquipment, safetyContext } from '../app/derive';
 
 const baseOf = (deps: AppDeps) => createBase(deps.ids.newId(), deps.clock.now(), deps.deviceId);
 const CALIBRATION_CODES = new Set(['first_execution', 'first_execution_choose_weight', 'layoff_calibrate']);
@@ -262,6 +265,13 @@ export interface WorkoutExerciseView {
   reasonText: string;
   reasonCode: string;
   pe: PlannedExercise | undefined;
+  /** Notes from earlier workouts, shown once (this is the first workout after they were written). */
+  reminders: ExerciseNote[];
+  /** Note written in THIS workout. */
+  ownNote: ExerciseNote | undefined;
+  /** For the adaptive rest timer. */
+  daysSinceLast: number | null;
+  trend: RestTrend | null;
 }
 export interface WorkoutView {
   session: WorkoutSession;
@@ -269,6 +279,42 @@ export interface WorkoutView {
   version: ProgramVersion | undefined;
   label: string;
   exercises: WorkoutExerciseView[];
+}
+
+const BODYWEIGHT_KEY = 'bodyweight';
+const DAY_MS = 86_400_000;
+
+/** Score of a set for comparing sessions: estimated strength for loaded work, reps (or seconds) otherwise. */
+const setScore = (l: SetLog): number => (l.actualWeightKg && l.actualWeightKg > 0 ? l.actualWeightKg * (1 + (l.actualReps ?? 0) / 30) : (l.actualReps ?? 0));
+
+/** Reminders (shown once), the note of this workout and the data the rest timer adapts to. */
+async function noteAndRestInfo(r: Repositories, deps: AppDeps, session: WorkoutSession, se: SessionExercise, exerciseId: string, notes: readonly ExerciseNote[]) {
+  const mine = notes.filter((n) => n.exerciseId === exerciseId);
+  const ownNote = mine.find((n) => n.sessionId === session.id);
+  const reminders: ExerciseNote[] = [];
+  for (const n of mine) {
+    if (n.sessionId === session.id) continue;
+    if (n.shownInSessionId === null) {
+      // Written earlier and not shown yet: this is "the next workout" with the exercise.
+      if (n.createdAt >= session.startedAt) continue;
+      const shown = { ...n, shownInSessionId: session.id };
+      await r.exerciseNotes.put(shown);
+      reminders.push(shown);
+    } else if (n.shownInSessionId === session.id) reminders.push(n);
+  }
+  const logs = (await r.workouts.listSetLogsByExercise(exerciseId)).filter((l) => l.status === 'done' && l.setType === 'working' && l.sessionExerciseId !== se.id && (l.completedAt ?? '') < session.startedAt);
+  const last = logs.map((l) => l.completedAt ?? '').sort().pop();
+  const daysSinceLast = last ? Math.max(0, Math.floor((Date.parse(session.startedAt) - Date.parse(last)) / DAY_MS)) : null;
+  const bySession = new Map<string, number>();
+  for (const l of logs) bySession.set(l.sessionExerciseId, Math.max(bySession.get(l.sessionExerciseId) ?? 0, setScore(l)));
+  const order = [...new Set(logs.sort((a, b) => ((a.completedAt ?? '') < (b.completedAt ?? '') ? -1 : 1)).map((l) => l.sessionExerciseId))].slice(-2);
+  let trend: RestTrend | null = null;
+  if (order.length === 2) {
+    const [a, b] = [bySession.get(order[0] as string) ?? 0, bySession.get(order[1] as string) ?? 0];
+    trend = a > 0 && b > a * 1.03 ? 'up' : a > 0 && b < a * 0.97 ? 'down' : 'flat';
+  }
+  void deps;
+  return { reminders, ownNote, daysSinceLast, trend };
 }
 
 export async function loadWorkout(deps: AppDeps, sessionId: string): Promise<WorkoutView> {
@@ -282,6 +328,7 @@ export async function loadWorkout(deps: AppDeps, sessionId: string): Promise<Wor
     const equipment = await r.equipment.listAll();
     const userEquipment = await r.userEquipment.listAll();
     const ses = (await r.workouts.listSessionExercises(sessionId)).sort((a, b) => a.position - b.position);
+    const notes = (await r.exerciseNotes.listAll()).filter((n) => n.deletedAt === null);
     const exercises: WorkoutExerciseView[] = [];
     for (const se of ses) {
       if (se.status === 'skipped' && se.replacedFromExerciseId === null && (await r.workouts.listSetLogs(se.id)).length === 0 && ses.some((x) => x.replacedFromExerciseId === se.exerciseId && x.plannedExerciseKey === se.plannedExerciseKey)) continue;
@@ -301,9 +348,10 @@ export async function loadWorkout(deps: AppDeps, sessionId: string): Promise<Wor
         reasonText: plan[0]?.reasonText ?? '',
         reasonCode: plan[0]?.reasonCode ?? '',
         pe,
+        ...(await noteAndRestInfo(r, deps, session, se, exercise.id, notes)),
       });
     }
-    return { session, plannedSession: ps, version, label: template?.label ?? 'Тренировка', exercises };
+    return { session, plannedSession: ps, version, label: ps?.workoutKey === BODYWEIGHT_KEY ? 'Со своим весом' : (template?.label ?? 'Тренировка'), exercises };
   });
 }
 
@@ -513,6 +561,71 @@ export async function finishWorkout(deps: AppDeps, sessionId: string, note: stri
 export async function abandonWorkout(deps: AppDeps, sessionId: string): Promise<void> {
   await deps.uow.run(async (r) => {
     const session = await r.workouts.getSession(sessionId);
-    if (session) await r.workouts.putSession({ ...session, status: 'abandoned', endedAt: deps.clock.now() });
+    if (!session) return;
+    await r.workouts.putSession({ ...session, status: 'abandoned', endedAt: deps.clock.now() });
+    const ps = session.plannedSessionId ? await r.plannedSessions.get(session.plannedSessionId) : undefined;
+    if (ps && ps.workoutKey === BODYWEIGHT_KEY) await r.plannedSessions.softDelete(ps.id);
+  });
+}
+
+// ---------------------------------------------------------------- notes, likes, bodyweight
+
+/** A comment on an exercise ("hard, watch the shoulder"). It is shown once, in the next workout with the same exercise. */
+export async function saveExerciseNote(deps: AppDeps, input: { sessionId: string; exerciseId: string; text: string }): Promise<void> {
+  const text = input.text.trim().slice(0, 500);
+  await deps.uow.run(async (r) => {
+    const existing = (await r.exerciseNotes.listAll()).find((n) => n.deletedAt === null && n.sessionId === input.sessionId && n.exerciseId === input.exerciseId);
+    if (!text) {
+      if (existing) await r.exerciseNotes.softDelete(existing.id);
+      return;
+    }
+    if (existing) await r.exerciseNotes.put({ ...existing, text, shownInSessionId: null });
+    else await r.exerciseNotes.put({ ...baseOf(deps), exerciseId: input.exerciseId, text, sessionId: input.sessionId, shownInSessionId: null });
+  });
+}
+
+/** Like / dislike an exercise; null clears the mark. */
+export async function setExercisePreference(deps: AppDeps, exerciseId: string, preference: 'like' | 'dislike' | null): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const existing = (await r.userExercises.listAll()).find((u) => u.deletedAt === null && u.exerciseId === exerciseId);
+    if (preference === null) {
+      if (existing) await r.userExercises.softDelete(existing.id);
+      return;
+    }
+    if (existing) await r.userExercises.put({ ...existing, preference });
+    else await r.userExercises.put({ ...baseOf(deps), exerciseId, preference });
+  });
+}
+
+/** A workout without equipment (business trip, home). Not a part of the program: the rotation and versions stay untouched. */
+export async function startBodyweightWorkout(deps: AppDeps): Promise<string> {
+  return deps.uow.run(async (r) => {
+    const profile = await r.profile.get();
+    const version = await activeVersion(r);
+    if (!profile || !version) throw new Error('Сначала заполните профиль и создайте программу');
+    const open = (await r.workouts.listSessions()).find((s) => s.status === 'in_progress');
+    if (open) return open.id;
+    const injuries = (await r.injuries.listAll()).filter((i) => i.resolvedOn === null);
+    const userExercises = await r.userExercises.listAll();
+    const ctx = safetyContext(
+      { injuries, painEvents: await r.painEvents.listAll(), equipment: await r.equipment.listAll(), userEquipment: await r.userEquipment.listAll(), profile, userExercises },
+      deps.clock.now(),
+    );
+    const template = buildBodyweightWorkout({ exercises: (await r.exercises.listAll()) as Exercise[], ctx });
+    if (template.exercises.length === 0) throw new Error('Не нашлось подходящих упражнений без оборудования');
+    const today = deps.clock.today(profile.timezone);
+    const ps: PlannedSession = { ...baseOf(deps), versionId: version.id, workoutKey: BODYWEIGHT_KEY, plannedDate: today, status: 'planned', originalDate: null, movedReason: null };
+    await r.plannedSessions.put(ps);
+    const sessionId = deps.ids.newId();
+    await r.workouts.putSession({ ...createBase(sessionId, deps.clock.now(), deps.deviceId), plannedSessionId: ps.id, versionId: version.id, startedAt: deps.clock.now(), endedAt: null, status: 'in_progress', note: null });
+    const pctx = await prescriptionContext(r, deps, version, null);
+    for (const pe of template.exercises) {
+      const exercise = await r.exercises.get(pe.exerciseId);
+      if (!exercise) continue;
+      const p = await prescribe(r, deps, pctx, pe, exercise, false);
+      await r.workouts.putSessionExercise({ ...baseOf(deps), sessionId, exerciseId: exercise.id, variantKey: pe.variantKey, plannedExerciseKey: pe.key, position: pe.position, replacedFromExerciseId: null, replacementReason: null, status: 'planned', skipReason: null, note: null });
+      await createSets(r, deps, ps.id, pe.key, exercise, pe.variantKey, p, false);
+    }
+    return sessionId;
   });
 }

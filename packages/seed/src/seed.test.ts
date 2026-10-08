@@ -27,8 +27,8 @@ describe('bundled seed catalog', () => {
 
   it('links cooked and raw foods through yield factors', () => {
     const c = loadSeedCatalog();
-    const cooked = c.foods.filter((f) => f.basis === 'cooked');
-    expect(cooked.length).toBe(3);
+    const cooked = c.foods.filter((f) => f.basis === 'cooked' && f.variantGroup);
+    expect(cooked.length).toBeGreaterThanOrEqual(3);
     for (const f of cooked) {
       expect(f.yieldFactor).not.toBeNull();
       expect(c.foods.some((r) => r.variantGroup === f.variantGroup && r.basis !== 'cooked')).toBe(true);

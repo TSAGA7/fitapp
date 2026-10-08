@@ -13,6 +13,8 @@ export interface PlanFood {
   availability: Availability;
   excluded: boolean;
   maxPerDayG: number | null;
+  /** false: never picked by the generator on its own. */
+  autoPlan?: boolean;
 }
 
 export const SLOTS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -76,7 +78,7 @@ function snapGrams(f: PlanFood, grams: number, min: number, max: number): number
 
 /** Candidate foods for a role: allowed by the user's preferences, best preference first, rotated by the seed. */
 export function candidatesFor(foods: readonly PlanFood[], role: Pick<Role, 'categories'>, rotation: string, avoidIds: ReadonlySet<string> = new Set()): PlanFood[] {
-  const ok = foods.filter((f) => role.categories.includes(f.category) && !f.excluded && f.preference !== 'avoid' && f.availability !== 'rare' && !avoidIds.has(f.id));
+  const ok = foods.filter((f) => role.categories.includes(f.category) && f.autoPlan !== false && !f.excluded && f.preference !== 'avoid' && f.availability !== 'rare' && !avoidIds.has(f.id));
   const sorted = [...ok].sort((a, b) => PREF_RANK[a.preference] - PREF_RANK[b.preference] || a.name.localeCompare(b.name, 'ru'));
   if (sorted.length <= 1) return sorted;
   const offset = hash(rotation) % sorted.length;
@@ -138,20 +140,32 @@ export interface SlotInput {
   avoidFoodIds?: ReadonlySet<string>;
 }
 
-/** One meal: picks a food for each role, then fits the amounts to the meal targets. */
-export function generateMeal(input: SlotInput): PlanLine[] {
+/** One attempt: picks a food for each role (rotated by `rotation`), then fits the amounts to the meal targets. */
+function attempt(input: SlotInput, rotation: string): { vars: Variable[]; err: number } {
   const vars: Variable[] = [];
   const used = new Set<string>(input.avoidFoodIds ?? []);
   for (const role of ROLES[input.slot]) {
-    const list = candidatesFor(input.foods, role, `${input.rotation}|${input.slot}|${role.name}`, used);
+    const list = candidatesFor(input.foods, role, `${rotation}|${input.slot}|${role.name}`, used);
     const food = list[0];
     if (!food) continue;
     used.add(food.id);
     vars.push({ food, role, grams: snapGrams(food, role.start, role.min, role.max) });
   }
-  // The oil/fat role may be dropped when it is not needed: start at its minimum.
   fit(vars, input.target);
-  return vars
+  return { vars, err: error(sumMacros(vars.map((v) => macrosForAmount(v.food.per100, v.grams))), input.target) };
+}
+
+/** Number of food combinations tried per meal; the one that fits the meal targets best wins. */
+const ATTEMPTS = 8;
+
+/** One meal: tries several food combinations (deterministically, from the seed) and keeps the closest to the targets. */
+export function generateMeal(input: SlotInput): PlanLine[] {
+  let best = attempt(input, input.rotation);
+  for (let i = 1; i < ATTEMPTS && best.err > 0.004; i++) {
+    const next = attempt(input, `${input.rotation}#${i}`);
+    if (next.err + 1e-9 < best.err) best = next;
+  }
+  return best.vars
     .filter((v) => v.grams > 0)
     .map((v) => ({ slot: input.slot, foodId: v.food.id, grams: v.grams, macros: macrosForAmount(v.food.per100, v.grams) }));
 }

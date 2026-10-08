@@ -152,6 +152,8 @@ export const REFERENCE_RULES: readonly ReferenceRule[] = [
   { store: 'foodLogs', field: 'plannedItemId', target: 'plannedItems' },
   { store: 'foodLogs', field: 'snapshot.foodId', target: 'foods' },
   { store: 'userFoods', field: 'foodId', target: 'foods' },
+  { store: 'userExercises', field: 'exerciseId', target: 'exercises' },
+  { store: 'exerciseNotes', field: 'exerciseId', target: 'exercises' },
   { store: 'userEquipment', field: 'equipmentId', target: 'equipment' },
   { store: 'programVersions', field: 'programId', target: 'programs' },
   { store: 'planChanges', field: 'toVersionId', target: 'programVersions' },

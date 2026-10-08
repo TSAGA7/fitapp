@@ -1,0 +1,86 @@
+/* Glass layer: translucent surfaces over a soft colored backdrop. Loaded last, so it overrides the flat styles. */
+:root {
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-line: rgba(15, 23, 42, 0.07);
+  --blur: blur(22px) saturate(170%);
+}
+body { background: var(--bg); }
+.app-shell::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(60% 38% at 8% 0%, rgba(163, 230, 53, 0.30), transparent 70%),
+    radial-gradient(55% 40% at 100% 18%, rgba(6, 95, 70, 0.16), transparent 70%),
+    radial-gradient(60% 40% at 0% 62%, rgba(167, 139, 250, 0.14), transparent 70%),
+    radial-gradient(60% 40% at 100% 100%, rgba(163, 230, 53, 0.20), transparent 70%),
+    var(--bg);
+}
+.card, .list-item, .metric, .tile, .option {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 10px 30px rgba(15, 23, 42, 0.07);
+}
+.card.flat { background: rgba(255, 255, 255, 0.45); box-shadow: none; border-color: var(--glass-border); }
+.option[aria-pressed='true'] { background: rgba(236, 253, 245, 0.8); border-color: var(--primary); }
+.input, .select { background: var(--glass-strong); border-color: rgba(15, 23, 42, 0.08); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.chip { background: var(--glass); border-color: var(--glass-line); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.chip[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); }
+.segmented { background: rgba(15, 23, 42, 0.06); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.icon-btn { background: var(--glass); border-color: var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.icon-btn.ghost { background: transparent; }
+.set-row { background: rgba(255, 255, 255, 0.55); }
+.sheet { background: var(--glass-strong); -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%); border: 1px solid var(--glass-border); border-bottom: 0; }
+.sheet-backdrop { background: rgba(15, 23, 42, 0.30); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.pbar { background: rgba(15, 23, 42, 0.08); }
+
+/* Floating bottom bar, like in Instagram: transparent glass, no hard border */
+.bottom-nav {
+  left: 50%; bottom: calc(8px + var(--safe-b)); height: var(--nav-h); padding-bottom: 0;
+  width: min(calc(100% - 24px), 456px); border-radius: 30px; border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.50);
+  -webkit-backdrop-filter: blur(28px) saturate(190%); backdrop-filter: blur(28px) saturate(190%);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.14);
+}
+.bottom-nav a[aria-current='page'] .nav-ic { background: rgba(6, 95, 70, 0.12); }
+.screen { padding-bottom: calc(var(--nav-h) + var(--safe-b) + 44px); }
+.screen.no-nav { padding-bottom: calc(150px + var(--safe-b)); }
+
+/* Sticky save bar: always reachable, whatever the scroll position or keyboard state */
+.save-bar { position: sticky; bottom: calc(12px + var(--safe-b)); z-index: 20; padding: 8px; margin: 0 -8px; border-radius: 30px; background: rgba(255, 255, 255, 0.55); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); }
+
+/* Equipment rows */
+.eq-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); background: var(--glass); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.eq-row .check { width: 44px; height: 44px; flex: none; border-radius: 14px; border: 2px solid rgba(15, 23, 42, 0.18); background: rgba(255, 255, 255, 0.7); display: grid; place-items: center; color: #fff; }
+.eq-row .check[aria-checked='true'] { background: var(--primary); border-color: var(--primary); }
+.eq-row .eq-main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 4px 0; }
+.eq-yes { color: var(--primary); font-weight: 600; }
+.eq-no { color: var(--muted); }
+
+/* Nutrition */
+.ring-num { font-size: 28px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; }
+.ring-cap { font-size: 11px; line-height: 14px; color: var(--muted); font-weight: 500; max-width: 80px; }
+.macro-strip { display: grid; gap: 4px; padding: 8px 12px; border-radius: var(--r-md); background: rgba(255, 255, 255, 0.5); border: 1px solid var(--glass-border); }
+.macro-line { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; }
+.macro-line.muted { color: var(--muted); font-weight: 500; }
+.macro-line .ml-label { width: 64px; color: var(--muted); font-weight: 500; }
+.macro-line .dot { margin-right: 3px; }
+
+/* ---- rest timer & exercise notes */
+.rest-panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 5; }
+.rest-time { font-size: 56px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.rest-cue { text-align: center; min-height: 1.6em; }
+.rest-boss { text-align: center; padding: 28px 8px; }
+.note-reminder { border-left: 3px solid var(--lime, #c6f432); padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,.06); }
+.rest-pick { padding: 0 2px; }
+
+/* ---- month calendar */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-head { text-align: center; opacity: .7; }
+.cal-day { aspect-ratio: 1; border-radius: 12px; border: 1px solid transparent; background: rgba(255,255,255,.05); color: inherit; font: inherit; position: relative; }
+.cal-day[data-today="true"] { border-color: var(--lime, #c6f432); }
+.cal-day[aria-pressed="true"] { background: rgba(198,244,50,.22); }
+.cal-day[data-done="true"]::after, .cal-day[data-planned="true"]::after { content: ''; position: absolute; bottom: 5px; left: 50%; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--lime, #c6f432); }
+.cal-day[data-planned="true"]:not([data-done="true"])::after { background: transparent; border: 1.5px solid var(--lime, #c6f432); }
+.cal-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 4px 0 10px; border: 1.5px solid var(--lime, #c6f432); }
+.cal-dot.done { background: var(--lime, #c6f432); }

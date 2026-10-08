@@ -257,6 +257,8 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
     equipment: core('equipment') as never,
     userEquipment: core('userEquipment') as never,
     exercises: core('exercises') as never,
+    userExercises: core('userExercises') as never,
+    exerciseNotes: core('exerciseNotes') as never,
     foods: new FoodRepo(db.foods as never, 'foods', now),
     userFoods: core('userFoods') as never,
     nutritionTargets: new TargetsRepo(db.nutritionTargets as never, 'nutritionTargets', now),

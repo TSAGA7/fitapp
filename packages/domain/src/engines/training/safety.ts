@@ -10,6 +10,9 @@ export interface SafetyContext {
   experience: Experience;
   /** Today's instant (ISO) to judge how recent the pain events are. */
   now: string;
+  /** Exercise ids the user marked as comfortable / uncomfortable. */
+  liked?: ReadonlySet<string>;
+  disliked?: ReadonlySet<string>;
 }
 
 export interface ExerciseAssessment {
@@ -117,7 +120,7 @@ export function rankSubstitutes(original: Exercise, catalog: readonly Exercise[]
     const samePattern = ex.movementPattern === original.movementPattern;
     const overlap = ex.primaryMuscles.filter((m) => original.primaryMuscles.includes(m)).length;
     if (!curated && !samePattern && overlap === 0) continue;
-    const score = (curated ? 10 : 0) + (samePattern ? 4 : 0) + overlap * 3 - assessment.risk * 0.5 - (assessment.status === 'caution' ? 1 : 0);
+    const score = (curated ? 10 : 0) + (samePattern ? 4 : 0) + overlap * 3 - assessment.risk * 0.5 - (assessment.status === 'caution' ? 1 : 0) + (ctx.liked?.has(ex.id) ? 3 : 0) - (ctx.disliked?.has(ex.id) ? 8 : 0);
     out.push({ exercise: ex, assessment, score, curated });
   }
   return out.sort((a, b) => b.score - a.score || a.exercise.name.localeCompare(b.exercise.name, 'ru')).slice(0, limit);

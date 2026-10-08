@@ -25,6 +25,8 @@ import {
   type ProgramVersion,
   type UserEquipment,
   type UserFood,
+  type UserExercise,
+  type ExerciseNote,
   type WorkoutSession,
   type LocalDate,
   type MetricPoint,
@@ -74,6 +76,8 @@ export interface Snapshot {
   painEvents: PainEvent[];
   foods: Food[];
   userFoods: UserFood[];
+  userExercises: UserExercise[];
+  exerciseNotes: ExerciseNote[];
   foodLogs: FoodLog[];
   program: Program | undefined;
   versions: ProgramVersion[];
@@ -168,6 +172,8 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       painEvents: await r.painEvents.listAll(),
       foods: await r.foods.listAll(),
       userFoods: await r.userFoods.listAll(),
+      userExercises: await r.userExercises.listAll(),
+      exerciseNotes: await r.exerciseNotes.listAll(),
       foodLogs: logs,
       program,
       versions,
@@ -175,7 +181,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       changes: (await r.programs.listChanges()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
       targets: await r.nutritionTargets.activeOn(today),
       mealWeeks,
-      plannedSessions: await r.plannedSessions.listByDateRange({ from: addDays(today, -30), to: addDays(today, 28) }),
+      plannedSessions: (await r.plannedSessions.listByDateRange({ from: addDays(today, -30), to: addDays(today, 28) })).filter((p) => p.workoutKey !== 'bodyweight'),
       openSession: allSessions.find((x) => x.status === 'in_progress'),
     };
   });

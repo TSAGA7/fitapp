@@ -7,7 +7,9 @@ import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_L
 import { getDisplayName, setDisplayName } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
+import { ExerciseCatalogScreen } from './ExerciseCatalog';
 import { ImportPanel } from './ImportPanel';
+import { TvaGuideScreen } from './TvaGuide';
 import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './ProfileMore';
 import { AddMeasurementSheet, AddWeightSheet, parseDecimal, ScreenHeader } from './shared';
 
@@ -31,6 +33,10 @@ export function Profile({ route }: { route: string[] }) {
       return <InjuriesScreen />;
     case 'versions':
       return <VersionsScreen />;
+    case 'exercises':
+      return <ExerciseCatalogScreen />;
+    case 'tva':
+      return <TvaGuideScreen />;
     default:
       return <ProfileHome />;
   }
@@ -42,8 +48,10 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'calendar', name: 'Расписание', to: 'profile/schedule' },
   { icon: 'box', name: 'Продукты', to: 'profile/foods' },
   { icon: 'gear', name: 'Оборудование', to: 'profile/equipment' },
+  { icon: 'training', name: 'Каталог упражнений', to: 'profile/exercises' },
+  { icon: 'leaf', name: 'Вакуум и дыхание', to: 'profile/tva' },
   { icon: 'shield', name: 'Болевые точки', to: 'profile/injuries' },
-  { icon: 'history', name: 'История версий', to: 'profile/versions' },
+  { icon: 'history', name: 'История изменений программы', to: 'profile/versions' },
   { icon: 'download', name: 'Экспорт и импорт', to: 'profile/data' },
 ];
 
@@ -137,8 +145,8 @@ function Personal() {
           {(Object.keys(JOB_LABELS) as JobActivity[]).map((v) => <option key={v} value={v}>{JOB_LABELS[v]}</option>)}
         </SelectField>
         {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
-        <Button block onClick={save}>Сохранить</Button>
       </div>
+      <div className="save-bar"><Button block onClick={save}>Сохранить</Button></div>
     </main>
   );
 }
@@ -267,7 +275,7 @@ function Schedule() {
       <WeekdayPicker schedule={schedule} onToggle={(d) => setSchedule((x) => ({ ...x, [d]: !x[d] }))} />
       <p className="t-caption">{count} {plural(count, ['тренировка', 'тренировки', 'тренировок'])} в неделю</p>
       {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
-      <Button block onClick={save} disabled={count < 1 || count > 6}>Сохранить</Button>
+      <div className="save-bar"><Button block onClick={save} disabled={count < 1 || count > 6}>Сохранить</Button></div>
     </main>
   );
 }

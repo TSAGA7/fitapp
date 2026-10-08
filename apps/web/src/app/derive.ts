@@ -25,6 +25,7 @@ export function planFoods(foods: readonly Food[], userFoods: readonly UserFood[]
         availability: u?.availability ?? 'always',
         excluded: u?.excluded ?? false,
         maxPerDayG: u?.maxPerDayG ?? null,
+        autoPlan: f.autoPlan !== false,
       };
     });
 }
@@ -34,13 +35,15 @@ export function availableEquipmentKeys(equipment: readonly Equipment[], userEqui
   return new Set(equipment.filter((e) => e.deletedAt === null && !off.has(e.id)).map((e) => e.id));
 }
 
-export function safetyContext(s: Pick<Snapshot, 'injuries' | 'painEvents' | 'equipment' | 'userEquipment' | 'profile'>, now: string): SafetyContext {
+export function safetyContext(s: Pick<Snapshot, 'injuries' | 'painEvents' | 'equipment' | 'userEquipment' | 'profile' | 'userExercises'>, now: string): SafetyContext {
   return {
     injuries: s.injuries.filter((i) => i.deletedAt === null && i.resolvedOn === null),
     painEvents: s.painEvents.filter((e): e is PainEvent => e.deletedAt === null),
     availableEquipment: availableEquipmentKeys(s.equipment, s.userEquipment),
     experience: s.profile?.experience ?? 'intermediate',
     now,
+    liked: new Set(s.userExercises.filter((u) => u.deletedAt === null && u.preference === 'like').map((u) => u.exerciseId)),
+    disliked: new Set(s.userExercises.filter((u) => u.deletedAt === null && u.preference === 'dislike').map((u) => u.exerciseId)),
   };
 }
 

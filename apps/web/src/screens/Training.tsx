@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDays, assessExercise, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
-import { createProgram, ensureSessions, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
+import { addDays, assessExercise, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
+import { createProgram, ensureSessions, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startBodyweightWorkout, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
@@ -9,7 +9,9 @@ import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
 import { ScreenHeader } from './shared';
 
-type View = 'week' | 'program' | 'history';
+type View = 'week' | 'month' | 'program' | 'history';
+
+const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
 export function Training() {
   const { snapshot: s } = useData();
@@ -41,9 +43,10 @@ export function Training() {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
-      <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
+      <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}
       {view === 'week' && <Week />}
+      {view === 'month' && <MonthView />}
       {view === 'program' && <ProgramView />}
       {view === 'history' && <History />}
     </main>
@@ -86,6 +89,15 @@ function Week() {
           </div>
         </Card>
       )}
+      <Card flat>
+        <div className="row between">
+          <div>
+            <div className="t-h3">Со своим весом</div>
+            <div className="t-small">Командировка, дом, нет зала: приседания, отжимания, мёртвый жук и другое.</div>
+          </div>
+          <Button size="sm" variant="secondary" icon="play" disabled={busy || !!open} onClick={async () => { const id = await run((d) => startBodyweightWorkout(d)); if (id) go(`workout/${id}`); }}>Начать</Button>
+        </div>
+      </Card>
       {sessions.length === 0 && <p className="note">Ближайших тренировок нет. Проверь дни тренировок в профиле.</p>}
       <div className="stack">
         {sessions.map((p) => {
@@ -266,16 +278,71 @@ function History() {
       <div className="section-title"><h2 className="t-h3">История тренировок</h2></div>
       {s.workouts.length === 0 ? (
         <>
-          <p className="note">Тренировок пока нет. Историю можно загрузить из Excel или резервной копии.</p>
-          <Button variant="secondary" icon="upload" onClick={() => go('profile/data')}>Загрузить историю</Button>
+          <p className="note">Тренировок пока нет. Они появятся здесь после первой записанной тренировки.</p>
         </>
       ) : (
         <div className="list">
           {s.workouts.slice(0, 30).map((w) => (
-            <ListItem key={w.id} icon="history" title={formatDay(w.date)} subtitle={`${w.names.slice(0, 3).join(', ')}${w.names.length > 3 ? ` и ещё ${w.names.length - 3}` : ''}`} trailing={`${w.sets} ${plural(w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go('progress/strength')} />
+            <ListItem key={w.id} icon="history" title={formatDay(w.date)} subtitle={`${w.names.slice(0, 3).join(', ')}${w.names.length > 3 ? ` и ещё ${w.names.length - 3}` : ''}`} trailing={`${w.sets} ${plural(w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${w.id}`)} />
           ))}
         </div>
       )}
+    </>
+  );
+}
+
+// ------------------------------------------------------------------ month
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Month calendar: tap a day to see what was done or planned. */
+function MonthView() {
+  const { snapshot: s } = useData();
+  const version = s.activeVersion!;
+  const [ym, setYm] = useState(() => ({ y: Number(s.today.slice(0, 4)), m: Number(s.today.slice(5, 7)) }));
+  const [picked, setPicked] = useState<string>(s.today);
+  const first = `${ym.y}-${pad2(ym.m)}-01`;
+  const daysIn = new Date(Date.UTC(ym.y, ym.m, 0)).getUTCDate();
+  const offset = WEEKDAYS.indexOf(weekdayOf(first));
+  const cells: (string | null)[] = [...Array(offset).fill(null), ...Array.from({ length: daysIn }, (_, i) => `${ym.y}-${pad2(ym.m)}-${pad2(i + 1)}`)];
+  const done = useMemo(() => new Map(s.workouts.map((w) => [w.date, w])), [s.workouts]);
+  const planned = useMemo(() => new Map(s.plannedSessions.filter((p) => p.deletedAt === null && p.status === 'planned').map((p) => [p.plannedDate, p])), [s.plannedSessions]);
+  const shift = (d: number) => setYm((c) => { const t = c.y * 12 + (c.m - 1) + d; return { y: Math.floor(t / 12), m: (t % 12) + 1 }; });
+  const labelOf = (key: string) => version.training.workouts.find((w) => w.key === key)?.label ?? 'Тренировка';
+  const day = done.get(picked);
+  const plan = planned.get(picked);
+  return (
+    <>
+      <Card>
+        <div className="stack">
+          <div className="row between">
+            <Button size="sm" variant="text" aria-label="Предыдущий месяц" onClick={() => shift(-1)}>←</Button>
+            <div className="t-h3">{MONTH_NAMES[ym.m - 1]} {ym.y}</div>
+            <Button size="sm" variant="text" aria-label="Следующий месяц" onClick={() => shift(1)}>→</Button>
+          </div>
+          <div className="cal-grid" role="grid" aria-label="Календарь тренировок">
+            {WEEKDAYS.map((w) => <span key={w} className="t-caption cal-head">{WEEKDAY_SHORT[w]}</span>)}
+            {cells.map((date, i) =>
+              date ? (
+                <button key={date} type="button" className="cal-day" aria-pressed={picked === date} data-today={date === s.today} data-done={done.has(date)} data-planned={planned.has(date)} aria-label={formatDateShort(date)} onClick={() => setPicked(date)}>
+                  {Number(date.slice(8))}
+                </button>
+              ) : (
+                <span key={`e${i}`} />
+              ),
+            )}
+          </div>
+          <div className="row t-caption"><span className="cal-dot done" /> сделано <span className="cal-dot planned" /> запланировано</div>
+        </div>
+      </Card>
+      <Card flat>
+        <div className="stack">
+          <div className="t-h3">{formatDay(picked)}</div>
+          {day && <ListItem icon="history" title="Тренировка выполнена" subtitle={day.names.slice(0, 4).join(', ')} trailing={`${day.sets} подх.`} onClick={() => go(`workout/${day.id}`)} />}
+          {plan && <ListItem icon="calendar" title={labelOf(plan.workoutKey)} subtitle="Запланировано" onClick={() => go('training')} />}
+          {!day && !plan && <p className="note">В этот день тренировки нет.</p>}
+        </div>
+      </Card>
     </>
   );
 }

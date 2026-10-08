@@ -54,9 +54,13 @@ async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typ
   const weekStart = startOfWeek(date, c.weekStartsOn);
   const plan = await ensurePlan(r, deps, weekStart, c.version.id, String(variation));
   const items = (await r.mealPlans.listItems(plan.id)).filter((i) => i.date === date);
-  const protectedLines = items.filter((i) => i.locked || (slots !== undefined && !slots.includes(i.slot))).map(toLine);
+  // Eaten (or skipped) items are facts: "redo" never touches them.
+  const logged = new Set<string>();
+  for (const i of items) if ((await r.foodLogs.listByPlannedItem(i.id)).some((l) => l.deletedAt === null)) logged.add(i.id);
+  const isKept = (i: PlannedItem): boolean => i.locked || logged.has(i.id) || (slots !== undefined && !slots.includes(i.slot));
+  const protectedLines = items.filter(isKept).map(toLine);
   const result = generateDayPlan({ targets: c.targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines.map((l) => ({ ...l, locked: true })), slots, avoidFoodIds: avoid });
-  const keepIds = new Set(items.filter((i) => i.locked || (slots !== undefined && !slots.includes(i.slot))).map((i) => i.id));
+  const keepIds = new Set(items.filter(isKept).map((i) => i.id));
   const now = deps.clock.now();
   const removed = items.filter((i) => !keepIds.has(i.id)).map((i) => ({ ...i, deletedAt: now }));
   const fresh = result.lines.filter((l) => !protectedLines.some((p) => p.slot === l.slot && p.foodId === l.foodId && p.grams === l.grams)).map((l) => toItem(deps, plan.id, date, l));
@@ -188,6 +192,23 @@ export async function undoLog(deps: AppDeps, logId: string): Promise<void> {
   await deps.uow.run((r) => r.foodLogs.softDelete(logId));
 }
 
+/** Changes the eaten amount of an entry that was not in the plan. */
+export async function setLogAmount(deps: AppDeps, logId: string, grams: number): Promise<void> {
+  await deps.uow.run(async (r) => {
+    if (!(grams > 0)) throw new Error('Укажите количество в граммах');
+    const log = (await r.foodLogs.listAll()).find((l) => l.id === logId);
+    if (!log) return;
+    await r.foodLogs.put({ ...log, actualAmountG: grams, macros: macrosForAmount(log.snapshot.per100, grams) });
+  });
+}
+
+/** Clears all marks of a meal: planned items become "not eaten yet", unplanned entries are removed. */
+export async function clearMealLogs(deps: AppDeps, date: string, slot: MealSlot): Promise<void> {
+  await deps.uow.run(async (r) => {
+    for (const l of (await r.foodLogs.listAll()).filter((x) => x.date === date && x.slot === slot && x.deletedAt === null)) await r.foodLogs.softDelete(l.id);
+  });
+}
+
 /** Something eaten that was not in the plan. */
 export async function logUnplanned(deps: AppDeps, input: { date: string; slot: MealSlot; foodId: string; grams: number }): Promise<void> {
   await deps.uow.run(async (r) => {
@@ -230,6 +251,7 @@ export async function createCustomFood(deps: AppDeps, input: CustomFoodInput): P
       ...createBase(id, deps.clock.now(), deps.deviceId),
       key: `custom_${id.replace(/-/g, '').slice(0, 16)}`,
       name: input.name.trim(),
+      autoPlan: true,
       brand: input.brand?.trim() || null,
       barcode: null,
       category: input.category,
