@@ -86,7 +86,7 @@ export function EquipmentScreen() {
   const isTreadmill = current?.key === 'treadmill';
   return (
     <main className="screen">
-      <ScreenHeader title="Оборудование" back="profile" />
+      <ScreenHeader title="Тренажёры" back="profile" />
       {banner}
       <p className="t-small">Поставь галочку у того, что есть в твоём зале. Нажми на название, чтобы задать шаг веса (для кардио-тренажёров — скорость или уровни). После изменений можно пересобрать программу на вкладке «Тренировки».</p>
       <div className="stack" style={{ gap: 8 }}>

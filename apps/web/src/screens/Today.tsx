@@ -5,7 +5,7 @@ import { eatenOf, itemsOnDate, logsOnDate, plannedOf } from '../app/derive';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
 import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signed } from '../app/format';
-import { getDisplayName } from '../app/prefs';
+import { getDisplayName, useVacationMode } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
@@ -16,6 +16,7 @@ import { AddMeasurementSheet, AddWeightSheet, parseDecimal } from './shared';
 const NBSP = '\u00a0';
 
 export function Today() {
+  const vacation = useVacationMode();
   const { snapshot: s } = useData();
   const [weightOpen, setWeightOpen] = useState(false);
   const [measureOpen, setMeasureOpen] = useState(false);
@@ -105,7 +106,13 @@ export function Today() {
 
       {banner}
       {bodyweight && s.activeVersion && <BodyweightCard />}
-      {s.activeVersion && (
+      {vacation && (
+        <div className="day-status vacation">
+          <span className="ds-emoji" aria-hidden="true">🥂</span>
+          <span>Я ща в Дубае, я ща отдыхаю</span>
+        </div>
+      )}
+      {!vacation && s.activeVersion && (
         <button type="button" className={`day-status ${trainingDay ? 'train' : 'rest'}`} onClick={() => go('training')}>
           <span className="ds-emoji" aria-hidden="true">{trainingDay ? '💪🏼' : '😎'}</span>
           <span>{trainingDay ? 'Сегодня пашем в зале' : 'Выходной. Сегодня кайфуй, но не сильно!'}</span>
@@ -124,7 +131,7 @@ export function Today() {
           <div className="t-small" style={{ marginTop: 6 }}>Белок {fmt(eatenToday.proteinG, 0)} из {fmt(targets.proteinG, 0)} г</div>
         </Card>
       )}
-      {lastWorkout ? (
+      {vacation ? null : lastWorkout ? (
         <ListItem icon="training" lime title="Последняя тренировка" subtitle={`${formatDay(lastWorkout.date)} · ${lastWorkout.exercises} ${plural(lastWorkout.exercises, ['упражнение', 'упражнения', 'упражнений'])} · ${lastWorkout.sets} ${plural(lastWorkout.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go('training')} />
       ) : (
         <Card flat>

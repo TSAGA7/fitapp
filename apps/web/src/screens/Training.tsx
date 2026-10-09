@@ -7,7 +7,7 @@ import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
-import { useBodyweightMode } from '../app/prefs';
+import { useBodyweightMode, useVacationMode } from '../app/prefs';
 import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
 import { CardioSheet } from './Cardio';
 import { ScreenHeader } from './shared';
@@ -22,12 +22,23 @@ export function Training() {
   const [view, setView] = useState<View>('week');
   const bodyweight = useBodyweightMode();
   const [cardioOpen, setCardioOpen] = useState(false);
+  const vacation = useVacationMode();
 
   // The calendar is derived from the active version: keep the next two weeks created.
   useEffect(() => {
     if (s.activeVersion) void run((d) => ensureSessions(d));
   }, [s.activeVersion?.id, s.profile?.updatedAt, s.today]);
 
+  if (vacation) {
+    return (
+      <main className="screen">
+        <ScreenHeader title="Тренировки" />
+        <Card flat>
+          <EmptyState icon="training" title="🍻" text="Разве эта вкладка похожа на барное меню? Иди отдыхай!" />
+        </Card>
+      </main>
+    );
+  }
   if (!s.activeVersion) {
     return (
       <main className="screen">

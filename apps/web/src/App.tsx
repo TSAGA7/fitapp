@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getAppRuntime, type AppRuntime } from './composition';
 import { DataProvider, useData } from './app/DataContext';
 import { useRoute } from './app/router';
-import { BottomNav } from './ui';
+import { BottomNav, Button, Sheet } from './ui';
 import { DesignSystem } from './screens/DesignSystem';
 import { Nutrition } from './screens/Nutrition';
 import { Onboarding } from './screens/Onboarding';
@@ -35,6 +35,30 @@ export function App({ runtime }: { runtime?: Promise<AppRuntime> }) {
   );
 }
 
+const BDAY_KEY = 'fitapp.birthdayShown';
+
+/** Shows the birthday greeting once per year, on the first launch that day. */
+function BirthdayGreeting({ birthDate }: { birthDate: string }) {
+  const now = new Date();
+  const ymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const isBirthday = birthDate.slice(5) === ymd.slice(5);
+  const [open, setOpen] = useState(() => {
+    if (!isBirthday) return false;
+    try { return localStorage.getItem(BDAY_KEY) !== ymd; } catch { return true; }
+  });
+  const close = () => {
+    try { localStorage.setItem(BDAY_KEY, ymd); } catch { /* storage may be unavailable */ }
+    setOpen(false);
+  };
+  if (!isBirthday) return null;
+  return (
+    <Sheet open={open} title="🎂 С днём рождения!" onClose={close}>
+      <p className="t-body">С др! Ты давай тоже особо не напрягайся в этот день, закрывай приложение!</p>
+      <Button onClick={close}>Ладно</Button>
+    </Sheet>
+  );
+}
+
 function Gate() {
   const { snapshot } = useData();
   const route = useRoute();
@@ -44,6 +68,7 @@ function Gate() {
   const tab = ['today', 'nutrition', 'training', 'progress', 'profile'].includes(route[0] as string) ? (route[0] as string) : 'today';
   return (
     <>
+      <BirthdayGreeting birthDate={snapshot.profile.birthDate} />
       {tab === 'today' && <Today />}
       {tab === 'nutrition' && <Nutrition />}
       {tab === 'training' && <Training />}

@@ -208,3 +208,6 @@ html, body { overflow-x: hidden; }
 [data-theme='dark'] .warn { background: var(--warning-50); border-color: #5c4a14; color: #fcd34d; }
 [data-theme='dark'] .errbox { background: var(--danger-50); border-color: #6b2323; color: #fca5a5; }
 [data-theme='dark'] .water-input { color: var(--text); }
+
+.day-status.vacation { background: linear-gradient(135deg, rgba(251, 191, 36, 0.28), rgba(244, 114, 182, 0.2)); color: #7c2d12; border-color: rgba(251, 191, 36, 0.4); }
+[data-theme='dark'] .day-status.vacation { background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(244, 114, 182, 0.16)); color: #fde68a; border-color: rgba(251, 191, 36, 0.3); }

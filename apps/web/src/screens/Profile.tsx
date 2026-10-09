@@ -52,7 +52,7 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'ruler', name: 'Замеры и вес', to: 'profile/body' },
   { icon: 'calendar', name: 'Расписание', to: 'profile/schedule' },
   { icon: 'basket', name: 'Продукты', to: 'profile/foods' },
-  { icon: 'gear', name: 'Оборудование', to: 'profile/equipment' },
+  { icon: 'gear', name: 'Тренажёры', to: 'profile/equipment' },
   { icon: 'training', name: 'Каталог упражнений', to: 'profile/exercises' },
   { icon: 'leaf', name: 'Поперечная мышца', to: 'profile/tva' },
   { icon: 'heart', name: 'Кардио', to: 'profile/cardio' },
