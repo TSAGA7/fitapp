@@ -5,7 +5,7 @@ import { eatenOf, itemsOnDate, logsOnDate, plannedOf } from '../app/derive';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
 import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signed } from '../app/format';
-import { getDisplayName, useVacationMode } from '../app/prefs';
+import { getDisplayName, setBeerMl, useBeerMl, useVacationMode } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
@@ -171,7 +171,7 @@ export function Today() {
         </Card>
       )}
 
-      <WaterCard recommendedMl={recommended} />
+      {vacation ? <BeerCard /> : <WaterCard recommendedMl={recommended} />}
 
       {(measureAge === null || measureAge > 14) && (
         <ListItem icon="ruler" title={measureAge === null ? 'Добавь замеры' : 'Пора обновить замеры'} subtitle={measureAge === null ? 'Грудь, талия, бицепс, бедро: так видно прогресс, который не показывают весы' : `Последний замер ${measureAge}${NBSP}${plural(measureAge, ['день', 'дня', 'дней'])} назад`} onClick={() => setMeasureOpen(true)} />
@@ -203,6 +203,52 @@ function lastWorkoutToday(s: { workouts: { date: string }[]; today: string }): b
 }
 
 const WATER_DONE = 'Да ты чё? Базару нет!';
+
+function BeerCard() {
+  const { snapshot: s } = useData();
+  const ml = useBeerMl(s.today);
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState('');
+  const commit = () => {
+    setEditing(false);
+    const l = parseDecimal(text);
+    if (text.trim() !== '' && Number.isFinite(l) && l >= 0) setBeerMl(s.today, l * 1000);
+  };
+  return (
+    <Card>
+      <div className="row between">
+        <div className="row">
+          <span className="li-icon lime" aria-hidden="true" style={{ fontSize: 20 }}>🍺</span>
+          <div>
+            <div className="t-caption">Пиво сегодня</div>
+            <div className="t-h3">
+              {editing ? (
+                <input
+                  className="water-input"
+                  autoFocus
+                  inputMode="decimal"
+                  aria-label="Выпито пива, литров"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onBlur={commit}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditing(false); }}
+                />
+              ) : (
+                <button type="button" className="water-value" aria-label="Ввести количество пива вручную" onClick={() => { setText(String(ml / 1000).replace('.', ',')); setEditing(true); }}>{fmt(ml / 1000, 2)}</button>
+              )}
+              {NBSP}л
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <IconButton icon="minus" label="Убрать 500 мл" disabled={ml === 0} onClick={() => setBeerMl(s.today, Math.max(0, ml - 500))} />
+          <IconButton icon="plus" label="Добавить 500 мл" onClick={() => setBeerMl(s.today, ml + 500)} />
+        </div>
+      </div>
+      <p className="t-small" style={{ marginTop: 10 }}>В отпуске считаем пиво. Кнопки добавляют по 0,5 л (кружка), своё число вводится нажатием на литры. Примерно 43 ккал на 100 мл, так что литр — около 430 ккал.</p>
+    </Card>
+  );
+}
 
 function WaterCard({ recommendedMl }: { recommendedMl: number }) {
   const { snapshot: s, act } = useData();

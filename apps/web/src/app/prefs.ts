@@ -138,3 +138,45 @@ export function useVacationMode(): boolean {
     () => isVacationMode(),
   );
 }
+
+/** Beer drunk per day in holiday mode (millilitres). Phone-only, like the mode itself. */
+const BEER_KEY = 'fitapp.beer';
+const beerListeners = new Set<() => void>();
+let beerCache: Record<string, number> | null = null;
+
+function readBeer(): Record<string, number> {
+  if (beerCache) return beerCache;
+  try {
+    const raw = window.localStorage.getItem(BEER_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    beerCache = parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    beerCache = {};
+  }
+  return beerCache;
+}
+export function getBeerMl(date: string): number {
+  const v = readBeer()[date];
+  return typeof v === 'number' && v > 0 ? v : 0;
+}
+export function setBeerMl(date: string, ml: number): void {
+  const next = { ...readBeer() };
+  if (ml > 0) next[date] = Math.round(ml);
+  else delete next[date];
+  beerCache = next;
+  try {
+    window.localStorage.setItem(BEER_KEY, JSON.stringify(next));
+  } catch {
+    /* storage unavailable: the number lives until the page is closed */
+  }
+  beerListeners.forEach((l) => l());
+}
+export function useBeerMl(date: string): number {
+  return useSyncExternalStore(
+    (cb) => {
+      beerListeners.add(cb);
+      return () => beerListeners.delete(cb);
+    },
+    () => getBeerMl(date),
+  );
+}
