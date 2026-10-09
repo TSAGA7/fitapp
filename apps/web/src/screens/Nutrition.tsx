@@ -24,6 +24,7 @@ import { useData } from '../app/DataContext';
 import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, SLOT_ORDER, userFoodOf } from '../app/derive';
 import { fmt, formatDateShort, formatDay, WEEKDAY_SHORT } from '../app/format';
 import { useCommand } from '../app/useCommand';
+import { useVacationMode } from '../app/prefs';
 import type { FoodLog } from '@fitapp/domain';
 import { Badge, Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, TextField, type ChartSeries } from '../ui';
 import { isBarcode, lookupBarcode } from '../app/openFoodFacts';
@@ -80,6 +81,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const eaten = eatenOf(logs);
   // The day as it will be: what was really eaten plus what is still planned.
   const planned = sumMacros([eaten, plannedOf(items.filter((i) => !logs.some((l) => l.plannedItemId === i.id)))]);
+  const vacation = useVacationMode();
   const [slotForAdd, setSlotForAdd] = useState<{ slot: MealSlot; scan: boolean } | null>(null);
   const [itemSheet, setItemSheet] = useState<PlannedItem | null>(null);
   const [logSheet, setLogSheet] = useState<FoodLog | null>(null);
@@ -101,6 +103,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
     <>
       <DayNav date={date} setDate={setDate} today={s.today} />
       {banner}
+      {vacation && <Card flat><p className="t-small">🏖️ Режим «Отпуск»: рацион из пиццы, роллов, бургеров, пива и вина. Калории подогнаны под норму, белка в такой еде мало, поэтому он будет ниже. Выключается в профиле.</p></Card>}
       {adjustment && !dismissed && (
         <Card>
           <div className="stack">
@@ -409,16 +412,16 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
           />
         ) : !food ? (
           <>
-            <TextField label="Поиск продукта" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" autoFocus />
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <Button variant="secondary" icon="scan" onClick={() => setScanning(true)}>Сканировать штрих-код</Button>
+              <Button variant="secondary" icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
+            </div>
+            <TextField label="Поиск продукта" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" />
             <div className="list">
               {foods.map((f) => (
                 <ListItem key={f.id} title={f.name} subtitle={`${CATEGORY_LABELS[f.category]} · ${fmt(f.per100.kcal, 0)} ккал/100 г`} onClick={() => { setPicked(f.id); setGrams(f.gramsPerPiece ? String(f.gramsPerPiece) : '100'); }} />
               ))}
               {foods.length === 0 && <p className="note">Ничего не найдено.</p>}
-            </div>
-            <div className="row" style={{ flexWrap: 'wrap' }}>
-              <Button variant="secondary" icon="scan" onClick={() => setScanning(true)}>Сканировать штрих-код</Button>
-              <Button variant="secondary" icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
             </div>
           </>
         ) : (

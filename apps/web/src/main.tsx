@@ -1,11 +1,19 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { applyTheme } from './app/prefs';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';
 import './styles/screens.css';
 import './styles/glass.css';
+
+applyTheme();
+try {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+} catch {
+  /* old browser: the theme is applied once */
+}
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>

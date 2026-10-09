@@ -38,7 +38,14 @@ export function BarcodeScanner({ onCode, onCancel }: { onCode: (code: string) =>
 
   return (
     <div className="stack">
-      {problem ? <div className="note">{problem}</div> : <video ref={video} className="scan-video" playsInline muted autoPlay aria-label="Камера для штрих-кода" />}
+      {problem ? (
+        <div className="note">{problem}</div>
+      ) : (
+        <div className="scan-box">
+          <video ref={video} className="scan-video" playsInline muted autoPlay aria-label="Камера для штрих-кода" />
+          <div className="scan-line" aria-hidden="true" />
+        </div>
+      )}
       {!problem && <p className="t-small">Наведи камеру на штрих-код на упаковке, держи ровно и при хорошем свете.</p>}
       <TextField label="Или введи цифры штрих-кода" inputMode="numeric" value={typed} onChange={(e) => setTyped(e.target.value.replace(/\D/g, ''))} />
       <div className="row">

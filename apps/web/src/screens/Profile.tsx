@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useCommand } from '../app/useCommand';
 import { ageYears, isLocalDate, type Experience, type FocusArea, type GoalType, type JobActivity, type Sex, type TrainingSchedule, type Weekday, WEEKDAYS } from '@fitapp/domain';
-import { saveGoal, updateProfile } from '../actions';
+import { applyDietMode, saveGoal, updateProfile } from '../actions';
 import { useData } from '../app/DataContext';
 import { deleteMetric } from '../actions';
 import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, WEEKDAY_SHORT, cm } from '../app/format';
-import { getDisplayName, setDisplayName } from '../app/prefs';
+import { getDisplayName, setDisplayName, setTheme, setVacationMode, useTheme, useVacationMode, type ThemeChoice } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
 import { ExerciseCatalogScreen } from './ExerciseCatalog';
@@ -93,6 +94,7 @@ function ProfileHome() {
           <Icon name="chevronRight" size={18} />
         </div>
       </Card>
+      <VacationButton />
       <div className="grid-3">
         {TILES.map((t) => (
           <button key={t.name} type="button" className="tile" aria-disabled={t.to ? undefined : true} onClick={() => t.to && go(t.to)}>
@@ -105,6 +107,42 @@ function ProfileHome() {
         ))}
       </div>
     </main>
+  );
+}
+
+function VacationButton() {
+  const on = useVacationMode();
+  const { banner, run } = useCommand();
+  const toggle = async () => {
+    setVacationMode(!on);
+    await run((d) => applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000));
+  };
+  return (
+    <>
+      <button type="button" className={`vacation-btn${on ? ' on' : ''}`} aria-pressed={on} onClick={() => void toggle()}>
+        <span className="vb-ic" aria-hidden="true">🏖️</span>
+        <span className="grow">
+          <span className="li-title" style={{ display: 'block' }}>Отпуск</span>
+          <span className="li-sub" style={{ display: 'block' }}>{on ? 'Включён: рацион из пиццы, роллов, бургеров, пива и вина. Нажми ещё раз, и вернётся здоровое питание.' : 'Рацион из пиццы, роллов, бургеров, пива и вина. Выключишь, и сразу вернётся здоровое питание.'}</span>
+        </span>
+        {on && <Icon name="check" size={22} />}
+      </button>
+      {banner}
+    </>
+  );
+}
+
+const THEME_LABELS: Record<ThemeChoice, string> = { system: 'Системная', light: 'Светлая', dark: 'Тёмная' };
+
+/** Appearance: follow the phone (day / night) or force light or dark. Applied at once, no need to press "Сохранить". */
+function ThemePicker() {
+  const theme = useTheme();
+  return (
+    <div className="field">
+      <span className="lbl">Оформление</span>
+      <Segmented<ThemeChoice> label="Оформление" options={(Object.keys(THEME_LABELS) as ThemeChoice[]).map((v) => ({ value: v, label: THEME_LABELS[v] }))} value={theme} onChange={setTheme} />
+      {theme === 'system' && <span className="hint">Приложение повторяет тему телефона: днём светлая, ночью тёмная.</span>}
+    </div>
   );
 }
 
@@ -149,6 +187,7 @@ function Personal() {
         <SelectField label="Активность в течение дня" value={job} onChange={(e) => setJob(e.target.value as JobActivity)}>
           {(Object.keys(JOB_LABELS) as JobActivity[]).map((v) => <option key={v} value={v}>{JOB_LABELS[v]}</option>)}
         </SelectField>
+        <ThemePicker />
         {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
       </div>
       <div className="save-bar"><Button block onClick={save}>Сохранить</Button></div>

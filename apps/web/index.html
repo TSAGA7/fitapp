@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Fitapp</title>
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      /* Set the theme before the first paint so a dark phone does not flash white. */
+      (function () {
+        try {
+          var c = localStorage.getItem('fitapp.theme');
+          var dark = c === 'dark' || (c !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
     <meta name="theme-color" content="#065F46" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />

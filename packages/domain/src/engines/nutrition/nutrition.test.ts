@@ -86,6 +86,18 @@ describe('meal plan', () => {
       }
     }
   });
+  it('vacation mode builds the day from holiday food only and still lands near the calories', () => {
+    const t = { kcal: 1865, proteinG: 180, fatG: 65, carbG: 140, fiberG: 26, waterMl: 2700 };
+    const holiday = /^(pizza_|[a-z]+_pizza_|vit_|bk_|rostics_|roll_|maki_|nigiri_|sushi_rolls|gunkan|philadelphia_roll|california_roll|baked_roll|tempura_roll|spicy_roll|unagi_roll|chicken_roll|inari|dodo_|cheburek|samsa_meat|teremok_|potato_fries|nuggets_chicken|gyoza|shrimp_tempura|salad_|pie_|bun_|croissant|vatrushka_|latte|juice_|cola|sprite|fanta|energy_drink|beer_|wine_|champagne_)/;
+    for (let i = 0; i < 12; i++) {
+      const plan = generateDayPlan({ targets: t, foods, seed: `v${i}`, mode: 'vacation' });
+      expect(plan.lines.length).toBeGreaterThanOrEqual(6);
+      for (const l of plan.lines) expect(holiday.test(l.foodId), l.foodId).toBe(true);
+      expect(Math.abs(plan.deviation.kcal), `seed ${i}`).toBeLessThan(0.12);
+    }
+    const normal = generateDayPlan({ targets: t, foods, seed: 'v0' });
+    expect(normal.lines.some((l) => /^(pizza_|beer_|wine_|champagne_)/.test(l.foodId))).toBe(false);
+  });
   it('another seed gives another set of foods', () => {
     const ids = (seed: string) => generateDayPlan({ targets, foods, seed }).lines.map((l) => l.foodId).join();
     const variants = new Set(['a', 'b', 'c', 'd', 'e'].map(ids));

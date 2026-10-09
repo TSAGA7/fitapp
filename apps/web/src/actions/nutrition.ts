@@ -21,6 +21,7 @@ import {
   type Repositories,
 } from '@fitapp/domain';
 import { planFoods } from '../app/derive';
+import { isVacationMode } from '../app/prefs';
 
 const baseOf = (deps: AppDeps) => createBase(deps.ids.newId(), deps.clock.now(), deps.deviceId);
 
@@ -75,7 +76,7 @@ async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typ
   const used = outside.reduce((a, l) => ({ kcal: a.kcal + l.macros.kcal, proteinG: a.proteinG + l.macros.proteinG, fatG: a.fatG + l.macros.fatG, carbG: a.carbG + l.macros.carbG, fiberG: a.fiberG + l.macros.fiberG }), { kcal: 0, proteinG: 0, fatG: 0, carbG: 0, fiberG: 0 });
   const left = (n: number, u: number) => Math.max(0, n - u);
   const targets = { ...c.targets, kcal: left(c.targets.kcal, used.kcal), proteinG: left(c.targets.proteinG, used.proteinG), fatG: left(c.targets.fatG, used.fatG), carbG: left(c.targets.carbG, used.carbG), fiberG: left(c.targets.fiberG, used.fiberG) };
-  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, slots, avoidFoodIds: avoid });
+  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, slots, avoidFoodIds: avoid, mode: isVacationMode() ? 'vacation' : 'normal' });
   const keepIds = new Set(items.filter(isKept).map((i) => i.id));
   const fixedLines = [...protectedLines, ...partialLines];
   const now = deps.clock.now();
@@ -106,6 +107,24 @@ export async function generateWeekPlan(deps: AppDeps, weekStart: string, variati
       const date = addDays(weekStart, i);
       if (date < c.today) continue;
       await fillDay(r, deps, c, date, variation);
+    }
+  });
+}
+
+/**
+ * The diet mode ("Отпуск" on or off) changed: the meals of today and the coming days that are not eaten or locked are rebuilt at once,
+ * this week and the next one (when it already has a plan).
+ */
+export async function applyDietMode(deps: AppDeps, variation: number): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const c = await context(r, deps);
+    for (let w = 0; w < 2; w++) {
+      const weekStart = startOfWeek(addDays(c.today, w * 7), c.weekStartsOn);
+      if (w > 0 && !(await r.mealPlans.getByWeek(weekStart))) continue;
+      for (let i = 0; i < 7; i++) {
+        const date = addDays(weekStart, i);
+        if (date >= c.today) await fillDay(r, deps, c, date, variation);
+      }
     }
   });
 }

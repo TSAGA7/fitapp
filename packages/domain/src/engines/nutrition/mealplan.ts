@@ -32,6 +32,8 @@ export interface PlanLine {
 interface Role {
   name: string;
   categories: FoodCategory[];
+  /** Holiday mode: picks foods by id instead of by category (and ignores the autoPlan flag). */
+  match?: (f: PlanFood) => boolean;
   min: number;
   max: number;
   start: number;
@@ -56,6 +58,36 @@ const SNACK: Role[] = [
 ];
 const ROLES: Record<MealSlot, Role[]> = { breakfast: BREAKFAST, lunch: MAIN, dinner: MAIN, snack: SNACK };
 
+/** "Отпуск": holiday food. Foods are recognised by their catalog keys, so the user's own foods never end up here by accident. */
+export const VACATION_MEALS = /^(pizza_|[a-z]+_pizza_|vit_(hamburger|cheeseburger|double_cheese|big_hit|big_tasty|chicken_burger|fish)$|bk_(whopper|double_whopper|cheeseburger|long_chicken|chicken_king)$|rostics_(boxmaster|twister|burger)$|roll_|maki_|nigiri_|sushi_rolls$|gunkan$|philadelphia_roll$|california_roll$|baked_roll$|tempura_roll$|spicy_roll$|unagi_roll$|chicken_roll$|inari$|dodo_dodster_|cheburek$|samsa_meat$|teremok_blin_(ham|chicken|meat|salmon)$)/;
+const VACATION_SIDES = /^(potato_fries$|nuggets_chicken$|vit_(fries|nuggets|strips|wings)$|bk_(fries|nuggets|onion_rings|wings)$|rostics_(fries|nuggets|potato_country|leg|wings|strips)$|dodo_(wings|cheese_sticks)$|gyoza$|shrimp_tempura$|salad_(olivier|crab|mimosa|herring_fur_coat|caesar_chicken|caesar_shrimp|crispy_eggplant|greek)$)/;
+const VACATION_BAKERY = /^(pie_|bun_|croissant|vatrushka_|vit_apple_pie$|teremok_blin_(jam|condensed)$)/;
+const VACATION_ALCOHOL = /^(beer_(lager|dark|wheat|ipa)$|wine_|champagne_)/;
+const VACATION_SOFT = /^(cola$|sprite$|fanta$|juice_|latte$|energy_drink$)/;
+const VACATION_SWEETS = /^(dodo_(brownie|cheesecake)$)/;
+const byId = (re: RegExp) => (f: PlanFood): boolean => re.test(f.id);
+const VAC_BREAKFAST: Role[] = [
+  { name: 'bake', categories: [], match: byId(VACATION_BAKERY), min: 60, max: 240, start: 120 },
+  { name: 'drink', categories: [], match: byId(/^(latte$|juice_)/), min: 200, max: 400, start: 250, fixed: true },
+];
+const VAC_MAIN: Role[] = [
+  { name: 'main', categories: [], match: byId(VACATION_MEALS), min: 100, max: 450, start: 250 },
+  { name: 'side', categories: [], match: byId(VACATION_SIDES), min: 50, max: 250, start: 120 },
+  { name: 'drink', categories: [], match: byId(VACATION_SOFT), min: 200, max: 500, start: 330, fixed: true },
+];
+const VAC_DINNER: Role[] = [
+  { name: 'main', categories: [], match: byId(VACATION_MEALS), min: 100, max: 450, start: 250 },
+  { name: 'side', categories: [], match: byId(VACATION_SIDES), min: 50, max: 250, start: 120 },
+  { name: 'alcohol', categories: [], match: byId(VACATION_ALCOHOL), min: 150, max: 500, start: 330, fixed: true },
+];
+const VAC_SNACK: Role[] = [
+  { name: 'sweet', categories: [], match: byId(new RegExp(`${VACATION_SWEETS.source}|${VACATION_BAKERY.source}`)), min: 40, max: 200, start: 90 },
+  { name: 'alcohol', categories: [], match: byId(/^(wine_|champagne_)/), min: 100, max: 250, start: 150, fixed: true },
+];
+const VACATION_ROLES: Record<MealSlot, Role[]> = { breakfast: VAC_BREAKFAST, lunch: VAC_MAIN, dinner: VAC_DINNER, snack: VAC_SNACK };
+
+export type DietMode = 'normal' | 'vacation';
+
 const PREF_RANK: Record<Preference, number> = { love: 0, like: 1, ok: 2, avoid: 3 };
 
 function hash(s: string): number {
@@ -77,8 +109,9 @@ function snapGrams(f: PlanFood, grams: number, min: number, max: number): number
 }
 
 /** Candidate foods for a role: allowed by the user's preferences, best preference first, rotated by the seed. */
-export function candidatesFor(foods: readonly PlanFood[], role: Pick<Role, 'categories'>, rotation: string, avoidIds: ReadonlySet<string> = new Set()): PlanFood[] {
-  const ok = foods.filter((f) => role.categories.includes(f.category) && f.autoPlan !== false && !f.excluded && f.preference !== 'avoid' && f.availability !== 'rare' && !avoidIds.has(f.id));
+export function candidatesFor(foods: readonly PlanFood[], role: Pick<Role, 'categories' | 'match'>, rotation: string, avoidIds: ReadonlySet<string> = new Set()): PlanFood[] {
+  const inRole = (f: PlanFood): boolean => (role.match ? role.match(f) : role.categories.includes(f.category) && f.autoPlan !== false);
+  const ok = foods.filter((f) => inRole(f) && !f.excluded && f.preference !== 'avoid' && f.availability !== 'rare' && !avoidIds.has(f.id));
   const sorted = [...ok].sort((a, b) => PREF_RANK[a.preference] - PREF_RANK[b.preference] || a.name.localeCompare(b.name, 'ru'));
   if (sorted.length <= 1) return sorted;
   const offset = hash(rotation) % sorted.length;
@@ -138,13 +171,14 @@ export interface SlotInput {
   /** Different values give different (but deterministic) food choices. */
   rotation: string;
   avoidFoodIds?: ReadonlySet<string>;
+  mode?: DietMode;
 }
 
 /** One attempt: picks a food for each role (rotated by `rotation`), then fits the amounts to the meal targets. */
 function attempt(input: SlotInput, rotation: string): { vars: Variable[]; err: number } {
   const vars: Variable[] = [];
   const used = new Set<string>(input.avoidFoodIds ?? []);
-  for (const role of ROLES[input.slot]) {
+  for (const role of (input.mode === 'vacation' ? VACATION_ROLES : ROLES)[input.slot]) {
     const list = candidatesFor(input.foods, role, `${rotation}|${input.slot}|${role.name}`, used);
     const food = list[0];
     if (!food) continue;
@@ -183,6 +217,8 @@ export interface DayPlanInput {
   slots?: readonly MealSlot[];
   /** Foods that must not appear (e.g. the ones the user just rejected). */
   avoidFoodIds?: ReadonlySet<string>;
+  /** 'vacation': the day is built from holiday food (pizza, rolls, burgers, beer, wine...). */
+  mode?: DietMode;
 }
 
 export interface DayPlan {
@@ -285,7 +321,7 @@ export function generateDayPlan(input: DayPlanInput): DayPlan {
       carbG: Math.max(0, remaining.carbG * k),
       fiberG: Math.max(0, remaining.fiberG * k),
     };
-    const meal = generateMeal({ slot, target, foods: input.foods, rotation: input.seed, avoidFoodIds: input.avoidFoodIds });
+    const meal = generateMeal({ slot, target, foods: input.foods, rotation: input.seed, avoidFoodIds: input.avoidFoodIds, mode: input.mode });
     lines.push(...meal);
   }
   refineDay(lines, keep, input.foods, dayTarget);

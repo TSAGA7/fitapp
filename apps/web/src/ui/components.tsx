@@ -198,6 +198,7 @@ export function Sheet({ open, title, onClose, children }: { open: boolean; title
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
+  useScrollLock(open);
   if (!open) return null;
   return (
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -211,4 +212,33 @@ export function Sheet({ open, title, onClose, children }: { open: boolean; title
       </div>
     </div>
   );
+}
+
+/** While a sheet is open the page behind it must not scroll (on iOS the page moved instead of the sheet). */
+let locks = 0;
+let lockedY = 0;
+function useScrollLock(active: boolean): void {
+  useEffect(() => {
+    if (!active) return;
+    if (locks === 0) {
+      lockedY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${lockedY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+    }
+    locks += 1;
+    return () => {
+      locks -= 1;
+      if (locks === 0) {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        window.scrollTo(0, lockedY);
+      }
+    };
+  }, [active]);
 }
