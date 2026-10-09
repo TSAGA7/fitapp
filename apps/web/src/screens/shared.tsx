@@ -64,7 +64,7 @@ export function AddWeightSheet({ open, onClose }: { open: boolean; onClose: () =
   return (
     <Sheet open={open} title="Записать вес" onClose={onClose}>
       <div className="stack">
-        <TextField label="Вес утром" unit="кг" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} placeholder={snapshot.weight.currentKg ? String(snapshot.weight.currentKg).replace('.', ',') : '82,5'} error={error} autoFocus />
+        <TextField label="Вес утром" unit="кг" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} placeholder={snapshot.weight.currentKg ? String(snapshot.weight.currentKg).replace('.', ',') : '82,5'} error={error} />
         <TextField label="Дата" type="date" value={date} max={snapshot.today} onChange={(e) => setDate(e.target.value)} />
         <Button block onClick={submit} disabled={busy}>Сохранить</Button>
       </div>
@@ -105,7 +105,7 @@ export function AddMeasurementSheet({ open, onClose, type: fixedType }: { open: 
             ))}
           </SelectField>
         )}
-        <TextField label={fixedType ? METRIC_LABELS[fixedType] : 'Значение'} unit="см" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} error={error} autoFocus />
+        <TextField label={fixedType ? METRIC_LABELS[fixedType] : 'Значение'} unit="см" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} error={error} />
         <TextField label="Дата" type="date" value={date} max={snapshot.today} onChange={(e) => setDate(e.target.value)} />
         <Button block onClick={submit} disabled={busy}>Сохранить</Button>
       </div>

@@ -87,7 +87,7 @@ button.list-item:active { background: #f8faf9; }
 
 /* Sheet */
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); display: flex; align-items: flex-end; justify-content: center; z-index: 50; animation: fade .18s; }
-.sheet { width: 100%; max-width: 480px; background: var(--surface); border-radius: 28px 28px 0 0; padding: 12px 20px calc(24px + var(--safe-b)); max-height: 92dvh; overflow: auto; animation: rise .22s; }
+.sheet { width: 100%; max-width: 480px; background: var(--surface); border-radius: 28px 28px 0 0; padding: 12px 20px calc(24px + var(--safe-b)); max-height: min(92dvh, 100%); overflow: auto; overscroll-behavior: contain; animation: rise .22s; }
 .sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: #d6dce1; margin: 0 auto 14px; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { transform: translateY(24px); opacity: .6; } }

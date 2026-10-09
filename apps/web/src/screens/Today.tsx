@@ -204,10 +204,10 @@ function lastWorkoutToday(s: { workouts: { date: string }[]; today: string }): b
 
 const WATER_DONE = 'Да ты чё? Базару нет!';
 
-const DRINKS: Record<Drink, { emoji: string; name: string; step: number; stepLabel: string }> = {
-  beer: { emoji: '🍺', name: 'Пиво', step: 500, stepLabel: '500 мл' },
-  wine: { emoji: '🍷', name: 'Вино', step: 150, stepLabel: '150 мл' },
-  sparkling: { emoji: '🥂', name: 'Просекко / шампанское', step: 150, stepLabel: '150 мл' },
+const DRINKS: Record<Drink, { emoji: string; name: string; short: string; step: number; stepLabel: string }> = {
+  beer: { emoji: '🍺', name: 'Пиво', short: 'Пиво', step: 500, stepLabel: '500 мл' },
+  wine: { emoji: '🍷', name: 'Вино', short: 'Вино', step: 150, stepLabel: '150 мл' },
+  sparkling: { emoji: '🥂', name: 'Просекко / шампанское', short: 'Просекко', step: 150, stepLabel: '150 мл' },
 };
 
 function BeerCard() {
@@ -257,7 +257,7 @@ function BeerCard() {
       {picking && (
         <div className="drink-row" role="group" aria-label="Напиток">
           {(Object.keys(DRINKS) as Drink[]).map((d) => (
-            <Chip key={d} pressed={d === drink} onClick={() => { setDrink(d); setPicking(false); }}>{DRINKS[d].emoji} {DRINKS[d].name}</Chip>
+            <Chip key={d} pressed={d === drink} onClick={() => { setDrink(d); setPicking(false); }}>{DRINKS[d].emoji} {DRINKS[d].short}</Chip>
           ))}
         </div>
       )}

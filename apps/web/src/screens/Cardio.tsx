@@ -114,7 +114,7 @@ export function CardioSheet({ open, onClose }: { open: boolean; onClose: () => v
           <>
             <div className="t-h3">{info.label}</div>
             <p className="t-small">{info.hint}</p>
-            <TextField label="Время" unit="мин" inputMode="decimal" value={minutes} onChange={(e) => setMinutes(e.target.value)} autoFocus />
+            <TextField label="Время" unit="мин" inputMode="decimal" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
             {info.fields.includes('speed') && <TextField label="Скорость" unit="км/ч" inputMode="decimal" value={speed} onChange={(e) => setSpeed(e.target.value)} hint={maxOfMachine !== null && machine === 'treadmill' ? `На твоей дорожке до ${fmt(maxOfMachine, 1)} км/ч` : undefined} />}
             {info.fields.includes('incline') && <TextField label="Наклон" unit="%" inputMode="decimal" value={incline} onChange={(e) => setIncline(e.target.value)} />}
             {info.fields.includes('level') && <TextField label={info.levelLabel ?? 'Уровень'} inputMode="decimal" value={level} onChange={(e) => setLevel(e.target.value)} hint={maxOfMachine !== null && machine !== 'treadmill' ? `Уровней на этом тренажёре: до ${fmt(maxOfMachine, 0)}` : undefined} />}

@@ -1,4 +1,4 @@
-import { useEffect, useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { useEffect, useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
 import { Icon, type IconName } from './Icon';
 
 type Variant = 'primary' | 'secondary' | 'text' | 'accent' | 'danger' | 'on-dark';
@@ -199,9 +199,25 @@ export function Sheet({ open, title, onClose, children }: { open: boolean; title
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
   useScrollLock(open);
+  // On a phone the on-screen keyboard covers the bottom of the screen: lift the sheet above it so the field being typed in stays visible.
+  const [kb, setKb] = useState(0);
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setKb(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      setKb(0);
+    };
+  }, [open]);
   if (!open) return null;
   return (
-    <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="sheet-backdrop" style={kb > 0 ? { bottom: kb } : undefined} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
         <div className="grab" />
         <div className="row between" style={{ marginBottom: 14 }}>

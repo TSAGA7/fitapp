@@ -431,7 +431,7 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
               {foods.map((f) => (
                 <ListItem key={f.id} title={f.name} subtitle={`${CATEGORY_LABELS[f.category]} · ${fmt(f.per100.kcal, 0)} ккал/100 г`} onClick={() => { setPicked(f.id); setGrams(f.gramsPerPiece ? String(f.gramsPerPiece) : '100'); }} />
               ))}
-              {foods.length === 0 && <p className="note">Ничего не найдено.</p>}
+              {foods.length === 0 && <div className="empty-hint"><span className="eh-ic" aria-hidden="true">🔍</span><span className="eh-t">Ничего не найдено</span><span className="eh-s">Попробуй другое название или добавь свой продукт</span></div>}
             </div>
           </>
         ) : (
@@ -479,7 +479,7 @@ function CustomFoodForm({ barcode, onCancel, onCreated }: { barcode?: string | n
   return (
     <div className="stack">
       {banner}
-      <TextField label="Название" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+      <TextField label="Название" value={name} onChange={(e) => setName(e.target.value)} />
       <SelectField label="Категория" value={category} onChange={(e) => setCategory(e.target.value as FoodCategory)}>
         {(Object.keys(CATEGORY_LABELS) as FoodCategory[]).map((k) => <option key={k} value={k}>{CATEGORY_LABELS[k]}</option>)}
       </SelectField>

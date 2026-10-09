@@ -81,7 +81,7 @@ export function ExerciseCatalogScreen() {
             </div>
           </div>
         ))}
-        {items.length === 0 && <p className="note">Ничего не найдено.</p>}
+        {items.length === 0 && <div className="empty-hint"><span className="eh-ic" aria-hidden="true">🔍</span><span className="eh-t">Ничего не найдено</span><span className="eh-s">Попробуй другой фильтр или поиск</span></div>}
       </div>
     </main>
   );
