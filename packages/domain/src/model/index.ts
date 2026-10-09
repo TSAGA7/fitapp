@@ -7,6 +7,7 @@ export * from './metrics';
 export * from './injuries';
 export * from './equipment';
 export * from './exercise';
+export * from './cardio';
 export * from './food';
 export * from './nutritionLog';
 export * from './program';

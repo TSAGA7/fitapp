@@ -31,6 +31,7 @@ export function Today() {
   const todaySession = s.plannedSessions.find((p) => p.deletedAt === null && p.plannedDate === s.today && p.status === 'planned');
   const weightForWater = w.currentKg;
   const recommended = weightForWater !== null && s.profile ? recommendedWaterMl(weightForWater, s.profile.sex) : (targets?.waterMl ?? 0);
+  const trainingDay = !!(todaySession || s.openSession || lastWorkoutToday(s));
   const eatenToday = eatenOf(logsOnDate(s, s.today));
   const plannedToday = plannedOf(itemsOnDate(s, s.today));
 
@@ -105,9 +106,10 @@ export function Today() {
       {banner}
       {bodyweight && s.activeVersion && <BodyweightCard />}
       {s.activeVersion && (
-        <Card flat onClick={() => go('training')}>
-          <div className="t-h3">{todaySession || s.openSession || lastWorkoutToday(s) ? 'Сегодня пашем в зале' : 'Выходной. Сегодня кайфуй, но не сильно!'}</div>
-        </Card>
+        <button type="button" className={`day-status ${trainingDay ? 'train' : 'rest'}`} onClick={() => go('training')}>
+          <span className="ds-emoji" aria-hidden="true">{trainingDay ? '💪🏼' : '😎'}</span>
+          <span>{trainingDay ? 'Сегодня пашем в зале' : 'Выходной. Сегодня кайфуй, но не сильно!'}</span>
+        </button>
       )}
       {targets && (plannedToday.kcal > 0 || eatenToday.kcal > 0) && (
         <Card onClick={() => go('nutrition')}>

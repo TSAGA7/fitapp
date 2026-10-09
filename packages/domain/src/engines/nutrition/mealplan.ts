@@ -177,6 +177,8 @@ export interface DayPlanInput {
   seed: string;
   /** Lines the user fixed ("locked"): kept as they are; the other meals are fitted to what remains. */
   locked?: readonly PlanLine[];
+  /** Lines that stay and count towards the day but do NOT fix their meal: the rest of that meal is still built (e.g. one item of a breakfast was eaten). */
+  keepLines?: readonly PlanLine[];
   /** Meals to (re)generate; the default is all. */
   slots?: readonly MealSlot[];
   /** Foods that must not appear (e.g. the ones the user just rejected). */
@@ -265,8 +267,9 @@ export function generateDayPlan(input: DayPlanInput): DayPlan {
   const locked = input.locked ?? [];
   const slots = input.slots ?? SLOTS;
   const lockedTotal = sumMacros(locked.map((l) => l.macros));
-  const keep = locked.filter((l) => !slots.includes(l.slot) || l.locked);
-  const toBuild = slots.filter((s) => !keep.some((l) => l.slot === s && l.locked));
+  const fixed = locked.filter((l) => !slots.includes(l.slot) || l.locked);
+  const keep = [...fixed, ...(input.keepLines ?? [])];
+  const toBuild = slots.filter((s) => !fixed.some((l) => l.slot === s && l.locked));
   const dayTarget: Macros = { kcal: input.targets.kcal, proteinG: input.targets.proteinG, fatG: input.targets.fatG, carbG: input.targets.carbG, fiberG: input.targets.fiberG };
   const keptTotal = sumMacros(keep.map((l) => l.macros));
   const remaining = subtractMacros(dayTarget, keptTotal);

@@ -10,11 +10,7 @@ import { Button, Card, Chip } from '../ui';
 /** Status switch: while it is on, the workout of the day is "со своим весом"; the program itself is untouched. */
 export function BodyweightToggle() {
   const on = useBodyweightMode();
-  return (
-    <div className="chips" role="group" aria-label="Режим тренировки">
-      <Chip pressed={on} onClick={() => setBodyweightMode(!on)}>Со своим весом</Chip>
-    </div>
-  );
+  return <Chip pressed={on} onClick={() => setBodyweightMode(!on)}>Со своим весом</Chip>;
 }
 
 /** The bodyweight workout of the day: replaces the program workout while the status is on. */

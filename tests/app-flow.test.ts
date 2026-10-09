@@ -36,7 +36,12 @@ import {
   addSetToExercise,
   setExercisePreference,
   startBodyweightWorkout,
+  addCardioSession,
+  deleteCardioSession,
+  createCustomFood,
+  setEquipmentLimits,
 } from '../apps/web/src/actions';
+import { lookupBarcode } from '../apps/web/src/app/openFoodFacts';
 
 const MON = '2026-10-05T09:00:00+03:00';
 let n = 0;
@@ -98,6 +103,57 @@ describe('app flow on the real storage', () => {
     expect(s.versions[0]!.training).not.toEqual(s.versions[1]!.training === s.versions[0]!.training ? null : undefined);
   });
 
+  it('something eaten off-plan refits the meals that are not eaten yet; eaten ones stay', async () => {
+    const { deps } = await setup();
+    await generateWeekPlan(deps, '2026-10-05', 0);
+    await logMealAsPlanned(deps, '2026-10-05', 'breakfast');
+    let s = await loadSnapshot(deps);
+    const eatenIds = s.foodLogs.filter((l) => l.slot === 'breakfast').map((l) => l.plannedItemId);
+    const planKcalBefore = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.deletedAt === null).reduce((a, i) => a + i.plannedMacros.kcal, 0);
+    const pizza = s.foods.find((f) => f.key === 'pizza_pepperoni')!;
+    await logUnplanned(deps, { date: '2026-10-05', slot: 'lunch', foodId: pizza.id, grams: 330 });
+    s = await loadSnapshot(deps);
+    const day = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.deletedAt === null);
+    // breakfast items are untouched
+    for (const id of eatenIds) expect(day.some((i) => i.id === id)).toBe(true);
+    // the whole day (eaten + still planned) stays at the norm instead of going over
+    const eatenKcal = s.foodLogs.filter((l) => l.date === '2026-10-05' && l.deletedAt === null).reduce((a, l) => a + l.macros.kcal, 0);
+    const notEaten = day.filter((i) => !eatenIds.includes(i.id)).reduce((a, i) => a + i.plannedMacros.kcal, 0);
+    const norm = s.activeVersion!.nutrition.kcal;
+    expect(Math.abs(eatenKcal + notEaten - norm) / norm).toBeLessThan(0.06);
+    expect(notEaten).toBeLessThan(planKcalBefore);
+  });
+
+  it('stores cardio sessions with machine-specific fields and the equipment limits of a treadmill', async () => {
+    const { deps } = await setup();
+    await addCardioSession(deps, { date: '2026-10-05', machine: 'treadmill', durationMin: 30, speedKmh: 5.5, inclinePct: 6, level: null, distanceKm: 2.8, avgHeartRate: 128, effort: 5, note: null });
+    await setEquipmentLimits(deps, 'treadmill', { stepKg: 0.1, maxKg: 18 });
+    let s = await loadSnapshot(deps);
+    expect(s.cardioSessions).toHaveLength(1);
+    expect(s.cardioSessions[0]!.inclinePct).toBe(6);
+    expect(s.userEquipment.find((u) => u.equipmentId === 'treadmill')).toMatchObject({ stepKg: 0.1, maxKg: 18 });
+    await expect(addCardioSession(deps, { date: '2026-10-05', machine: 'bike', durationMin: 0, speedKmh: null, inclinePct: null, level: 5, distanceKm: null, avgHeartRate: null, effort: null, note: null })).rejects.toThrow();
+    await deleteCardioSession(deps, s.cardioSessions[0]!.id);
+    s = await loadSnapshot(deps);
+    expect(s.cardioSessions).toHaveLength(0);
+  });
+
+  it('a scanned product is saved with its barcode and found locally next time; Open Food Facts answers are parsed', async () => {
+    const { deps } = await setup();
+    const id = await createCustomFood(deps, { name: 'Йогурт', brand: 'Тест', category: 'dairy', basis: 'as_sold', per100: { kcal: 70, proteinG: 4, fatG: 2, carbG: 9, fiberG: 0 }, fromLabel: false, barcode: '4601234567890', sourceNote: 'Open Food Facts' });
+    const s = await loadSnapshot(deps);
+    expect(s.foods.find((f) => f.id === id)?.barcode).toBe('4601234567890');
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async () => new Response(JSON.stringify({ status: 1, product: { product_name_ru: 'Йогурт', brands: 'Тест, Другой', nutriments: { 'energy-kcal_100g': 70, proteins_100g: 4, fat_100g: 2, carbohydrates_100g: 9 } } }))) as typeof fetch;
+    try {
+      expect(await lookupBarcode('4601234567890')).toEqual({ name: 'Йогурт', brand: 'Тест', per100: { kcal: 70, proteinG: 4, fatG: 2, carbG: 9, fiberG: 0 } });
+      globalThis.fetch = (async () => new Response(JSON.stringify({ status: 0 }))) as typeof fetch;
+      expect(await lookupBarcode('4600000000000')).toBeNull();
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+
   it('builds a week of meals close to the targets, replaces and locks items, logs plan and fact separately', async () => {
     const { deps } = await setup();
     await generateWeekPlan(deps, '2026-10-05', 0);
@@ -115,7 +171,10 @@ describe('app flow on the real storage', () => {
 
     const lunch = day.find((i) => i.slot === 'lunch')!;
     await logPlanned(deps, lunch.id, { kind: 'eaten', grams: lunch.plannedAmountG + 50 });
-    await logPlanned(deps, day.find((i) => i.slot === 'dinner')!.id, { kind: 'skipped' });
+    // eating a different amount refits the meals that are not eaten yet, so take the dinner from the fresh plan
+    s = await loadSnapshot(deps);
+    const dinner = s.mealWeeks[0]!.items.find((i) => i.date === '2026-10-05' && i.deletedAt === null && i.slot === 'dinner')!;
+    await logPlanned(deps, dinner.id, { kind: 'skipped' });
     s = await loadSnapshot(deps);
     expect(s.foodLogs.find((l) => l.plannedItemId === lunch.id)?.entryType).toBe('modified');
     expect(s.foodLogs.find((l) => l.entryType === 'skipped_planned')?.macros.kcal).toBe(0);

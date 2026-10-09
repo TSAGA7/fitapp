@@ -52,9 +52,14 @@ export const STORES_V2: Record<string, string> = {
   exerciseNotes: 'id, exerciseId, sessionId, updatedAt',
 };
 
+export const STORES_V3: Record<string, string> = {
+  cardioSessions: 'id, date, machine, updatedAt',
+};
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, description: 'Initial schema', stores: STORES_V1 },
   { version: 2, description: 'Exercise likes and notes', stores: STORES_V2 },
+  { version: 3, description: 'Cardio sessions', stores: STORES_V3 },
 ];
 
 export const LATEST_VERSION = (MIGRATIONS[MIGRATIONS.length - 1] as Migration).version;

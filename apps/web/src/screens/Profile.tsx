@@ -10,6 +10,7 @@ import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField,
 import { ExerciseCatalogScreen } from './ExerciseCatalog';
 import { GoalExplainSheet } from './GoalExplain';
 import { ImportPanel } from './ImportPanel';
+import { CardioGuideScreen } from './Cardio';
 import { TvaGuideScreen } from './TvaGuide';
 import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './ProfileMore';
 import { AddMeasurementSheet, AddWeightSheet, parseDecimal, ScreenHeader } from './shared';
@@ -38,6 +39,8 @@ export function Profile({ route }: { route: string[] }) {
       return <ExerciseCatalogScreen />;
     case 'tva':
       return <TvaGuideScreen />;
+    case 'cardio':
+      return <CardioGuideScreen />;
     default:
       return <ProfileHome />;
   }
@@ -51,6 +54,7 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'gear', name: 'Оборудование', to: 'profile/equipment' },
   { icon: 'training', name: 'Каталог упражнений', to: 'profile/exercises' },
   { icon: 'leaf', name: 'Поперечная мышца', to: 'profile/tva' },
+  { icon: 'heart', name: 'Кардио', to: 'profile/cardio' },
   { icon: 'shield', name: 'Болевые точки', to: 'profile/injuries' },
   { icon: 'history', name: 'История изменений программы', to: 'profile/versions' },
   { icon: 'download', name: 'Экспорт и импорт', to: 'profile/data' },

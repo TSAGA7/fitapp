@@ -7,6 +7,7 @@ export * from './program';
 export * from './nutrition';
 export * from './workout';
 export * from './health';
+export * from './cardio';
 
 /**
  * Commands of the screens (presentation layer). Each one writes through the repositories of the

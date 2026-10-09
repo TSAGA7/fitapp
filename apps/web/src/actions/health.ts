@@ -49,6 +49,15 @@ export async function setEquipmentAvailable(deps: AppDeps, equipmentId: string, 
   });
 }
 
+/** Cardio machines have no weights: the same two numbers hold the step of speed/level and the maximum (km/h or number of levels). */
+export async function setEquipmentLimits(deps: AppDeps, equipmentId: string, limits: { stepKg: number | null; maxKg: number | null }): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const current = (await r.userEquipment.listAll()).find((u) => u.equipmentId === equipmentId);
+    if (current) await r.userEquipment.put({ ...current, ...limits });
+    else await r.userEquipment.put({ ...baseOf(deps), equipmentId, available: true, minKg: null, ...limits });
+  });
+}
+
 /** The smallest weight step of a machine in the user's gym (it differs between gyms). */
 export async function setEquipmentStep(deps: AppDeps, equipmentId: string, stepKg: number | null): Promise<void> {
   await deps.uow.run(async (r) => {

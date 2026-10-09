@@ -53,18 +53,49 @@ async function ensurePlan(r: Repositories, deps: AppDeps, weekStart: string, ver
 async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typeof context>>, date: string, variation: number, slots?: readonly MealSlot[], avoid?: ReadonlySet<string>) {
   const weekStart = startOfWeek(date, c.weekStartsOn);
   const plan = await ensurePlan(r, deps, weekStart, c.version.id, String(variation));
-  const items = (await r.mealPlans.listItems(plan.id)).filter((i) => i.date === date);
-  // Eaten (or skipped) items are facts: "redo" never touches them.
-  const logged = new Set<string>();
-  for (const i of items) if ((await r.foodLogs.listByPlannedItem(i.id)).some((l) => l.deletedAt === null)) logged.add(i.id);
-  const isKept = (i: PlannedItem): boolean => i.locked || logged.has(i.id) || (slots !== undefined && !slots.includes(i.slot));
-  const protectedLines = items.filter(isKept).map(toLine);
-  const result = generateDayPlan({ targets: c.targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines.map((l) => ({ ...l, locked: true })), slots, avoidFoodIds: avoid });
+  const items = (await r.mealPlans.listItems(plan.id)).filter((i) => i.date === date && i.deletedAt === null);
+  // Eaten (or skipped) items are facts: "redo" never touches them. What was really eaten counts with its REAL amount.
+  const dayLogs = (await r.foodLogs.listAll()).filter((l) => l.date === date && l.deletedAt === null);
+  const logOfItem = new Map<string, FoodLog>();
+  for (const l of dayLogs) if (l.plannedItemId !== null) logOfItem.set(l.plannedItemId, l);
+  const isKept = (i: PlannedItem): boolean => i.locked || logOfItem.has(i.id) || (slots !== undefined && !slots.includes(i.slot));
+  // A meal is fixed only when ALL its items are kept; a meal with some eaten items is rebuilt around them.
+  const slotDone = (slot: MealSlot): boolean => items.filter((i) => i.slot === slot).every(isKept);
+  const protectedLines: PlanLine[] = [];
+  const partialLines: PlanLine[] = [];
+  for (const i of items.filter(isKept)) {
+    const log = logOfItem.get(i.id);
+    const line: PlanLine | undefined = log === undefined ? toLine(i) : log.entryType === 'skipped_planned' ? undefined : { slot: i.slot, foodId: i.foodId, grams: log.actualAmountG, macros: log.macros, locked: true };
+    if (!line) continue;
+    if (slotDone(i.slot)) protectedLines.push({ ...line, locked: true });
+    else partialLines.push({ ...line, locked: false });
+  }
+  // Things eaten outside the plan use up the day's targets too: the meals that are not eaten yet are fitted to what remains.
+  const outside = dayLogs.filter((l) => l.plannedItemId === null && l.entryType !== 'skipped_planned');
+  const used = outside.reduce((a, l) => ({ kcal: a.kcal + l.macros.kcal, proteinG: a.proteinG + l.macros.proteinG, fatG: a.fatG + l.macros.fatG, carbG: a.carbG + l.macros.carbG, fiberG: a.fiberG + l.macros.fiberG }), { kcal: 0, proteinG: 0, fatG: 0, carbG: 0, fiberG: 0 });
+  const left = (n: number, u: number) => Math.max(0, n - u);
+  const targets = { ...c.targets, kcal: left(c.targets.kcal, used.kcal), proteinG: left(c.targets.proteinG, used.proteinG), fatG: left(c.targets.fatG, used.fatG), carbG: left(c.targets.carbG, used.carbG), fiberG: left(c.targets.fiberG, used.fiberG) };
+  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, slots, avoidFoodIds: avoid });
   const keepIds = new Set(items.filter(isKept).map((i) => i.id));
+  const fixedLines = [...protectedLines, ...partialLines];
   const now = deps.clock.now();
   const removed = items.filter((i) => !keepIds.has(i.id)).map((i) => ({ ...i, deletedAt: now }));
-  const fresh = result.lines.filter((l) => !protectedLines.some((p) => p.slot === l.slot && p.foodId === l.foodId && p.grams === l.grams)).map((l) => toItem(deps, plan.id, date, l));
+  const fresh = result.lines.filter((l) => !fixedLines.some((p) => p.slot === l.slot && p.foodId === l.foodId && p.grams === l.grams && p.macros === l.macros)).map((l) => toItem(deps, plan.id, date, l));
   await r.mealPlans.putItems([...removed, ...fresh]);
+}
+
+/**
+ * After something was eaten differently from the plan: the meals that are not eaten yet are refitted so the day ends at its norm.
+ * Only today and future days that already have a plan; eaten marks and locked items stay as they are.
+ */
+async function rebalanceDay(r: Repositories, deps: AppDeps, date: string): Promise<void> {
+  const profile = await r.profile.get();
+  const program = await r.programs.getProgram();
+  if (!profile || !program?.activeVersionId) return;
+  if (date < deps.clock.today(profile.timezone)) return;
+  const plan = await r.mealPlans.getByWeek(startOfWeek(date, profile.weekStartsOn));
+  if (!plan || !(await r.mealPlans.listItems(plan.id)).some((i) => i.date === date && i.deletedAt === null)) return;
+  await fillDay(r, deps, await context(r, deps), date, Number(plan.generatorSeed) || 0);
 }
 
 /** Builds (or rebuilds) the meal plan for the days of a week that are not in the past. Locked items are kept. */
@@ -181,15 +212,21 @@ export async function logPlanned(deps: AppDeps, itemId: string, outcome: { kind:
     const food = await foodById(r, item.foodId);
     if (outcome.kind === 'skipped') {
       await r.foodLogs.put(makeLog(deps, food, { date: item.date, slot: item.slot, grams: 0, entryType: 'skipped_planned', plannedItemId: item.id }));
+      await rebalanceDay(r, deps, item.date);
       return;
     }
     const grams = outcome.grams ?? item.plannedAmountG;
     await r.foodLogs.put(makeLog(deps, food, { date: item.date, slot: item.slot, grams, entryType: grams === item.plannedAmountG ? 'as_planned' : 'modified', plannedItemId: item.id }));
+    if (grams !== item.plannedAmountG) await rebalanceDay(r, deps, item.date);
   });
 }
 
 export async function undoLog(deps: AppDeps, logId: string): Promise<void> {
-  await deps.uow.run((r) => r.foodLogs.softDelete(logId));
+  await deps.uow.run(async (r) => {
+    const log = (await r.foodLogs.listAll()).find((l) => l.id === logId);
+    await r.foodLogs.softDelete(logId);
+    if (log && (log.plannedItemId === null || log.entryType === 'skipped_planned' || log.entryType === 'modified')) await rebalanceDay(r, deps, log.date);
+  });
 }
 
 /** Changes the eaten amount of an entry that was not in the plan. */
@@ -199,6 +236,7 @@ export async function setLogAmount(deps: AppDeps, logId: string, grams: number):
     const log = (await r.foodLogs.listAll()).find((l) => l.id === logId);
     if (!log) return;
     await r.foodLogs.put({ ...log, actualAmountG: grams, macros: macrosForAmount(log.snapshot.per100, grams) });
+    if (log.plannedItemId === null) await rebalanceDay(r, deps, log.date);
   });
 }
 
@@ -215,6 +253,7 @@ export async function logUnplanned(deps: AppDeps, input: { date: string; slot: M
     if (!(input.grams > 0)) throw new Error('Укажите количество в граммах');
     const food = await foodById(r, input.foodId);
     await r.foodLogs.put(makeLog(deps, food, { ...input, entryType: 'unplanned', plannedItemId: null }));
+    await rebalanceDay(r, deps, input.date);
   });
 }
 
@@ -242,6 +281,10 @@ export interface CustomFoodInput {
   per100: Macros;
   /** The source of the numbers, for honesty in the diary. */
   fromLabel: boolean;
+  /** EAN/UPC from the scanner; the same product is found locally next time. */
+  barcode?: string | null;
+  /** Where the numbers came from when it is not the label or the user (e.g. Open Food Facts). */
+  sourceNote?: string;
 }
 
 export async function createCustomFood(deps: AppDeps, input: CustomFoodInput): Promise<string> {
@@ -253,7 +296,7 @@ export async function createCustomFood(deps: AppDeps, input: CustomFoodInput): P
       name: input.name.trim(),
       autoPlan: true,
       brand: input.brand?.trim() || null,
-      barcode: null,
+      barcode: input.barcode ?? null,
       category: input.category,
       basis: input.basis,
       unit: 'g',
@@ -261,7 +304,7 @@ export async function createCustomFood(deps: AppDeps, input: CustomFoodInput): P
       per100: input.per100,
       variantGroup: null,
       yieldFactor: null,
-      dataSource: { kind: input.fromLabel ? 'label' : 'user', note: input.fromLabel ? 'С упаковки' : 'Введено пользователем' },
+      dataSource: { kind: input.fromLabel ? 'label' : 'user', note: input.sourceNote ?? (input.fromLabel ? 'С упаковки' : 'Введено пользователем') },
       origin: 'custom',
     }),
   );

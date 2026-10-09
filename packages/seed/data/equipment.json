@@ -250,5 +250,40 @@
     "category": "accessories",
     "loadType": "none",
     "defaultStepKg": null
+  },
+  {
+    "key": "elliptical",
+    "name": "Эллиптический тренажёр",
+    "category": "cardio",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "rowing_ergometer",
+    "name": "Гребной тренажёр",
+    "category": "cardio",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "stair_climber",
+    "name": "Степпер / лестница",
+    "category": "cardio",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "air_bike",
+    "name": "Эйр-байк",
+    "category": "cardio",
+    "loadType": "none",
+    "defaultStepKg": null
+  },
+  {
+    "key": "ski_erg",
+    "name": "Лыжный эргометр",
+    "category": "cardio",
+    "loadType": "none",
+    "defaultStepKg": null
   }
 ]

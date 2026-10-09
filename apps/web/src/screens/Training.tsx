@@ -6,9 +6,10 @@ import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
 import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
+import { CardioSheet } from './Cardio';
 import { ScreenHeader } from './shared';
 
 type View = 'week' | 'month' | 'program' | 'history';
@@ -20,6 +21,7 @@ export function Training() {
   const { run, banner, busy } = useCommand();
   const [view, setView] = useState<View>('week');
   const bodyweight = useBodyweightMode();
+  const [cardioOpen, setCardioOpen] = useState(false);
 
   // The calendar is derived from the active version: keep the next two weeks created.
   useEffect(() => {
@@ -46,7 +48,8 @@ export function Training() {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
-      <BodyweightToggle />
+      <div className="chips" role="group" aria-label="Режим тренировки"><BodyweightToggle /><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
+      <CardioSheet open={cardioOpen} onClose={() => setCardioOpen(false)} />
       <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}
       {view === 'week' && (bodyweight ? <BodyweightCard /> : <Week />)}

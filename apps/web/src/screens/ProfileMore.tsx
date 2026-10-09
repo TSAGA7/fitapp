@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Availability, BodyArea, InjuryStatus, Preference, Side, TriggerKind } from '@fitapp/domain';
-import { addInjury, deleteInjury, resolveInjury, setEquipmentAvailable, setEquipmentStep, setFoodPreference } from '../actions';
+import { addInjury, deleteInjury, resolveInjury, setEquipmentAvailable, setEquipmentLimits, setEquipmentStep, setFoodPreference } from '../actions';
 import { useData } from '../app/DataContext';
 import { go } from '../app/router';
 import { userFoodOf } from '../app/derive';
@@ -76,15 +76,19 @@ export function EquipmentScreen() {
   const { ok, banner } = useCommand();
   const [stepFor, setStepFor] = useState<string | null>(null);
   const [step, setStep] = useState('');
+  const [max, setMax] = useState('');
   const list = s.equipment.filter((e) => e.deletedAt === null).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   const userOf = (id: string) => s.userEquipment.find((u) => u.equipmentId === id);
   const current = stepFor ? list.find((e) => e.id === stepFor) : undefined;
   const v = parseDecimal(step);
+  const mx = parseDecimal(max);
+  const cardio = current?.category === 'cardio';
+  const isTreadmill = current?.key === 'treadmill';
   return (
     <main className="screen">
       <ScreenHeader title="Оборудование" back="profile" />
       {banner}
-      <p className="t-small">Поставь галочку у того, что есть в твоём зале. Нажми на название, чтобы задать шаг веса. После изменений можно пересобрать программу на вкладке «Тренировки».</p>
+      <p className="t-small">Поставь галочку у того, что есть в твоём зале. Нажми на название, чтобы задать шаг веса (для кардио-тренажёров — скорость или уровни). После изменений можно пересобрать программу на вкладке «Тренировки».</p>
       <div className="stack" style={{ gap: 8 }}>
         {list.map((e) => {
           const u = userOf(e.id);
@@ -94,9 +98,9 @@ export function EquipmentScreen() {
               <button type="button" className="check" role="checkbox" aria-checked={available} aria-label={`${e.name}: ${available ? 'есть' : 'нет'}`} onClick={() => void ok((d) => setEquipmentAvailable(d, e.id, !available))}>
                 {available && <Icon name="check" size={20} />}
               </button>
-              <button type="button" className="eq-main" onClick={() => { setStepFor(e.id); setStep(u?.stepKg ? String(u.stepKg) : ''); }}>
+              <button type="button" className="eq-main" onClick={() => { setStepFor(e.id); setStep(u?.stepKg ? String(u.stepKg) : ''); setMax(u?.maxKg ? String(u.maxKg) : ''); }}>
                 <span className="li-title" style={{ display: 'block' }}>{e.name}</span>
-                <span className={`li-sub ${available ? 'eq-yes' : 'eq-no'}`} style={{ display: 'block' }}>{available ? 'Есть' : 'Нет'}{u?.stepKg ? ` · шаг веса ${fmt(u.stepKg, 2)} кг` : ''}</span>
+                <span className={`li-sub ${available ? 'eq-yes' : 'eq-no'}`} style={{ display: 'block' }}>{available ? 'Есть' : 'Нет'}{e.category === 'cardio' ? (u?.maxKg ? ` · максимум ${fmt(u.maxKg, e.key === 'treadmill' ? 1 : 0)}${e.key === 'treadmill' ? ' км/ч' : ' ур.'}` : '') : u?.stepKg ? ` · шаг веса ${fmt(u.stepKg, 2)} кг` : ''}</span>
               </button>
               <Icon name="chevronRight" size={18} />
             </div>
@@ -104,11 +108,20 @@ export function EquipmentScreen() {
         })}
       </div>
       <Sheet open={current !== undefined} title={current?.name ?? ''} onClose={() => setStepFor(null)}>
-        <div className="stack">
-          <p className="t-small">Минимальный шаг веса в твоём зале (например, 2,5 или 5 кг на блоке). От него зависит следующая рекомендация.</p>
-          <TextField label="Шаг веса" unit="кг" inputMode="decimal" value={step} onChange={(e) => setStep(e.target.value)} />
-          <Button block disabled={!(v > 0) && step.trim() !== ''} onClick={async () => { if (current && (await ok((d) => setEquipmentStep(d, current.id, step.trim() === '' ? null : v)))) setStepFor(null); }}>Сохранить</Button>
-        </div>
+        {cardio ? (
+          <div className="stack">
+            <p className="t-small">{isTreadmill ? 'Для беговой дорожки вес не нужен. Укажи, как у неё меняется скорость и какая максимальная: приложение подскажет рамки при записи кардио.' : 'Для этого тренажёра вес не нужен. Укажи, сколько на нём уровней нагрузки: приложение подскажет рамки при записи кардио.'}</p>
+            {isTreadmill && <TextField label="Шаг скорости" unit="км/ч" inputMode="decimal" value={step} onChange={(e) => setStep(e.target.value)} hint="Обычно 0,1 или 0,5 км/ч" />}
+            <TextField label={isTreadmill ? 'Максимальная скорость' : 'Число уровней'} unit={isTreadmill ? 'км/ч' : undefined} inputMode="decimal" value={max} onChange={(e) => setMax(e.target.value)} hint={isTreadmill ? 'Часто 10–20 км/ч' : 'Часто 10, 16 или 20'} />
+            <Button block disabled={(step.trim() !== '' && !(v > 0)) || (max.trim() !== '' && !(mx > 0))} onClick={async () => { if (current && (await ok((d) => setEquipmentLimits(d, current.id, { stepKg: step.trim() === '' ? null : v, maxKg: max.trim() === '' ? null : mx })))) setStepFor(null); }}>Сохранить</Button>
+          </div>
+        ) : (
+          <div className="stack">
+            <p className="t-small">Минимальный шаг веса в твоём зале (например, 2,5 или 5 кг на блоке). От него зависит следующая рекомендация.</p>
+            <TextField label="Шаг веса" unit="кг" inputMode="decimal" value={step} onChange={(e) => setStep(e.target.value)} />
+            <Button block disabled={!(v > 0) && step.trim() !== ''} onClick={async () => { if (current && (await ok((d) => setEquipmentStep(d, current.id, step.trim() === '' ? null : v)))) setStepFor(null); }}>Сохранить</Button>
+          </div>
+        )}
       </Sheet>
     </main>
   );

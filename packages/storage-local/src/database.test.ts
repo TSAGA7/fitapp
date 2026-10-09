@@ -7,7 +7,7 @@ import { META_KEYS } from './constants';
 import { openAppDatabase } from './database';
 import { StorageTooNewError } from './errors';
 import { getMeta, setMeta } from './meta';
-import { LATEST_VERSION, MIGRATIONS, STORES_V1, STORES_V2 } from './schema';
+import { LATEST_VERSION, MIGRATIONS, STORES_V1, STORES_V2, STORES_V3 } from './schema';
 import { builders, makeStorage } from './testkit';
 import { createLocalStorage } from './storage';
 import { deterministicIds } from './testkit';
@@ -23,7 +23,7 @@ describe('schema', () => {
     }
     expect(names).toEqual(expect.arrayContaining(['appMeta', 'syncState']));
     expect(names).toHaveLength(STORE_NAMES.length + 2);
-    expect(Object.keys({ ...STORES_V1, ...STORES_V2 })).toHaveLength(STORE_NAMES.length + 2);
+    expect(Object.keys({ ...STORES_V1, ...STORES_V2, ...STORES_V3 })).toHaveLength(STORE_NAMES.length + 2);
   });
   it('the last migration matches the domain schema version', () => {
     expect(LATEST_VERSION).toBe(SCHEMA_VERSION);
@@ -58,7 +58,7 @@ describe('meta', () => {
 
 describe('migrations', () => {
   const v2 = {
-    version: 3,
+    version: 4,
     description: 'Index on goals.priority and a data fix',
     stores: { goals: 'id, status, priority, updatedAt' },
     upgrade: async (tx: import('dexie').Transaction) => {
@@ -80,14 +80,14 @@ describe('migrations', () => {
     expect(row.id).toBe(g.id);
     expect(row.migrated).toBe(true);
     expect(db.goals.schema.idxByName.priority).toBeDefined();
-    expect(db.verno).toBe(3);
+    expect(db.verno).toBe(4);
     db.close();
   });
   it('refuses a database written by a newer app instead of damaging it', async () => {
     const factory = new IDBFactory();
     const opts = { name: 'newer', indexedDB: factory, IDBKeyRange };
     const newer = await openAppDatabase({ ...opts, migrations: [...MIGRATIONS, v2] });
-    await setMeta(newer, META_KEYS.schemaVersion, 3);
+    await setMeta(newer, META_KEYS.schemaVersion, 4);
     newer.close();
     await expect(openAppDatabase({ ...opts })).rejects.toBeInstanceOf(StorageTooNewError);
   });

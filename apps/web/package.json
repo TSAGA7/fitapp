@@ -12,9 +12,11 @@
     "@fitapp/application": "*",
     "@fitapp/domain": "*",
     "@fitapp/seed": "*",
+    "@fitapp/storage-local": "*",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "@fitapp/storage-local": "*"
+    "react-dom": "^18.3.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",

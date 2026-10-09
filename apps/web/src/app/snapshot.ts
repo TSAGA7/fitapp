@@ -26,6 +26,7 @@ import {
   type UserEquipment,
   type UserFood,
   type UserExercise,
+  type CardioSession,
   type ExerciseNote,
   type WorkoutSession,
   type LocalDate,
@@ -77,6 +78,7 @@ export interface Snapshot {
   foods: Food[];
   userFoods: UserFood[];
   userExercises: UserExercise[];
+  cardioSessions: CardioSession[];
   exerciseNotes: ExerciseNote[];
   foodLogs: FoodLog[];
   program: Program | undefined;
@@ -173,6 +175,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       foods: await r.foods.listAll(),
       userFoods: await r.userFoods.listAll(),
       userExercises: await r.userExercises.listAll(),
+      cardioSessions: (await r.cardioSessions.listAll()).filter((c) => c.deletedAt === null).sort((a, b) => (a.date === b.date ? (a.createdAt < b.createdAt ? 1 : -1) : a.date < b.date ? 1 : -1)),
       exerciseNotes: await r.exerciseNotes.listAll(),
       foodLogs: logs,
       program,

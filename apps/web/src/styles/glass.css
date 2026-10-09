@@ -118,11 +118,16 @@ html, body { overflow-x: hidden; }
 .bottom-nav a { gap: 1px; padding: 0 9px; }
 .bottom-nav a .nav-ic { height: 28px; }
 
-/* Hero card: translucent green glass */
-.hero {
-  background: linear-gradient(160deg, rgba(13, 110, 82, 0.66) 0%, rgba(6, 95, 70, 0.6) 48%, rgba(4, 69, 53, 0.66) 100%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%); backdrop-filter: blur(26px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 10px 34px rgba(6, 95, 70, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-.hero-stats { background: rgba(255, 255, 255, 0.58); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.6); }
+/* Hero card: the original deep green, only a glossy edge */
+.hero { box-shadow: 0 12px 32px rgba(6, 95, 70, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28); }
+.scan-video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-lg); background: #000; }
+
+/* Floating nav: a bit more glass */
+.bottom-nav { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.5); -webkit-backdrop-filter: blur(38px) saturate(230%) brightness(1.04); backdrop-filter: blur(38px) saturate(230%) brightness(1.04); box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(255, 255, 255, 0.2); }
+
+/* Today status */
+.day-status { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: var(--r-xl); font-weight: 700; font-size: 18px; line-height: 24px; border: 1px solid var(--glass-border); }
+.day-status .ds-emoji { font-size: 30px; line-height: 1; flex: none; }
+.day-status.train { background: linear-gradient(135deg, rgba(163, 230, 53, 0.55), rgba(16, 163, 90, 0.28)); color: #064e3b; border-color: rgba(6, 95, 70, 0.2); }
+.day-status.rest { background: linear-gradient(135deg, rgba(167, 139, 250, 0.32), rgba(251, 191, 36, 0.26)); color: #4c1d95; border-color: rgba(124, 58, 237, 0.18); }
+.day-status { width: 100%; text-align: left; font-family: inherit; }

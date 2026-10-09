@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { addDays, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek, suggestTargetAdjustment, sumMacros, weekdayOf, type FoodCategory, type MealSlot, type PlannedItem } from '@fitapp/domain';
 import {
   acceptTargetAdjustment,
@@ -26,6 +26,8 @@ import { fmt, formatDateShort, formatDay, WEEKDAY_SHORT } from '../app/format';
 import { useCommand } from '../app/useCommand';
 import type { FoodLog } from '@fitapp/domain';
 import { Badge, Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, TextField, type ChartSeries } from '../ui';
+import { isBarcode, lookupBarcode } from '../app/openFoodFacts';
+import { BarcodeScanner } from './BarcodeScan';
 import { parseDecimal, ScreenHeader } from './shared';
 
 type View = 'day' | 'week' | 'month';
@@ -76,8 +78,9 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const items = itemsOnDate(s, date);
   const logs = logsOnDate(s, date);
   const eaten = eatenOf(logs);
-  const planned = plannedOf(items);
-  const [slotForAdd, setSlotForAdd] = useState<MealSlot | null>(null);
+  // The day as it will be: what was really eaten plus what is still planned.
+  const planned = sumMacros([eaten, plannedOf(items.filter((i) => !logs.some((l) => l.plannedItemId === i.id)))]);
+  const [slotForAdd, setSlotForAdd] = useState<{ slot: MealSlot; scan: boolean } | null>(null);
   const [itemSheet, setItemSheet] = useState<PlannedItem | null>(null);
   const [logSheet, setLogSheet] = useState<FoodLog | null>(null);
   const [dismissed, setDismissed] = useState(false);
@@ -182,10 +185,10 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
               );
             })}
             {loose.map((l) => (
-              <ListItem key={l.id} icon="plus" lime title={l.snapshot.foodName} subtitle={`${l.plannedItemId === null ? 'Не по плану' : 'Из прежнего плана'} · ${fmt(l.actualAmountG, 0)} г · Б ${fmt(l.macros.proteinG, 0)} Ж ${fmt(l.macros.fatG, 0)} У ${fmt(l.macros.carbG, 0)}`} trailing={<span className="t-small">{fmt(l.macros.kcal, 0)}</span>} onClick={() => setLogSheet(l)} />
+              <ListItem key={l.id} icon="check" lime title={l.snapshot.foodName} subtitle={`${l.plannedItemId === null ? 'Съедено не по плану' : 'Из прежнего плана'} · ${fmt(l.actualAmountG, 0)} г · Б ${fmt(l.macros.proteinG, 0)} Ж ${fmt(l.macros.fatG, 0)} У ${fmt(l.macros.carbG, 0)}`} trailing={<span className="t-small">{fmt(l.macros.kcal, 0)}</span>} onClick={() => setLogSheet(l)} />
             ))}
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              <Button size="sm" variant="secondary" icon="plus" onClick={() => setSlotForAdd(slot)}>Добавить еду</Button>
+              <Button size="sm" variant="secondary" icon="plus" onClick={() => setSlotForAdd({ slot, scan: false })}>Добавить еду</Button>
               {slotItems.length > 0 && !allDone && <Button size="sm" variant="secondary" icon="check" disabled={busy} onClick={() => void run((d) => logMealAsPlanned(d, date, slot))}>Съел всё</Button>}
               {slotLogs.length > 0 && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => clearMealLogs(d, date, slot))}>Сбросить отметки</Button>}
               {!isPast && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => regenerateMeal(d, date, slot, variation()))}>Переделать</Button>}
@@ -195,12 +198,13 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         );
       })}
 
+      {!isPast && <Button variant="secondary" block icon="scan" onClick={() => setSlotForAdd({ slot: 'snack', scan: true })}>Сканировать штрих-код</Button>}
       {!isPast && items.length > 0 && (
         <Button variant="secondary" block icon="history" disabled={busy} onClick={() => void run((d) => regenerateDay(d, date, variation()))}>Переделать день</Button>
       )}
       <Button variant="text" onClick={() => void run((d) => recalculateTargets(d))} disabled={busy}>Пересчитать норму по текущему весу</Button>
 
-      <AddFoodSheet open={slotForAdd !== null} slot={slotForAdd ?? 'snack'} date={date} onClose={() => setSlotForAdd(null)} />
+      <AddFoodSheet open={slotForAdd !== null} slot={slotForAdd?.slot ?? 'snack'} startScan={slotForAdd?.scan ?? false} date={date} onClose={() => setSlotForAdd(null)} />
       <ItemSheet item={itemSheet} onClose={() => setItemSheet(null)} />
       <LogSheet log={logSheet} onClose={() => setLogSheet(null)} />
     </>
@@ -314,14 +318,56 @@ const CATEGORY_LABELS: Record<FoodCategory, string> = {
   meat: 'Мясо', poultry: 'Птица', fish: 'Рыба', eggs: 'Яйца', dairy: 'Молочное', grains: 'Крупы и макароны', legumes: 'Бобовые', vegetables: 'Овощи', fruits: 'Фрукты', nuts_seeds: 'Орехи и семена', fats_oils: 'Масла и жиры', bread_bakery: 'Хлеб', sweets: 'Сладкое', drinks: 'Напитки', supplements: 'Добавки', ready_meals: 'Готовые блюда', other: 'Другое',
 };
 
-function AddFoodSheet({ open, slot, date, onClose }: { open: boolean; slot: MealSlot; date: string; onClose: () => void }) {
+function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean; slot: MealSlot; startScan: boolean; date: string; onClose: () => void }) {
   const { snapshot: s } = useData();
-  const { ok, banner, busy } = useCommand();
+  const { ok, run, banner, busy } = useCommand();
   const [query, setQuery] = useState('');
   const [picked, setPicked] = useState<string | null>(null);
   const [grams, setGrams] = useState('100');
   const [mode, setMode] = useState<'eaten' | 'plan'>('eaten');
   const [creating, setCreating] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanNote, setScanNote] = useState<string | null>(null);
+  const [looking, setLooking] = useState(false);
+  const [barcode, setBarcode] = useState<string | null>(null);
+  const [slotSel, setSlotSel] = useState<MealSlot>(slot);
+  useEffect(() => {
+    if (open) {
+      setSlotSel(slot);
+      setScanning(startScan);
+    }
+  }, [open, slot, startScan]);
+
+  const onCode = async (code: string) => {
+    setScanning(false);
+    setScanNote(null);
+    const local = s.foods.find((f) => f.deletedAt === null && f.barcode === code);
+    if (local) {
+      setPicked(local.id);
+      setGrams(local.gramsPerPiece ? String(local.gramsPerPiece) : '100');
+      return;
+    }
+    setLooking(true);
+    try {
+      const found = await lookupBarcode(code);
+      if (found) {
+        const id = await run((d) => createCustomFood(d, { name: found.name, brand: found.brand, category: 'other', basis: 'as_sold', per100: found.per100, fromLabel: false, barcode: code, sourceNote: 'Open Food Facts: данные пользователей, сверь с упаковкой' }));
+        if (id) {
+          setPicked(id);
+          setGrams('100');
+          setScanNote('Нашёл в Open Food Facts. Это данные пользователей: сверь с упаковкой.');
+        }
+        return;
+      }
+      setScanNote('Этого штрих-кода нет в базе. Введи цифры с упаковки один раз, и в следующий раз продукт найдётся сразу.');
+    } catch {
+      setScanNote('Нет сети для поиска. Введи цифры с упаковки один раз, и в следующий раз продукт найдётся без интернета.');
+    } finally {
+      setLooking(false);
+    }
+    setBarcode(code);
+    setCreating(true);
+  };
 
   const foods = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -337,16 +383,25 @@ function AddFoodSheet({ open, slot, date, onClose }: { open: boolean; slot: Meal
     setPicked(null);
     setQuery('');
     setCreating(false);
+    setScanning(false);
+    setScanNote(null);
+    setBarcode(null);
     onClose();
   };
 
   return (
-    <Sheet open={open} title={`${SLOT_LABEL[slot]}: добавить еду`} onClose={close}>
+    <Sheet open={open} title="Добавить еду" onClose={close}>
       <div className="stack">
         {banner}
-        {creating ? (
+        {scanNote && <div className="note">{scanNote}</div>}
+        {looking ? (
+          <p className="t-body">Ищу продукт по штрих-коду…</p>
+        ) : scanning ? (
+          <BarcodeScanner onCode={(c) => void onCode(c)} onCancel={() => setScanning(false)} />
+        ) : creating ? (
           <CustomFoodForm
-            onCancel={() => setCreating(false)}
+            barcode={barcode}
+            onCancel={() => { setCreating(false); setBarcode(null); }}
             onCreated={(id) => {
               setCreating(false);
               setPicked(id);
@@ -361,7 +416,10 @@ function AddFoodSheet({ open, slot, date, onClose }: { open: boolean; slot: Meal
               ))}
               {foods.length === 0 && <p className="note">Ничего не найдено.</p>}
             </div>
-            <Button variant="secondary" icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <Button variant="secondary" icon="scan" onClick={() => setScanning(true)}>Сканировать штрих-код</Button>
+              <Button variant="secondary" icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
+            </div>
           </>
         ) : (
           <>
@@ -369,19 +427,22 @@ function AddFoodSheet({ open, slot, date, onClose }: { open: boolean; slot: Meal
             <p className="t-small">{food.basis === 'raw' ? 'Вес сырого продукта' : food.basis === 'cooked' ? 'Вес готового продукта' : 'Вес как на упаковке'}</p>
             <TextField label="Количество" unit="г" inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} />
             {preview && <p className="t-body">{fmt(preview.kcal, 0)} ккал · Б {fmt(preview.proteinG, 0)} Ж {fmt(preview.fatG, 0)} У {fmt(preview.carbG, 0)}</p>}
+            <div className="t-caption">Какой приём пищи</div>
+            <Segmented<MealSlot> value={slotSel} onChange={setSlotSel} options={SLOT_ORDER.map((k) => ({ value: k, label: SLOT_LABEL[k] }))} label="Приём пищи" small />
             <Segmented<'eaten' | 'plan'> value={mode} onChange={setMode} options={[{ value: 'eaten', label: 'Я съел' }, { value: 'plan', label: 'В план' }]} label="Куда записать" />
             <div className="row">
               <Button variant="text" onClick={() => setPicked(null)}>Назад</Button>
               <Button
                 disabled={busy || !(g > 0)}
                 onClick={async () => {
-                  const done = await ok((d) => (mode === 'eaten' ? logUnplanned(d, { date, slot, foodId: food.id, grams: g }) : addPlannedItem(d, { date, slot, foodId: food.id, grams: g })));
+                  const done = await ok((d) => (mode === 'eaten' ? logUnplanned(d, { date, slot: slotSel, foodId: food.id, grams: g }) : addPlannedItem(d, { date, slot: slotSel, foodId: food.id, grams: g })));
                   if (done) close();
                 }}
               >
                 Добавить
               </Button>
             </div>
+            {mode === 'eaten' && <p className="t-small">Остальные приёмы пищи, которые ты ещё не отметил, пересчитаются так, чтобы день закончился на норме. Уже съеденное не меняется.</p>}
           </>
         )}
       </div>
@@ -389,7 +450,7 @@ function AddFoodSheet({ open, slot, date, onClose }: { open: boolean; slot: Meal
   );
 }
 
-function CustomFoodForm({ onCancel, onCreated }: { onCancel: () => void; onCreated: (id: string) => void }) {
+function CustomFoodForm({ barcode, onCancel, onCreated }: { barcode?: string | null; onCancel: () => void; onCreated: (id: string) => void }) {
   const { run, banner, busy } = useCommand();
   const [name, setName] = useState('');
   const [category, setCategory] = useState<FoodCategory>('other');
@@ -427,7 +488,7 @@ function CustomFoodForm({ onCancel, onCreated }: { onCancel: () => void; onCreat
         <Button
           disabled={busy || !valid}
           onClick={async () => {
-            const id = await run((d) => createCustomFood(d, { name, brand: null, category, basis, per100: { kcal: num(kcal), proteinG: num(p), fatG: num(f), carbG: num(c), fiberG: num(fiber) }, fromLabel: label }));
+            const id = await run((d) => createCustomFood(d, { name, brand: null, category, basis, per100: { kcal: num(kcal), proteinG: num(p), fatG: num(f), carbG: num(c), fiberG: num(fiber) }, fromLabel: label, barcode: barcode && isBarcode(barcode) ? barcode : null }));
             if (id) onCreated(id);
           }}
         >
