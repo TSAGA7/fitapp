@@ -14,7 +14,7 @@ import { ImportPanel } from './ImportPanel';
 import { CardioGuideScreen } from './Cardio';
 import { TvaGuideScreen } from './TvaGuide';
 import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './ProfileMore';
-import { AddMeasurementSheet, AddWeightSheet, parseDecimal, ScreenHeader } from './shared';
+import { AddMeasurementSheet, AddWeightSheet, DateField, parseDecimal, ScreenHeader } from './shared';
 
 export function Profile({ route }: { route: string[] }) {
   switch (route[1]) {
@@ -123,7 +123,6 @@ function VacationButton() {
         <span className="vb-ic" aria-hidden="true">🏖️</span>
         <span className="grow">
           <span className="li-title" style={{ display: 'block' }}>Отпуск</span>
-          <span className="li-sub" style={{ display: 'block' }}>{on ? 'Включён: рацион из пиццы, роллов, бургеров, пива и вина. Нажми ещё раз, и вернётся здоровое питание.' : 'Рацион из пиццы, роллов, бургеров, пива и вина. Выключишь, и сразу вернётся здоровое питание.'}</span>
         </span>
         {on && <Icon name="check" size={22} />}
       </button>
@@ -178,7 +177,7 @@ function Personal() {
       <div className="stack-lg">
         <TextField label="Как к тебе обращаться" value={name} onChange={(e) => setName(e.target.value)} hint="Показывается только на этом устройстве" />
         <div className="field"><span className="lbl">Пол</span><Segmented label="Пол" options={(Object.keys(SEX_LABELS) as Sex[]).map((v) => ({ value: v, label: SEX_LABELS[v] }))} value={sex} onChange={setSex} /></div>
-        <TextField label="Дата рождения" type="date" value={birth} onChange={(e) => setBirth(e.target.value)} max={s.today} />
+        <DateField label="Дата рождения" value={birth} onChange={setBirth} max={s.today} />
         <TextField label="Рост" unit="см" inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} />
         <SelectField label="Часовой пояс" value={tz} onChange={(e) => setTz(e.target.value)}>
           {zones.map((z) => <option key={z} value={z}>{z}</option>)}

@@ -180,3 +180,37 @@ export function useBeerMl(date: string): number {
     () => getBeerMl(date),
   );
 }
+
+/** True while the daily norm (kcal / macros) was typed by the user (for example dictated by a coach): auto-adjustments leave it alone. */
+const MANUAL_KEY = 'fitapp.manualTargets';
+const manualListeners = new Set<() => void>();
+let manualCache: boolean | null = null;
+export function isManualTargets(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (manualCache !== null) return manualCache;
+  try {
+    manualCache = window.localStorage.getItem(MANUAL_KEY) === '1';
+  } catch {
+    manualCache = false;
+  }
+  return manualCache;
+}
+export function setManualTargets(on: boolean): void {
+  manualCache = on;
+  try {
+    if (on) window.localStorage.setItem(MANUAL_KEY, '1');
+    else window.localStorage.removeItem(MANUAL_KEY);
+  } catch {
+    /* storage unavailable: lives until the page is closed */
+  }
+  manualListeners.forEach((l) => l());
+}
+export function useManualTargets(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      manualListeners.add(cb);
+      return () => manualListeners.delete(cb);
+    },
+    () => isManualTargets(),
+  );
+}

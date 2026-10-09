@@ -6,7 +6,7 @@ import { EXPERIENCE_LABELS, JOB_LABELS, SEX_LABELS } from '../app/format';
 import { setDisplayName } from '../app/prefs';
 import { Button, Chip, Icon, ProgressBar, Segmented, SelectField, TextField } from '../ui';
 import { FocusPicker, GoalPicker, WeekdayPicker } from './Profile';
-import { parseDecimal } from './shared';
+import { DateField, parseDecimal } from './shared';
 
 const MEASURES: ReadonlyArray<{ type: MetricType; label: string; hint?: string }> = [
   { type: 'chest', label: 'Грудь' },
@@ -151,7 +151,7 @@ export function Onboarding() {
         <div className="stack-lg">
           <TextField label="Как к тебе обращаться" placeholder="Необязательно" value={name} onChange={(e) => setName(e.target.value)} hint="Имя хранится только на этом устройстве" />
           <div className="field"><span className="lbl">Пол</span><Segmented label="Пол" options={(Object.keys(SEX_LABELS) as Sex[]).map((v) => ({ value: v, label: SEX_LABELS[v] }))} value={sex} onChange={setSex} /><span className="hint">Нужен для расчёта энергии; можно не указывать.</span></div>
-          <TextField label="Дата рождения" type="date" value={birth} max={snapshot.today} onChange={(e) => setBirth(e.target.value)} />
+          <DateField label="Дата рождения" value={birth} max={snapshot.today} onChange={setBirth} />
           <TextField label="Рост" unit="см" inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} />
         </div>
       )}

@@ -135,7 +135,7 @@ export function Today() {
         <ListItem icon="training" lime title="Последняя тренировка" subtitle={`${formatDay(lastWorkout.date)} · ${lastWorkout.exercises} ${plural(lastWorkout.exercises, ['упражнение', 'упражнения', 'упражнений'])} · ${lastWorkout.sets} ${plural(lastWorkout.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go('training')} />
       ) : (
         <Card flat>
-          <EmptyState icon="training" title="Программа тренировок появится здесь" text="Пока можно загрузить историю тренировок из Excel или резервной копии." action={<Button variant="secondary" size="sm" icon="upload" onClick={() => go('profile/data')}>Загрузить историю</Button>} />
+          <EmptyState icon="training" title="Программа тренировок появится здесь" text="Как только ты проведёшь первую тренировку, она появится в этом блоке." />
         </Card>
       )}
 
@@ -245,7 +245,7 @@ function BeerCard() {
           <IconButton icon="plus" label="Добавить 500 мл" onClick={() => setBeerMl(s.today, ml + 500)} />
         </div>
       </div>
-      <p className="t-small" style={{ marginTop: 10 }}>В отпуске считаем пиво. Кнопки добавляют по 0,5 л (кружка), своё число вводится нажатием на литры. Примерно 43 ккал на 100 мл, так что литр — около 430 ккал.</p>
+      <p className="t-small" style={{ marginTop: 10 }}>Вода подождёт, в отпуске у нас другой водный баланс. Кнопка «+» добавляет 0,5 л, своё число вводится нажатием на литры.</p>
     </Card>
   );
 }

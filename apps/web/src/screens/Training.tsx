@@ -34,7 +34,7 @@ export function Training() {
       <main className="screen">
         <ScreenHeader title="Тренировки" />
         <Card flat>
-          <EmptyState icon="training" title="🍻" text="Разве эта вкладка похожа на барное меню? Иди отдыхай!" />
+          <div className="vac-note"><span className="vac-emoji" aria-hidden="true">🍻</span><p className="t-h3">Разве эта вкладка похожа на барное меню? Иди отдыхай!</p></div>
         </Card>
       </main>
     );

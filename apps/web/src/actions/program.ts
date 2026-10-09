@@ -231,6 +231,20 @@ export async function setAbsEveryWorkout(deps: AppDeps, on: boolean): Promise<vo
   });
 }
 
+/** The user types the daily norm by hand (for example dictated by a coach): a new program version, water and fibre are kept. */
+export async function setManualNutrition(deps: AppDeps, v: { kcal: number; proteinG: number; fatG: number; carbG: number }): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const profile = await r.profile.get();
+    const today = deps.clock.today(profile?.timezone ?? 'UTC');
+    const program = await r.programs.getProgram();
+    const active = program?.activeVersionId ? await r.programs.getVersion(program.activeVersionId) : undefined;
+    const base = active?.nutrition ?? (await r.nutritionTargets.activeOn(today))?.targets;
+    if (!base) throw new Error('Сначала создайте программу');
+    const next = { ...base, kcal: Math.round(v.kcal), proteinG: Math.round(v.proteinG), fatG: Math.round(v.fatG), carbG: Math.round(v.carbG) };
+    await writeVersion(r, deps, today, { nutrition: next }, { source: 'user', reasonCode: 'manual_targets', reasonText: `Норма задана вручную: ${next.kcal} ккал, Б ${next.proteinG} / Ж ${next.fatG} / У ${next.carbG}` });
+  });
+}
+
 /** Recalculates daily targets from the latest weight and activity as a NEW version. */
 export async function recalculateTargets(deps: AppDeps): Promise<void> {
   await deps.uow.run(async (r) => {

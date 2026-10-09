@@ -4,7 +4,27 @@ import { addMetric } from '../actions';
 import { useData } from '../app/DataContext';
 import { BODY_MEASUREMENTS, METRIC_LABELS } from '../app/format';
 import { goBack } from '../app/router';
+import { isLocalDate } from '@fitapp/domain';
 import { Button, IconButton, SelectField, Sheet, TextField } from '../ui';
+
+const isoToRu = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : '');
+
+/** Birth date typed by hand as ДД.ММ.ГГГГ (dots are inserted while typing). Emits an ISO date, or '' while it is incomplete. */
+export function DateField({ label, value, onChange, max, hint }: { label: string; value: string; onChange: (iso: string) => void; max?: string; hint?: string }) {
+  const [text, setText] = useState(isoToRu(value));
+  const [touched, setTouched] = useState(false);
+  const change = (raw: string) => {
+    const d = raw.replace(/\D/g, '').slice(0, 8);
+    const t = d.length > 4 ? `${d.slice(0, 2)}.${d.slice(2, 4)}.${d.slice(4)}` : d.length > 2 ? `${d.slice(0, 2)}.${d.slice(2)}` : d;
+    setText(t);
+    if (d.length === 8) {
+      const iso = `${d.slice(4)}-${d.slice(2, 4)}-${d.slice(0, 2)}`;
+      onChange(isLocalDate(iso) && (!max || iso <= max) ? iso : '');
+    } else onChange('');
+  };
+  const bad = touched && text.length > 0 && !value;
+  return <TextField label={label} inputMode="numeric" placeholder="ДД.ММ.ГГГГ" autoComplete="bday" value={text} onChange={(e) => change(e.target.value)} onBlur={() => setTouched(true)} error={bad ? 'Введи дату целиком, например 12.05.1997' : null} hint={hint} />;
+}
 
 export function ScreenHeader({ title, back, right }: { title: string; back?: string; right?: ReactNode }) {
   return (

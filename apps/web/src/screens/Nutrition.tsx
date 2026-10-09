@@ -11,6 +11,8 @@ import {
   logPlanned,
   logUnplanned,
   recalculateTargets,
+  setManualNutrition,
+  applyDietMode,
   regenerateDay,
   regenerateMeal,
   removePlannedItem,
@@ -24,7 +26,7 @@ import { useData } from '../app/DataContext';
 import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, SLOT_ORDER, userFoodOf } from '../app/derive';
 import { fmt, formatDateShort, formatDay, WEEKDAY_SHORT } from '../app/format';
 import { useCommand } from '../app/useCommand';
-import { useVacationMode } from '../app/prefs';
+import { setManualTargets, useManualTargets, useVacationMode } from '../app/prefs';
 import type { FoodLog } from '@fitapp/domain';
 import { Badge, Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, TextField, type ChartSeries } from '../ui';
 import { isBarcode, lookupBarcode } from '../app/openFoodFacts';
@@ -82,6 +84,8 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   // The day as it will be: what was really eaten plus what is still planned.
   const planned = sumMacros([eaten, plannedOf(items.filter((i) => !logs.some((l) => l.plannedItemId === i.id)))]);
   const vacation = useVacationMode();
+  const manual = useManualTargets();
+  const [normOpen, setNormOpen] = useState(false);
   const [slotForAdd, setSlotForAdd] = useState<{ slot: MealSlot; scan: boolean } | null>(null);
   const [itemSheet, setItemSheet] = useState<PlannedItem | null>(null);
   const [logSheet, setLogSheet] = useState<FoodLog | null>(null);
@@ -89,10 +93,10 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
 
   const adjustment = useMemo(
     () =>
-      s.primaryGoal && s.profile && s.activeVersion
+      !manual && s.primaryGoal && s.profile && s.activeVersion
         ? suggestTargetAdjustment({ goal: s.primaryGoal.type, sex: s.profile.sex, targets, weight: s.weight, daysOnTargets: diffDays(s.activeVersion.effectiveFrom, s.today) })
         : null,
-    [s, targets],
+    [s, targets, manual],
   );
 
   const remaining = targets.kcal - eaten.kcal;
@@ -205,7 +209,13 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
       {!isPast && items.length > 0 && (
         <Button variant="secondary" block icon="history" disabled={busy} onClick={() => void run((d) => regenerateDay(d, date, variation()))}>Переделать день</Button>
       )}
-      <Button variant="text" onClick={() => void run((d) => recalculateTargets(d))} disabled={busy}>Пересчитать норму по текущему весу</Button>
+      <Button variant="secondary" block icon="edit" onClick={() => setNormOpen(true)}>Задать норму вручную</Button>
+      {manual ? (
+        <Button variant="text" onClick={() => { setManualTargets(false); void run(async (d) => { await recalculateTargets(d); await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000); }); }} disabled={busy}>Вернуть автоматический расчёт нормы</Button>
+      ) : (
+        <Button variant="text" onClick={() => void run((d) => recalculateTargets(d))} disabled={busy}>Пересчитать норму по текущему весу</Button>
+      )}
+      <NormSheet open={normOpen} onClose={() => setNormOpen(false)} current={targets} manual={manual} />
 
       <AddFoodSheet open={slotForAdd !== null} slot={slotForAdd?.slot ?? 'snack'} startScan={slotForAdd?.scan ?? false} date={date} onClose={() => setSlotForAdd(null)} />
       <ItemSheet item={itemSheet} onClose={() => setItemSheet(null)} />
@@ -579,5 +589,46 @@ function MonthView() {
       </div>
       <p className="t-small"><Icon name="info" size={14} /> Дни, в которых записано только часть еды, занижают среднее.</p>
     </>
+  );
+}
+
+function NormSheet({ open, onClose, current, manual }: { open: boolean; onClose: () => void; current: { kcal: number; proteinG: number; fatG: number; carbG: number }; manual: boolean }) {
+  const { ok, banner, busy } = useCommand();
+  const init = () => ({ kcal: String(Math.round(current.kcal)), p: String(Math.round(current.proteinG)), f: String(Math.round(current.fatG)), c: String(Math.round(current.carbG)) });
+  const [v, setV] = useState(init);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => { if (open) { setV(init()); setErr(null); } }, [open]);
+  const kcal = parseDecimal(v.kcal);
+  const p = parseDecimal(v.p);
+  const f = parseDecimal(v.f);
+  const c = parseDecimal(v.c);
+  const fromMacros = [p, f, c].every(Number.isFinite) ? Math.round(p * 4 + f * 9 + c * 4) : null;
+  const save = async () => {
+    if (![kcal, p, f, c].every((x) => Number.isFinite(x) && x >= 0)) return setErr('Заполни все четыре поля числами');
+    if (kcal < 800 || kcal > 8000) return setErr('Калории должны быть от 800 до 8000');
+    setErr(null);
+    const done = await ok(async (d) => {
+      await setManualNutrition(d, { kcal, proteinG: p, fatG: f, carbG: c });
+      await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000);
+    });
+    if (done) { setManualTargets(true); onClose(); }
+  };
+  return (
+    <Sheet open={open} title="Норма вручную" onClose={onClose}>
+      <div className="stack-lg">
+        <p className="note">Например, если норму диктует тренер. Приложение подстроит рацион под эти числа и не будет менять норму само, пока ты не вернёшь автоматический расчёт.</p>
+        <TextField label="Калории" unit="ккал" inputMode="numeric" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} />
+        <div className="grid-3">
+          <TextField label="Белки" unit="г" inputMode="decimal" value={v.p} onChange={(e) => setV({ ...v, p: e.target.value })} />
+          <TextField label="Жиры" unit="г" inputMode="decimal" value={v.f} onChange={(e) => setV({ ...v, f: e.target.value })} />
+          <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} />
+        </div>
+        {fromMacros !== null && Number.isFinite(kcal) && Math.abs(fromMacros - kcal) > 100 && <p className="t-small">По граммам выходит около {fromMacros} ккал, а ты указал {Math.round(kcal)}. Это не помешает, просто числа расходятся.</p>}
+        {err && <div className="errbox" role="alert">{err}</div>}
+        {banner}
+        <Button block disabled={busy} onClick={() => void save()}>Сохранить норму</Button>
+        {manual && <p className="t-small">Сейчас норма задана вручную.</p>}
+      </div>
+    </Sheet>
   );
 }
