@@ -107,7 +107,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
     <>
       <DayNav date={date} setDate={setDate} today={s.today} />
       {banner}
-      {vacation && <Card flat><p className="t-small">🏖️ Режим «Отпуск»: рацион из пиццы, роллов, бургеров, пива и вина. Калории подогнаны под норму, белка в такой еде мало, поэтому он будет ниже. Выключается в профиле.</p></Card>}
+      {vacation && <Card flat><p className="t-small">Режим «Отпуск»: это особый рацион питания, подобранный специально для тебя 🫶🏼</p></Card>}
       {adjustment && !dismissed && (
         <Card>
           <div className="stack">
@@ -422,11 +422,11 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
           />
         ) : !food ? (
           <>
-            <div className="row" style={{ flexWrap: 'wrap' }}>
-              <Button variant="secondary" icon="scan" onClick={() => setScanning(true)}>Сканировать штрих-код</Button>
-              <Button variant="secondary" icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
+            <div className="add-row">
+              <Button variant="secondary" size="sm" block icon="scan" onClick={() => setScanning(true)}>Сканировать штрих-код</Button>
+              <Button variant="secondary" size="sm" block icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
             </div>
-            <TextField label="Поиск продукта" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" />
+            <TextField label="Поиск продукта" className="search-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" />
             <div className="list">
               {foods.map((f) => (
                 <ListItem key={f.id} title={f.name} subtitle={`${CATEGORY_LABELS[f.category]} · ${fmt(f.per100.kcal, 0)} ккал/100 г`} onClick={() => { setPicked(f.id); setGrams(f.gramsPerPiece ? String(f.gramsPerPiece) : '100'); }} />

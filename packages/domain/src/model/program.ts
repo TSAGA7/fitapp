@@ -42,6 +42,8 @@ export const TrainingPlanSnapshot = z.object({
   startsOn: LocalDateSchema,
   /** The user asked to finish every workout with abdominal work (any goal). */
   absEveryWorkout: z.boolean().optional(),
+  /** The user asked to finish every workout with easy cardio. */
+  cardioEveryWorkout: z.boolean().optional(),
 });
 export type TrainingPlanSnapshot = z.infer<typeof TrainingPlanSnapshot>;
 

@@ -267,6 +267,17 @@ describe('abs in every workout and likes', () => {
     for (const w of withAbs.workouts) expect(coreCount(w)).toBeGreaterThanOrEqual(2);
     expect(withAbs.workouts.reduce((a, w) => a + coreCount(w), 0)).toBeGreaterThan(plain.workouts.reduce((a, w) => a + coreCount(w), 0));
   });
+  it('puts one timed cardio exercise at the end of every workout when asked', () => {
+    const plan = buildTrainingPlan({ ...input, cardioEveryWorkout: true }).plan;
+    expect(plan.cardioEveryWorkout).toBe(true);
+    for (const w of plan.workouts) {
+      const last = w.exercises[w.exercises.length - 1];
+      const ex = catalog.find((c) => c.id === last?.exerciseId);
+      expect(['incline_walk', 'bike_steady']).toContain(ex?.key);
+      expect(last?.sets).toBe(1);
+    }
+    expect(buildTrainingPlan(input).plan.cardioEveryWorkout).toBeUndefined();
+  });
   it('a liked exercise that the pain points removed can come back', () => {
     const idsOf = (liked?: Set<string>) => buildTrainingPlan({ ...input, ctx: ctx({ liked }) }).plan.workouts.flatMap((w) => w.exercises.map((e) => e.exerciseId));
     const base = new Set(idsOf());

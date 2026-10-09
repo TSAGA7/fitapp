@@ -120,8 +120,10 @@ async function gather(r: Repositories, deps: AppDeps) {
   const liked = new Set(prefs.filter((u) => u.preference === 'like').map((u) => u.exerciseId));
   const disliked = new Set(prefs.filter((u) => u.preference === 'dislike').map((u) => u.exerciseId));
   const today = deps.clock.today(profile.timezone);
-  const absEvery = (await activeTraining(r))?.absEveryWorkout === true;
-  return { profile, goal, weight, equipment, userEquipment, exercises, injuries, painEvents, liked, disliked, today, absEvery };
+  const activePlan = await activeTraining(r);
+  const absEvery = activePlan?.absEveryWorkout === true;
+  const cardioEvery = activePlan?.cardioEveryWorkout === true;
+  return { profile, goal, weight, equipment, userEquipment, exercises, injuries, painEvents, liked, disliked, today, absEvery, cardioEvery };
 }
 
 function buildPlan(g: Awaited<ReturnType<typeof gather>>, deps: AppDeps): PlanBuildResult {
@@ -142,6 +144,7 @@ function buildPlan(g: Awaited<ReturnType<typeof gather>>, deps: AppDeps): PlanBu
     focus: [...g.goal.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area),
     startsOn: g.today,
     absEveryWorkout: g.absEvery,
+    cardioEveryWorkout: g.cardioEvery,
   });
 }
 
@@ -242,6 +245,15 @@ export async function setManualNutrition(deps: AppDeps, v: { kcal: number; prote
     if (!base) throw new Error('Сначала создайте программу');
     const next = { ...base, kcal: Math.round(v.kcal), proteinG: Math.round(v.proteinG), fatG: Math.round(v.fatG), carbG: Math.round(v.carbG) };
     await writeVersion(r, deps, today, { nutrition: next }, { source: 'user', reasonCode: 'manual_targets', reasonText: `Норма задана вручную: ${next.kcal} ккал, Б ${next.proteinG} / Ж ${next.fatG} / У ${next.carbG}` });
+  });
+}
+
+/** "Cardio at the end of every workout" on/off: writes a new program version. */
+export async function setCardioEveryWorkout(deps: AppDeps, on: boolean): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const g = await gather(r, deps);
+    const plan = buildPlan({ ...g, cardioEvery: on }, deps);
+    await writeVersion(r, deps, g.today, { training: plan.plan }, { source: 'user', reasonCode: 'cardio_every_workout', reasonText: on ? 'Кардио добавлено в каждую тренировку' : 'Кардио больше не добавляется в каждую тренировку' });
   });
 }
 

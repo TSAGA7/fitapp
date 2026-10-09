@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCommand } from '../app/useCommand';
 import { ageYears, isLocalDate, type Experience, type FocusArea, type GoalType, type JobActivity, type Sex, type TrainingSchedule, type Weekday, WEEKDAYS } from '@fitapp/domain';
 import { applyDietMode, saveGoal, updateProfile } from '../actions';
@@ -17,6 +17,8 @@ import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './
 import { AddMeasurementSheet, AddWeightSheet, DateField, parseDecimal, ScreenHeader } from './shared';
 
 export function Profile({ route }: { route: string[] }) {
+  // Every profile screen opens from the very top, not at the scroll position of the previous one.
+  useEffect(() => { window.scrollTo(0, 0); }, [route.join('/')]);
   switch (route[1]) {
     case 'personal':
       return <Personal />;
@@ -57,7 +59,6 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'leaf', name: 'Поперечная мышца', to: 'profile/tva' },
   { icon: 'heart', name: 'Кардио', to: 'profile/cardio' },
   { icon: 'shield', name: 'Болевые точки', to: 'profile/injuries' },
-  { icon: 'history', name: 'История изменений программы', to: 'profile/versions' },
   { icon: 'download', name: 'Экспорт и импорт', to: 'profile/data' },
 ];
 
@@ -140,7 +141,6 @@ function ThemePicker() {
     <div className="field">
       <span className="lbl">Оформление</span>
       <Segmented<ThemeChoice> label="Оформление" options={(Object.keys(THEME_LABELS) as ThemeChoice[]).map((v) => ({ value: v, label: THEME_LABELS[v] }))} value={theme} onChange={setTheme} />
-      {theme === 'system' && <span className="hint">Приложение повторяет тему телефона: днём светлая, ночью тёмная.</span>}
     </div>
   );
 }
@@ -187,6 +187,7 @@ function Personal() {
           {(Object.keys(JOB_LABELS) as JobActivity[]).map((v) => <option key={v} value={v}>{JOB_LABELS[v]}</option>)}
         </SelectField>
         <ThemePicker />
+        <ListItem icon="history" title="История изменений программы" subtitle="Служебный журнал версий нормы и тренировок" onClick={() => go('profile/versions')} />
         {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
       </div>
       <div className="save-bar"><Button block onClick={save}>Сохранить</Button></div>

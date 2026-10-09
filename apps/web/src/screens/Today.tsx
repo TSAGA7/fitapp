@@ -5,9 +5,9 @@ import { eatenOf, itemsOnDate, logsOnDate, plannedOf } from '../app/derive';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
 import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signed } from '../app/format';
-import { getDisplayName, setBeerMl, useBeerMl, useVacationMode } from '../app/prefs';
+import { getDisplayName, setBeerMl, setDrink, useBeerMl, useDrink, useVacationMode, type Drink } from '../app/prefs';
 import { go } from '../app/router';
-import { Button, Card, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
+import { Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
 import { BodyweightCard } from './BodyweightMode';
 import { GoalExplainSheet } from './GoalExplain';
@@ -204,48 +204,64 @@ function lastWorkoutToday(s: { workouts: { date: string }[]; today: string }): b
 
 const WATER_DONE = 'Да ты чё? Базару нет!';
 
+const DRINKS: Record<Drink, { emoji: string; name: string; step: number; stepLabel: string }> = {
+  beer: { emoji: '🍺', name: 'Пиво', step: 500, stepLabel: '500 мл' },
+  wine: { emoji: '🍷', name: 'Вино', step: 150, stepLabel: '150 мл' },
+  sparkling: { emoji: '🥂', name: 'Просекко / шампанское', step: 150, stepLabel: '150 мл' },
+};
+
 function BeerCard() {
   const { snapshot: s } = useData();
-  const ml = useBeerMl(s.today);
+  const drink = useDrink();
+  const info = DRINKS[drink];
+  const ml = useBeerMl(s.today, drink);
+  const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState('');
   const commit = () => {
     setEditing(false);
     const l = parseDecimal(text);
-    if (text.trim() !== '' && Number.isFinite(l) && l >= 0) setBeerMl(s.today, l * 1000);
+    if (text.trim() !== '' && Number.isFinite(l) && l >= 0) setBeerMl(s.today, l * 1000, drink);
   };
   return (
     <Card>
       <div className="row between">
         <div className="row">
-          <span className="li-icon lime" aria-hidden="true" style={{ fontSize: 20 }}>🍺</span>
+          <button type="button" className="li-icon lime drink-btn" aria-label="Выбрать напиток" aria-expanded={picking} onClick={() => setPicking((v) => !v)}>{info.emoji}</button>
           <div>
-            <div className="t-caption">Пиво сегодня</div>
+            <div className="t-caption">{info.name} сегодня</div>
             <div className="t-h3">
               {editing ? (
                 <input
                   className="water-input"
                   autoFocus
                   inputMode="decimal"
-                  aria-label="Выпито пива, литров"
+                  aria-label={`Выпито, литров: ${info.name}`}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   onBlur={commit}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditing(false); }}
                 />
               ) : (
-                <button type="button" className="water-value" aria-label="Ввести количество пива вручную" onClick={() => { setText(String(ml / 1000).replace('.', ',')); setEditing(true); }}>{fmt(ml / 1000, 2)}</button>
+                <button type="button" className="water-value" aria-label="Ввести количество вручную" onClick={() => { setText(String(ml / 1000).replace('.', ',')); setEditing(true); }}>{fmt(ml / 1000, 2)}</button>
               )}
               {NBSP}л
             </div>
           </div>
         </div>
         <div className="row">
-          <IconButton icon="minus" label="Убрать 500 мл" disabled={ml === 0} onClick={() => setBeerMl(s.today, Math.max(0, ml - 500))} />
-          <IconButton icon="plus" label="Добавить 500 мл" onClick={() => setBeerMl(s.today, ml + 500)} />
+          <IconButton icon="minus" label={`Убрать ${info.stepLabel}`} disabled={ml === 0} onClick={() => setBeerMl(s.today, Math.max(0, ml - info.step), drink)} />
+          <IconButton icon="plus" label={`Добавить ${info.stepLabel}`} onClick={() => setBeerMl(s.today, ml + info.step, drink)} />
         </div>
       </div>
-      <p className="t-small" style={{ marginTop: 10 }}>Вода подождёт, в отпуске у нас другой водный баланс. Кнопка «+» добавляет 0,5 л, своё число вводится нажатием на литры.</p>
+      {picking && (
+        <div className="drink-row" role="group" aria-label="Напиток">
+          {(Object.keys(DRINKS) as Drink[]).map((d) => (
+            <Chip key={d} pressed={d === drink} onClick={() => { setDrink(d); setPicking(false); }}>{DRINKS[d].emoji} {DRINKS[d].name}</Chip>
+          ))}
+        </div>
+      )}
+      <p className="t-small" style={{ marginTop: 10 }}>Вода подождёт, в отпуске у нас другой водяной баланс.</p>
     </Card>
   );
 }
@@ -291,7 +307,7 @@ function WaterCard({ recommendedMl }: { recommendedMl: number }) {
           <IconButton icon="plus" label="Добавить 250 мл" onClick={() => void act((d) => addWater(d, s.today, 250))} />
         </div>
       </div>
-      <p className="t-small" style={{ marginTop: 10 }}>{reached ? WATER_DONE : 'Ориентир, не норма: ~33 мл на кг веса для мужчин и ~30 для женщин (у национальных академий США около 3 л напитков в сутки для мужчин и 2,2 л для женщин, ещё ~20% воды приходит с едой). Пей по жажде; в жару и в дни тренировок обычно больше. Чтобы ввести своё число, нажми на литры.'}</p>
+      <p className="t-small" style={{ marginTop: 10 }}>{reached ? WATER_DONE : 'Ориентир: ~33 мл на кг веса для мужчин и ~30 для женщин. Всё равно пей по жажде.'}</p>
     </Card>
   );
 }

@@ -155,14 +155,17 @@ function readBeer(): Record<string, number> {
   }
   return beerCache;
 }
-export function getBeerMl(date: string): number {
-  const v = readBeer()[date];
+export type Drink = 'beer' | 'wine' | 'sparkling';
+const drinkKey = (date: string, drink: Drink) => (drink === 'beer' ? date : `${date}|${drink}`);
+export function getBeerMl(date: string, drink: Drink = 'beer'): number {
+  const v = readBeer()[drinkKey(date, drink)];
   return typeof v === 'number' && v > 0 ? v : 0;
 }
-export function setBeerMl(date: string, ml: number): void {
+export function setBeerMl(date: string, ml: number, drink: Drink = 'beer'): void {
   const next = { ...readBeer() };
-  if (ml > 0) next[date] = Math.round(ml);
-  else delete next[date];
+  const k = drinkKey(date, drink);
+  if (ml > 0) next[k] = Math.round(ml);
+  else delete next[k];
   beerCache = next;
   try {
     window.localStorage.setItem(BEER_KEY, JSON.stringify(next));
@@ -171,13 +174,45 @@ export function setBeerMl(date: string, ml: number): void {
   }
   beerListeners.forEach((l) => l());
 }
-export function useBeerMl(date: string): number {
+export function useBeerMl(date: string, drink: Drink = 'beer'): number {
   return useSyncExternalStore(
     (cb) => {
       beerListeners.add(cb);
       return () => beerListeners.delete(cb);
     },
-    () => getBeerMl(date),
+    () => getBeerMl(date, drink),
+  );
+}
+
+const DRINK_KEY = 'fitapp.drink';
+const drinkListeners = new Set<() => void>();
+let drinkCache: Drink | null = null;
+export function getDrink(): Drink {
+  if (drinkCache) return drinkCache;
+  try {
+    const v = window.localStorage.getItem(DRINK_KEY);
+    drinkCache = v === 'wine' || v === 'sparkling' ? v : 'beer';
+  } catch {
+    drinkCache = 'beer';
+  }
+  return drinkCache;
+}
+export function setDrink(d: Drink): void {
+  drinkCache = d;
+  try {
+    window.localStorage.setItem(DRINK_KEY, d);
+  } catch {
+    /* storage unavailable */
+  }
+  drinkListeners.forEach((l) => l());
+}
+export function useDrink(): Drink {
+  return useSyncExternalStore(
+    (cb) => {
+      drinkListeners.add(cb);
+      return () => drinkListeners.delete(cb);
+    },
+    () => getDrink(),
   );
 }
 

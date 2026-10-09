@@ -32,6 +32,8 @@ const CALF = S(['calf_raise']);
 export const VACUUM_KEYS = ['vacuum_standing', 'vacuum_quadruped', 'vacuum_lying', 'breathing_90_90'] as const;
 const ACTIVATION: Slot = { patterns: ['core_antiextension'], keys: ['vacuum_standing', 'vacuum_lying', 'breathing_90_90'], allowTime: true };
 const CORE_A = S(['core_antiextension', 'core_antirotation'], false, true);
+/** Easy cardio at the end of a workout: a treadmill incline walk or an exercise bike, whichever the user has. */
+const CARDIO_TAIL: Slot = { patterns: ['carry'], keys: ['incline_walk', 'bike_steady'], allowTime: true };
 const CORE_B = S(['core_antirotation', 'core_flexion'], false, true);
 
 interface TemplateDef {
@@ -99,6 +101,8 @@ export interface PlanBuildInput {
   startsOn: LocalDate;
   /** Add abdominal work (up to two exercises) at the end of every workout, whatever the goal. */
   absEveryWorkout?: boolean;
+  /** Finish every workout with 10–30 minutes of easy cardio. */
+  cardioEveryWorkout?: boolean;
 }
 
 export interface ExcludedExercise {
@@ -142,7 +146,7 @@ function chooseExercise(
       if (!slot.keys.includes(ex.key) || usedHere.has(ex.id) || ex.deletedAt !== null) continue;
     } else if (!slot.patterns.includes(ex.movementPattern) || usedHere.has(ex.id) || ex.deletedAt !== null || (VACUUM_KEYS as readonly string[]).includes(ex.key)) continue;
     if (isTimedOrCardio(ex) && !slot.allowTime) continue;
-    if (ex.key === 'incline_walk' || ex.key === 'bike_steady') continue;
+    if (!slot.keys && (ex.key === 'incline_walk' || ex.key === 'bike_steady')) continue;
     if (ctx.disliked?.has(ex.id)) continue;
     const a = assessments.get(ex.id);
     if (!a || a.status === 'unavailable' || (a.status === 'avoid' && !ctx.liked?.has(ex.id))) continue;
@@ -214,7 +218,7 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
     const base = slotLists[wi] as Slot[];
     const coreCount = base.filter((sl) => sl.patterns[0]?.startsWith('core_')).length;
     const absTail = input.absEveryWorkout === true ? [CORE_A, CORE_B].slice(0, Math.max(0, 2 - coreCount)) : [];
-    const ordered = [...(activation ? [ACTIVATION] : []), ...base, ...absTail];
+    const ordered = [...(activation ? [ACTIVATION] : []), ...base, ...absTail, ...(input.cardioEveryWorkout === true ? [CARDIO_TAIL] : [])];
     ordered.forEach((slot) => {
       const ex = chooseExercise(slot, catalog, assessments, usedHere, usedAnywhere, input.ctx);
       if (!ex) return;
@@ -234,7 +238,7 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
         exerciseId: ex.id,
         variantKey: 'default',
         position,
-        sets: slot.keys ? 2 : Math.min(ex.defaultSets, ex.isCompound ? 4 : 3),
+        sets: slot.keys ? Math.min(2, ex.defaultSets) : Math.min(ex.defaultSets, ex.isCompound ? 4 : 3),
         repMin: ex.defaultRepRange.min,
         repMax: ex.defaultRepRange.max,
         rirAdaptation: adaptRir,
@@ -262,6 +266,7 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
     adaptationWeeks,
     startsOn: input.startsOn,
     ...(input.absEveryWorkout === true ? { absEveryWorkout: true } : {}),
+    ...(input.cardioEveryWorkout === true ? { cardioEveryWorkout: true } : {}),
   };
 
   const excluded: ExcludedExercise[] = [];

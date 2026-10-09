@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CARDIO_MACHINES, type CardioMachine } from '@fitapp/domain';
-import { addCardioSession, deleteCardioSession } from '../actions';
+import { addCardioSession, deleteCardioSession, setCardioEveryWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { fmt, formatDay } from '../app/format';
 import { go } from '../app/router';
@@ -187,11 +187,30 @@ export function CardioGuideBody() {
   );
 }
 
+function CardioEveryWorkout() {
+  const { snapshot: s } = useData();
+  const { ok, banner, busy } = useCommand();
+  const on = s.activeVersion?.training.cardioEveryWorkout === true;
+  if (!s.activeVersion) return null;
+  return (
+    <Card>
+      <div className="stack">
+        <div className="t-h3">Кардио в каждую тренировку</div>
+        <p className="t-small">{on ? 'Сейчас в конце каждой тренировки стоит 10–30 минут лёгкого кардио: ходьба в горку или велотренажёр, что есть в твоих тренажёрах.' : 'Нажми, и в конец каждой тренировки добавится 10–30 минут лёгкого кардио (ходьба в горку или велотренажёр, что есть в твоих тренажёрах). Отключить можно здесь же.'}</p>
+        {banner}
+        <Button block variant={on ? 'secondary' : 'primary'} disabled={busy} onClick={() => void ok((d) => setCardioEveryWorkout(d, !on))}>{on ? 'Убрать кардио из тренировок' : 'Добавить в тренировочный процесс'}</Button>
+      </div>
+    </Card>
+  );
+}
+
 export function CardioGuideScreen() {
   const [open, setOpen] = useState(false);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   return (
     <main className="screen">
       <ScreenHeader title="Кардио" back="profile" />
+      <CardioEveryWorkout />
       <Card>
         <CardioGuideBody />
       </Card>
