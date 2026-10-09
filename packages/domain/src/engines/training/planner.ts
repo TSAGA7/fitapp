@@ -97,6 +97,8 @@ export interface PlanBuildInput {
   goal: GoalType;
   focus: readonly FocusArea[];
   startsOn: LocalDate;
+  /** Add abdominal work (up to two exercises) at the end of every workout, whatever the goal. */
+  absEveryWorkout?: boolean;
 }
 
 export interface ExcludedExercise {
@@ -143,10 +145,10 @@ function chooseExercise(
     if (ex.key === 'incline_walk' || ex.key === 'bike_steady') continue;
     if (ctx.disliked?.has(ex.id)) continue;
     const a = assessments.get(ex.id);
-    if (!a || a.status === 'unavailable' || a.status === 'avoid') continue;
+    if (!a || a.status === 'unavailable' || (a.status === 'avoid' && !ctx.liked?.has(ex.id))) continue;
     if (ctx.experience === 'beginner' && ex.skillLevel >= 3) continue;
     let score = 0;
-    if (ctx.liked?.has(ex.id)) score += 2;
+    if (ctx.liked?.has(ex.id)) score += a.status === 'avoid' ? 30 : 2; // an explicit like brings a removed exercise back
     if (slot.keys) score -= slot.keys.indexOf(ex.key) * 0.1;
     if (slot.compound && ex.isCompound) score += 3;
     score -= a.risk;
@@ -170,6 +172,7 @@ function whyChosen(ex: Exercise, ctx: SafetyContext, a: ExerciseAssessment, alte
   if (ex.isCompound) parts.push('многосуставное, даёт основной стимул');
   if (parts.length === 0) parts.push('подходит под цель и оборудование');
   if (alternativesAvoided.length > 0) parts.push(`вместо «${alternativesAvoided[0]}», которое для вас рискованнее`);
+  if (a.status === 'avoid') parts.push('вернули лайком; идите на этом упражнении аккуратно и остановитесь при боли');
   if (a.status === 'caution') parts.push('с осторожностью: ' + (a.conditions[0] ?? 'следите за техникой'));
   return parts.join('; ');
 }
@@ -208,7 +211,11 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
     const usedHere = new Set<string>();
     const exercises: PlannedExercise[] = [];
     const muscles: MuscleGroup[] = [];
-    (activation ? [ACTIVATION, ...(slotLists[wi] as Slot[])] : (slotLists[wi] as Slot[])).forEach((slot) => {
+    const base = slotLists[wi] as Slot[];
+    const coreCount = base.filter((sl) => sl.patterns[0]?.startsWith('core_')).length;
+    const absTail = input.absEveryWorkout === true ? [CORE_A, CORE_B].slice(0, Math.max(0, 2 - coreCount)) : [];
+    const ordered = [...(activation ? [ACTIVATION] : []), ...base, ...absTail];
+    ordered.forEach((slot) => {
       const ex = chooseExercise(slot, catalog, assessments, usedHere, usedAnywhere, input.ctx);
       if (!ex) return;
       usedHere.add(ex.id);
@@ -254,6 +261,7 @@ export function buildTrainingPlan(input: PlanBuildInput): PlanBuildResult {
     rotation: workouts.filter((w) => w.exercises.length > 0).map((w) => w.key),
     adaptationWeeks,
     startsOn: input.startsOn,
+    ...(input.absEveryWorkout === true ? { absEveryWorkout: true } : {}),
   };
 
   const excluded: ExcludedExercise[] = [];

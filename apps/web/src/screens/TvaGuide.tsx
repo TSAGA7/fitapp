@@ -1,3 +1,5 @@
+import { setAbsEveryWorkout } from '../actions';
+import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
 import { go } from '../app/router';
 import { Button, Card } from '../ui';
@@ -8,7 +10,7 @@ export function TvaGuideBody() {
   return (
     <div className="stack">
       <section className="stack">
-        <h3 className="t-h3">Поперечная мышца живота (transversus abdominis)</h3>
+        <h3 className="t-h3">Поперечная мышца живота</h3>
         <p className="t-body">Поперечная мышца живота — самая глубокая из мышц пресса. Она идёт горизонтально, как широкий пояс: от рёбер и поясницы к центру живота. Её задача — держать живот «подобранным», стабилизировать поясницу и таз и создавать давление внутри корпуса, на которое опирается позвоночник.</p>
         <p className="t-body">Она не сжигает жир над собой: жир уходит из‑за дефицита калорий по всему телу. Зато если мышца вялая, живот выпячивается вперёд, а поясница прогибается — это выглядит как «пузо» даже при невысоком проценте жира.</p>
       </section>
@@ -50,12 +52,30 @@ export function TvaGuideBody() {
   );
 }
 
+function AbsEveryWorkout() {
+  const { snapshot: s } = useData();
+  const { ok, banner, busy } = useCommand();
+  const on = s.activeVersion?.training.absEveryWorkout === true;
+  if (!s.activeVersion) return null;
+  return (
+    <Card>
+      <div className="stack">
+        <div className="t-h3">Пресс в каждую тренировку</div>
+        <p className="t-small">Укрепление корпуса полезно каждому, а не только тем, кто худеет: оно держит осанку, разгружает поясницу и помогает в других упражнениях. {on ? 'Сейчас в конце каждой тренировки стоят 1–2 упражнения на пресс.' : 'Нажми, и в конец каждой тренировки добавятся 1–2 безопасных упражнения на пресс. Отключить можно здесь же.'}</p>
+        {banner}
+        <Button block variant={on ? 'secondary' : 'primary'} disabled={busy} onClick={() => void ok((d) => setAbsEveryWorkout(d, !on))}>{on ? 'Убрать пресс из тренировок' : 'Добавить в тренировочный процесс'}</Button>
+      </div>
+    </Card>
+  );
+}
+
 export function TvaGuideScreen() {
   const { snapshot: s } = useData();
   const vacuum = s.exercises.find((e) => e.key === 'vacuum_lying');
   return (
     <main className="screen">
       <ScreenHeader title="Поперечная мышца живота" back="profile" />
+      <AbsEveryWorkout />
       <Card>
         <TvaGuideBody />
       </Card>

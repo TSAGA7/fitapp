@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { Availability, BodyArea, InjuryStatus, Preference, Side, TriggerKind } from '@fitapp/domain';
 import { addInjury, deleteInjury, resolveInjury, setEquipmentAvailable, setEquipmentStep, setFoodPreference } from '../actions';
 import { useData } from '../app/DataContext';
+import { go } from '../app/router';
 import { userFoodOf } from '../app/derive';
 import { fmt, formatDay } from '../app/format';
 import { useCommand } from '../app/useCommand';
@@ -125,6 +126,14 @@ export function InjuriesScreen() {
     <main className="screen">
       <ScreenHeader title="Болевые точки" back="profile" />
       {banner}
+      <Card>
+        <div className="stack">
+          <div className="t-h3">Программа подстраивается сама</div>
+          <p className="t-small">Когда ты добавляешь, меняешь или закрываешь болевую точку, тренировки пересобираются автоматически: потенциально травмоопасные для этого места упражнения убираются из программы, а вместо них ставятся более щадящие.</p>
+          <p className="t-small">Убрали лишнее? Любое упражнение можно вернуть: открой каталог упражнений и поставь «Нравится». Лайк вернёт его в программу, но выполняй его осторожно и останавливайся при боли.</p>
+          <Button size="sm" variant="secondary" onClick={() => go('profile/exercises')}>Открыть каталог упражнений</Button>
+        </div>
+      </Card>
       <Card flat>
         <p className="t-small">Это только подсказки для подбора упражнений, не диагноз. Боль в суставе — повод остановить движение; если она повторяется или не проходит, покажись врачу или физиотерапевту.</p>
       </Card>
@@ -179,6 +188,7 @@ function AddInjurySheet({ open, onClose }: { open: boolean; onClose: () => void 
         <div className="chips">{(Object.keys(TRIGGER_LABELS) as TriggerKind[]).map((k) => <Chip key={k} pressed={triggers.includes(k)} onClick={() => toggle(k)}>{TRIGGER_LABELS[k]}</Chip>)}</div>
         <TextField label="Например: «при жиме лёжа»" value={text} onChange={(e) => setText(e.target.value)} />
         <TextField label="Заметка (необязательно)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <p className="t-small">После сохранения программа пересоберётся: потенциально травмоопасные упражнения для этого места уберутся. Вернуть любое из них можно в каталоге упражнений, поставив «Нравится».</p>
         <Button block disabled={busy || area === null} onClick={async () => { if (area && (await ok((d) => addInjury(d, { area, side, status, triggerKinds: triggers, triggerText: text.trim() || null, notes: notes.trim() || null })))) { setArea(null); setText(''); setNotes(''); setTriggers([]); onClose(); } }}>Сохранить</Button>
       </div>
     </Sheet>

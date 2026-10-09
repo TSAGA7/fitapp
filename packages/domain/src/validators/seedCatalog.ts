@@ -92,7 +92,8 @@ export function validateSeedCatalog(input: unknown): CatalogReport {
     const p = f.per100;
     const calc = 4 * p.proteinG + 9 * p.fatG + 4 * p.carbG;
     // Alcohol and sugar alcohols make small gaps normal: warn only for a clear mismatch.
-    if (p.kcal > 0 && Math.abs(calc - p.kcal) / p.kcal > 0.2 && Math.abs(calc - p.kcal) > 30) {
+    const alcohol = f.category === 'drinks' && (f.dataSource.note ?? '').includes('алкогол');
+    if (!alcohol && p.kcal > 0 && Math.abs(calc - p.kcal) / p.kcal > 0.2 && Math.abs(calc - p.kcal) > 30) {
       warnings.push(warn('macro_mismatch', `${f.key}: kcal ${p.kcal} differs from macros (${Math.round(calc)}) by more than 20%`, at));
     }
     if (p.proteinG + p.fatG + p.carbG > 100.5) errors.push(err('macros_over_100g', `${f.key}: macros exceed 100 g per 100 g`, at));

@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import type { Exercise, MuscleGroup } from '@fitapp/domain';
-import { isBodyweightOnly } from '@fitapp/domain';
+import { assessExercise, isBodyweightOnly } from '@fitapp/domain';
 import { setExercisePreference } from '../actions';
 import { useData } from '../app/DataContext';
+import { safetyContext } from '../app/derive';
 import { Chip, TextField } from '../ui';
 import { ScreenHeader } from './shared';
 import { useCommand } from '../app/useCommand';
@@ -50,12 +51,17 @@ export function ExerciseCatalogScreen() {
       .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   }, [s.exercises, filter, query, pref]);
 
+  const removedByPain = useMemo(() => {
+    const ctx = safetyContext(s, new Date().toISOString());
+    const noLikes = { ...ctx, liked: new Set<string>() };
+    return new Set(s.exercises.filter((e) => e.deletedAt === null && assessExercise(e, noLikes).status === 'avoid').map((e) => e.id));
+  }, [s]);
   const set = (e: Exercise, v: 'like' | 'dislike') => void ok((d) => setExercisePreference(d, e.id, pref.get(e.id) === v ? null : v));
 
   return (
     <main className="screen">
       <ScreenHeader title="Каталог упражнений" back="profile" />
-      <p className="note">Отметь, какие упражнения тебе удобны, а какие нет. «Нравится» чаще попадает в программу и в замены, «Не нравится» не попадает в новую программу и стоит в конце списка замен.</p>
+      <p className="note">Отметь, какие упражнения тебе удобны, а какие нет. «Нравится» чаще попадает в программу и в замены, Если упражнение убрано из программы из‑за болевой точки, «Нравится» вернёт его (с осторожностью). «Не нравится» не попадает в новую программу и стоит в конце списка замен.</p>
       {banner}
       <TextField label="Поиск" value={query} onChange={(e) => setQuery(e.target.value)} />
       <div className="chips" role="group" aria-label="Фильтр">
@@ -67,6 +73,7 @@ export function ExerciseCatalogScreen() {
             <div>
               <div className="li-title">{e.name}</div>
               <div className="li-sub">{isBodyweightOnly(e) ? 'Без оборудования' : e.equipmentRequirements.length ? 'Нужно оборудование' : ''} · {e.defaultSets}×{e.defaultRepRange.min}–{e.defaultRepRange.max}{e.loadUnit === 'seconds' ? ' с' : ''}</div>
+              {removedByPain.has(e.id) && <div className="li-sub" style={{ color: 'var(--danger)' }}>{pref.get(e.id) === 'like' ? 'Возвращено лайком: выполняй осторожно' : 'Убрано из программы из‑за болевой точки. «Нравится» вернёт его'}</div>}
             </div>
             <div className="chips">
               <Chip pressed={pref.get(e.id) === 'like'} onClick={() => set(e, 'like')}>Нравится</Chip>

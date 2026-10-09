@@ -1,6 +1,8 @@
 import type { AppDeps } from '@fitapp/application';
 import { createBase, type BodyArea, type InjuryStatus, type Side, type TriggerKind } from '@fitapp/domain';
 
+import { rebuildTrainingIfChanged } from './program';
+
 const baseOf = (deps: AppDeps) => createBase(deps.ids.newId(), deps.clock.now(), deps.deviceId);
 
 export interface InjuryInput {
@@ -15,6 +17,7 @@ export interface InjuryInput {
 /** A self-reported pain point. It only steers the choice of exercises; it is not a diagnosis. */
 export async function addInjury(deps: AppDeps, input: InjuryInput): Promise<void> {
   await deps.uow.run((r) => r.injuries.put({ ...baseOf(deps), ...input, resolvedOn: null }));
+  await rebuildTrainingIfChanged(deps, 'Добавлена болевая точка: потенциально травмоопасные упражнения убраны из программы');
 }
 
 export async function updateInjury(deps: AppDeps, id: string, patch: Partial<InjuryInput>): Promise<void> {
@@ -22,6 +25,7 @@ export async function updateInjury(deps: AppDeps, id: string, patch: Partial<Inj
     const current = await r.injuries.get(id);
     if (current) await r.injuries.put({ ...current, ...patch });
   });
+  await rebuildTrainingIfChanged(deps, 'Болевая точка изменена: программа пересобрана');
 }
 
 export async function resolveInjury(deps: AppDeps, id: string, today: string): Promise<void> {
@@ -29,10 +33,12 @@ export async function resolveInjury(deps: AppDeps, id: string, today: string): P
     const current = await r.injuries.get(id);
     if (current) await r.injuries.put({ ...current, status: 'past', resolvedOn: today });
   });
+  await rebuildTrainingIfChanged(deps, 'Болевая точка закрыта: программа пересобрана');
 }
 
 export async function deleteInjury(deps: AppDeps, id: string): Promise<void> {
   await deps.uow.run((r) => r.injuries.softDelete(id));
+  await rebuildTrainingIfChanged(deps, 'Болевая точка удалена: программа пересобрана');
 }
 
 export async function setEquipmentAvailable(deps: AppDeps, equipmentId: string, available: boolean): Promise<void> {

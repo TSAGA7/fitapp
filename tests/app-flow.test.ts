@@ -84,13 +84,13 @@ describe('app flow on the real storage', () => {
     const { deps } = await setup();
     await addInjury(deps, { area: 'lower_back', side: 'both', status: 'recurring', triggerKinds: ['exercise'], triggerText: 'гипертонус', notes: null });
     await addInjury(deps, { area: 'shoulder', side: 'both', status: 'recurring', triggerKinds: ['exercise'], triggerText: null, notes: null });
-    await rebuildTrainingPlan(deps);
     const s = await loadSnapshot(deps);
-    expect(s.versions.map((v) => v.versionNo)).toEqual([1, 2]);
-    expect(s.activeVersion?.versionNo).toBe(2);
-    expect(s.activeVersion?.parentVersionId).toBe(s.versions[0]!.id);
+    // every pain point rebuilds the program by itself
+    expect(s.versions.map((v) => v.versionNo)).toEqual([1, 2, 3]);
+    expect(s.activeVersion?.versionNo).toBe(3);
+    expect(s.activeVersion?.parentVersionId).toBe(s.versions[1]!.id);
     expect(s.targets?.targets.kcal).toBeGreaterThan(1900);
-    expect(s.changes.length).toBe(2);
+    expect(s.changes.length).toBe(3);
     const ids = s.activeVersion!.training.workouts.flatMap((w) => w.exercises.map((e) => e.exerciseId));
     expect(ids).not.toContain('back_squat_barbell');
     expect(ids).not.toContain('barbell_bench_press');

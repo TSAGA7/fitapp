@@ -112,3 +112,17 @@ html, body { overflow-x: hidden; }
 .card, .list-item, .metric, .tile, .option { box-shadow: 0 2px 14px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.65); }
 .btn { max-width: 100%; white-space: normal; text-align: center; min-height: 52px; height: auto; line-height: 1.2; padding-top: 8px; padding-bottom: 8px; }
 .btn.sm { min-height: 40px; }
+
+/* Compact floating nav: items grouped in the middle, icon and label close together */
+.bottom-nav { width: fit-content; max-width: calc(100% - 24px); grid-template-columns: repeat(5, auto); justify-content: center; gap: 0; padding: 0 8px; }
+.bottom-nav a { gap: 1px; padding: 0 9px; }
+.bottom-nav a .nav-ic { height: 28px; }
+
+/* Hero card: translucent green glass */
+.hero {
+  background: linear-gradient(160deg, rgba(13, 110, 82, 0.66) 0%, rgba(6, 95, 70, 0.6) 48%, rgba(4, 69, 53, 0.66) 100%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%); backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 34px rgba(6, 95, 70, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.hero-stats { background: rgba(255, 255, 255, 0.58); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.6); }

@@ -1,6 +1,7 @@
 import type { AppDeps } from '@fitapp/application';
 import {
   ageYears,
+  assessExercise,
   buildTrainingPlan,
   computeTargets,
   createBase,
@@ -119,7 +120,8 @@ async function gather(r: Repositories, deps: AppDeps) {
   const liked = new Set(prefs.filter((u) => u.preference === 'like').map((u) => u.exerciseId));
   const disliked = new Set(prefs.filter((u) => u.preference === 'dislike').map((u) => u.exerciseId));
   const today = deps.clock.today(profile.timezone);
-  return { profile, goal, weight, equipment, userEquipment, exercises, injuries, painEvents, liked, disliked, today };
+  const absEvery = (await activeTraining(r))?.absEveryWorkout === true;
+  return { profile, goal, weight, equipment, userEquipment, exercises, injuries, painEvents, liked, disliked, today, absEvery };
 }
 
 function buildPlan(g: Awaited<ReturnType<typeof gather>>, deps: AppDeps): PlanBuildResult {
@@ -139,6 +141,7 @@ function buildPlan(g: Awaited<ReturnType<typeof gather>>, deps: AppDeps): PlanBu
     goal: g.goal.type,
     focus: [...g.goal.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area),
     startsOn: g.today,
+    absEveryWorkout: g.absEvery,
   });
 }
 
@@ -176,6 +179,55 @@ export async function rebuildTrainingPlan(deps: AppDeps, reason = 'Пересб�
     const g = await gather(r, deps);
     const plan = buildPlan(g, deps);
     await writeVersion(r, deps, g.today, { training: plan.plan }, { source: 'user', reasonCode: 'rebuild_training', reasonText: reason });
+  });
+}
+
+const planKey = (t: TrainingPlanSnapshot): string => JSON.stringify(t.workouts.map((w) => [w.key, w.exercises.map((e) => e.exerciseId)]));
+
+async function activeTraining(r: Repositories): Promise<TrainingPlanSnapshot | undefined> {
+  const program = await r.programs.getProgram();
+  const version = program?.activeVersionId ? await r.programs.getVersion(program.activeVersionId) : undefined;
+  return version?.training;
+}
+
+/** Rebuilds the program after the constraints changed (pain points, likes), but only if the exercise list really differs. Returns whether a new version was written. */
+export async function rebuildTrainingIfChanged(deps: AppDeps, reason: string): Promise<boolean> {
+  return deps.uow.run(async (r) => {
+    const current = await activeTraining(r);
+    if (!current) return false;
+    const g = await gather(r, deps);
+    const plan = buildPlan(g, deps);
+    if (planKey(plan.plan) === planKey(current)) return false;
+    await writeVersion(r, deps, g.today, { training: plan.plan }, { source: 'user', reasonCode: 'rebuild_training', reasonText: reason });
+    return true;
+  });
+}
+
+/** After a like/dislike: the program is rebuilt only when it matters (a liked exercise that the pain points had removed, or a disliked one that is in the plan). */
+export async function rebuildForPreference(deps: AppDeps, exerciseId: string, preference: 'like' | 'dislike' | null): Promise<boolean> {
+  if (preference === null) return false;
+  const relevant = await deps.uow.run(async (r) => {
+    const current = await activeTraining(r);
+    if (!current) return false;
+    if (preference === 'dislike') return current.workouts.some((w) => w.exercises.some((e) => e.exerciseId === exerciseId));
+    const g = await gather(r, deps);
+    const ex = g.exercises.find((e) => e.id === exerciseId);
+    if (!ex) return false;
+    const without = new Set(g.liked);
+    without.delete(exerciseId);
+    const a = assessExercise(ex as Exercise, { injuries: g.injuries, painEvents: g.painEvents, availableEquipment: availableEquipmentKeys(g.equipment, g.userEquipment), experience: g.profile.experience, now: deps.clock.now(), liked: without, disliked: g.disliked });
+    return a.status === 'avoid';
+  });
+  if (!relevant) return false;
+  return rebuildTrainingIfChanged(deps, preference === 'like' ? 'Упражнение возвращено в программу лайком' : 'Упражнение убрано из программы: не нравится');
+}
+
+/** "Add abs to every workout" on/off: writes a new program version. */
+export async function setAbsEveryWorkout(deps: AppDeps, on: boolean): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const g = await gather(r, deps);
+    const plan = buildPlan({ ...g, absEvery: on }, deps);
+    await writeVersion(r, deps, g.today, { training: plan.plan }, { source: 'user', reasonCode: 'abs_every_workout', reasonText: on ? 'Пресс добавлен в каждую тренировку' : 'Пресс больше не добавляется в каждую тренировку' });
   });
 }
 

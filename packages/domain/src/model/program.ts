@@ -40,6 +40,8 @@ export const TrainingPlanSnapshot = z.object({
   rotation: z.array(key).min(1),
   adaptationWeeks: z.number().int().min(0).max(12),
   startsOn: LocalDateSchema,
+  /** The user asked to finish every workout with abdominal work (any goal). */
+  absEveryWorkout: z.boolean().optional(),
 });
 export type TrainingPlanSnapshot = z.infer<typeof TrainingPlanSnapshot>;
 

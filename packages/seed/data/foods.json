@@ -3109,49 +3109,49 @@
   },
   {
     "key": "pizza_pepperoni",
-    "name": "Пицца пепперони",
+    "name": "Пицца Пепперони (кусок)",
     "brand": null,
     "barcode": null,
     "category": "ready_meals",
-    "basis": "cooked",
+    "basis": "as_sold",
     "unit": "g",
-    "gramsPerPiece": 100,
+    "gramsPerPiece": 110,
     "per100": {
-      "kcal": 272,
-      "proteinG": 12.0,
-      "fatG": 12.5,
-      "carbG": 28.0,
-      "fiberG": 2.0
+      "kcal": 282,
+      "proteinG": 11,
+      "fatG": 14,
+      "carbG": 28,
+      "fiberG": 1.0
     },
     "variantGroup": null,
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   },
   {
     "key": "pizza_margherita",
-    "name": "Пицца маргарита",
+    "name": "Пицца Маргарита (кусок)",
     "brand": null,
     "barcode": null,
     "category": "ready_meals",
-    "basis": "cooked",
+    "basis": "as_sold",
     "unit": "g",
-    "gramsPerPiece": 100,
+    "gramsPerPiece": 110,
     "per100": {
-      "kcal": 249,
-      "proteinG": 11.0,
-      "fatG": 9.5,
-      "carbG": 30.0,
-      "fiberG": 2.0
+      "kcal": 241,
+      "proteinG": 10,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
     },
     "variantGroup": null,
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   },
@@ -3253,25 +3253,25 @@
   },
   {
     "key": "salad_olivier",
-    "name": "Салат оливье",
+    "name": "Салат Оливье",
     "brand": null,
     "barcode": null,
     "category": "ready_meals",
-    "basis": "cooked",
+    "basis": "as_sold",
     "unit": "g",
     "gramsPerPiece": null,
     "per100": {
-      "kcal": 190,
-      "proteinG": 5.0,
-      "fatG": 15.0,
-      "carbG": 8.0,
-      "fiberG": 1.0
+      "kcal": 200,
+      "proteinG": 6,
+      "fatG": 16,
+      "carbG": 8,
+      "fiberG": 1
     },
     "variantGroup": null,
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   },
@@ -3305,21 +3305,21 @@
     "brand": null,
     "barcode": null,
     "category": "ready_meals",
-    "basis": "cooked",
+    "basis": "as_sold",
     "unit": "g",
     "gramsPerPiece": null,
     "per100": {
       "kcal": 109,
-      "proteinG": 3.0,
-      "fatG": 9.0,
-      "carbG": 4.0,
-      "fiberG": 1.5
+      "proteinG": 3,
+      "fatG": 9,
+      "carbG": 4,
+      "fiberG": 1.2
     },
     "variantGroup": null,
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   },
@@ -3353,21 +3353,21 @@
     "brand": null,
     "barcode": null,
     "category": "ready_meals",
-    "basis": "cooked",
+    "basis": "as_sold",
     "unit": "g",
     "gramsPerPiece": null,
     "per100": {
-      "kcal": 91,
+      "kcal": 87,
       "proteinG": 1.5,
-      "fatG": 5.0,
-      "carbG": 10.0,
-      "fiberG": 2.0
+      "fatG": 5,
+      "carbG": 9,
+      "fiberG": 2
     },
     "variantGroup": null,
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   },
@@ -3377,21 +3377,21 @@
     "brand": null,
     "barcode": null,
     "category": "ready_meals",
-    "basis": "cooked",
+    "basis": "as_sold",
     "unit": "g",
     "gramsPerPiece": null,
     "per100": {
-      "kcal": 137,
-      "proteinG": 5.0,
-      "fatG": 9.0,
-      "carbG": 9.0,
+      "kcal": 147,
+      "proteinG": 5,
+      "fatG": 11,
+      "carbG": 7,
       "fiberG": 0.5
     },
     "variantGroup": null,
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   },
@@ -4486,16 +4486,16 @@
     "gramsPerPiece": 60,
     "per100": {
       "kcal": 405,
-      "proteinG": 8.0,
-      "fatG": 21.0,
-      "carbG": 46.0,
-      "fiberG": 2.0
+      "proteinG": 8,
+      "fatG": 21,
+      "carbG": 46,
+      "fiberG": 1.5
     },
     "variantGroup": null,
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   },
@@ -5336,6 +5336,3630 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_potato_fried",
+    "name": "Пирожок жареный с картошкой",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 229,
+      "proteinG": 5,
+      "fatG": 9,
+      "carbG": 32,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_cabbage_baked",
+    "name": "Пирожок печёный с капустой",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 210,
+      "proteinG": 5,
+      "fatG": 6,
+      "carbG": 34,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_meat_fried",
+    "name": "Пирожок жареный с мясом",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 252,
+      "proteinG": 9,
+      "fatG": 12,
+      "carbG": 27,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_apple_baked",
+    "name": "Пирожок печёный с яблоком",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 222,
+      "proteinG": 4,
+      "fatG": 6,
+      "carbG": 38,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_cherry_baked",
+    "name": "Пирожок печёный с вишней",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 222,
+      "proteinG": 4,
+      "fatG": 6,
+      "carbG": 38,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_curd_baked",
+    "name": "Пирожок печёный с творогом",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 240,
+      "proteinG": 9,
+      "fatG": 8,
+      "carbG": 33,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_egg_onion",
+    "name": "Пирожок печёный с яйцом и луком",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 236,
+      "proteinG": 8,
+      "fatG": 8,
+      "carbG": 33,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_mushroom",
+    "name": "Пирожок печёный с грибами",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 215,
+      "proteinG": 5,
+      "fatG": 7,
+      "carbG": 33,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pie_jam_fried",
+    "name": "Пирожок жареный с повидлом",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 283,
+      "proteinG": 4,
+      "fatG": 11,
+      "carbG": 42,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bun_cinnamon",
+    "name": "Булочка с корицей",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 100,
+    "per100": {
+      "kcal": 340,
+      "proteinG": 6,
+      "fatG": 12,
+      "carbG": 52,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bun_poppy",
+    "name": "Булочка с маком",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 313,
+      "proteinG": 8,
+      "fatG": 9,
+      "carbG": 50,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bun_raisin",
+    "name": "Булочка с изюмом",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 290,
+      "proteinG": 7,
+      "fatG": 6,
+      "carbG": 52,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bun_sugar",
+    "name": "Плюшка с сахаром",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 326,
+      "proteinG": 7,
+      "fatG": 10,
+      "carbG": 52,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bun_cheese",
+    "name": "Булочка с сыром",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 90,
+    "per100": {
+      "kcal": 308,
+      "proteinG": 10,
+      "fatG": 12,
+      "carbG": 40,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vatrushka_curd",
+    "name": "Ватрушка с творогом",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 100,
+    "per100": {
+      "kcal": 278,
+      "proteinG": 9,
+      "fatG": 10,
+      "carbG": 38,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "croissant_choco",
+    "name": "Круассан с шоколадом",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 70,
+    "per100": {
+      "kcal": 417,
+      "proteinG": 7,
+      "fatG": 21,
+      "carbG": 50,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "cheburek",
+    "name": "Чебурек",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 120,
+    "per100": {
+      "kcal": 320,
+      "proteinG": 10,
+      "fatG": 20,
+      "carbG": 25,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "samsa_meat",
+    "name": "Самса с мясом",
+    "brand": null,
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 120,
+    "per100": {
+      "kcal": 292,
+      "proteinG": 11,
+      "fatG": 16,
+      "carbG": 26,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "wine_white_dry",
+    "name": "Вино белое сухое",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 66,
+      "proteinG": 0.1,
+      "fatG": 0,
+      "carbG": 0.8,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "wine_red_dry",
+    "name": "Вино красное сухое",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 68,
+      "proteinG": 0.1,
+      "fatG": 0,
+      "carbG": 0.3,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "wine_white_semisweet",
+    "name": "Вино белое полусладкое",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 78,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbG": 5.0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "wine_red_semisweet",
+    "name": "Вино красное полусладкое",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 82,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbG": 5.5,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "champagne_brut",
+    "name": "Шампанское брют",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 76,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbG": 1.5,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "champagne_semisweet",
+    "name": "Шампанское полусладкое",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 90,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbG": 6.0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "beer_wheat",
+    "name": "Пиво пшеничное",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 45,
+      "proteinG": 0.5,
+      "fatG": 0,
+      "carbG": 3.5,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "beer_ipa",
+    "name": "Пиво крафтовое IPA",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 58,
+      "proteinG": 0.5,
+      "fatG": 0,
+      "carbG": 3.8,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "salad_olivier_chicken",
+    "name": "Салат Оливье с курицей",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 172,
+      "proteinG": 8,
+      "fatG": 12,
+      "carbG": 8,
+      "fiberG": 1
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "salad_mimosa",
+    "name": "Салат Мимоза",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 175,
+      "proteinG": 6,
+      "fatG": 15,
+      "carbG": 4,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "salad_herring_fur_coat",
+    "name": "Селёдка под шубой",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 156,
+      "proteinG": 4,
+      "fatG": 12,
+      "carbG": 8,
+      "fiberG": 1
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "salad_veg_cucumber_tomato",
+    "name": "Салат овощной: огурцы и помидоры с маслом",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 56,
+      "proteinG": 1,
+      "fatG": 4,
+      "carbG": 4,
+      "fiberG": 1.2
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "salad_caesar_chicken",
+    "name": "Салат Цезарь с курицей",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 167,
+      "proteinG": 10,
+      "fatG": 11,
+      "carbG": 7,
+      "fiberG": 1
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "salad_caesar_shrimp",
+    "name": "Салат Цезарь с креветками",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 150,
+      "proteinG": 9,
+      "fatG": 10,
+      "carbG": 6,
+      "fiberG": 1
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "salad_crispy_eggplant",
+    "name": "Салат с хрустящим баклажаном",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 138,
+      "proteinG": 3,
+      "fatG": 10,
+      "carbG": 9,
+      "fiberG": 1.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_four_cheese",
+    "name": "Пицца Четыре сыра (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 295,
+      "proteinG": 13,
+      "fatG": 15,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_ham_mushroom",
+    "name": "Пицца Ветчина и грибы (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 237,
+      "proteinG": 11,
+      "fatG": 9,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_hawaiian",
+    "name": "Пицца Гавайская (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 228,
+      "proteinG": 10,
+      "fatG": 8,
+      "carbG": 29,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_meat",
+    "name": "Пицца Мясная (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 277,
+      "proteinG": 13,
+      "fatG": 13,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_cheese",
+    "name": "Пицца Сырная (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 272,
+      "proteinG": 12,
+      "fatG": 12,
+      "carbG": 29,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_ham_cheese",
+    "name": "Пицца Ветчина и сыр (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 250,
+      "proteinG": 12,
+      "fatG": 10,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_chorizo",
+    "name": "Пицца Чоризо-фреш (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 282,
+      "proteinG": 12,
+      "fatG": 14,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_double_pepperoni",
+    "name": "Пицца Двойная пепперони (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 309,
+      "proteinG": 13,
+      "fatG": 17,
+      "carbG": 26,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "pizza_chicken_bbq",
+    "name": "Пицца Цыплёнок барбекю (кусок)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 249,
+      "proteinG": 12,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_margherita",
+    "name": "Додо Пицца: пицца Маргарита (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 241,
+      "proteinG": 10,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_pepperoni",
+    "name": "Додо Пицца: пицца Пепперони (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 282,
+      "proteinG": 11,
+      "fatG": 14,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_cheese",
+    "name": "Додо Пицца: пицца Сырная (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 272,
+      "proteinG": 12,
+      "fatG": 12,
+      "carbG": 29,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_ham_cheese",
+    "name": "Додо Пицца: пицца Ветчина и сыр (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 250,
+      "proteinG": 12,
+      "fatG": 10,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_chorizo",
+    "name": "Додо Пицца: пицца Чоризо-фреш (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 282,
+      "proteinG": 12,
+      "fatG": 14,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_meat",
+    "name": "Додо Пицца: пицца Мясная (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 277,
+      "proteinG": 13,
+      "fatG": 13,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_hawaiian",
+    "name": "Додо Пицца: пицца Гавайская (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 228,
+      "proteinG": 10,
+      "fatG": 8,
+      "carbG": 29,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_double_pepperoni",
+    "name": "Додо Пицца: пицца Двойная пепперони (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 309,
+      "proteinG": 13,
+      "fatG": 17,
+      "carbG": 26,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_four_cheese",
+    "name": "Додо Пицца: пицца Четыре сыра (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 295,
+      "proteinG": 13,
+      "fatG": 15,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_pizza_chicken_bbq",
+    "name": "Додо Пицца: пицца Цыплёнок барбекю (кусок)",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 249,
+      "proteinG": 12,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "papajohns_pizza_margherita",
+    "name": "Papa Johns: пицца Маргарита (кусок)",
+    "brand": "Papa Johns",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 241,
+      "proteinG": 10,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "papajohns_pizza_pepperoni",
+    "name": "Papa Johns: пицца Пепперони (кусок)",
+    "brand": "Papa Johns",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 282,
+      "proteinG": 11,
+      "fatG": 14,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "papajohns_pizza_four_cheese",
+    "name": "Papa Johns: пицца Четыре сыра (кусок)",
+    "brand": "Papa Johns",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 295,
+      "proteinG": 13,
+      "fatG": 15,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "papajohns_pizza_hawaiian",
+    "name": "Papa Johns: пицца Гавайская (кусок)",
+    "brand": "Papa Johns",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 228,
+      "proteinG": 10,
+      "fatG": 8,
+      "carbG": 29,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "papajohns_pizza_meat",
+    "name": "Papa Johns: пицца Мясная (кусок)",
+    "brand": "Papa Johns",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 277,
+      "proteinG": 13,
+      "fatG": 13,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "papajohns_pizza_ham_mushroom",
+    "name": "Papa Johns: пицца Ветчина и грибы (кусок)",
+    "brand": "Papa Johns",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 237,
+      "proteinG": 11,
+      "fatG": 9,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "papajohns_pizza_chicken_bbq",
+    "name": "Papa Johns: пицца Цыплёнок барбекю (кусок)",
+    "brand": "Papa Johns",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 249,
+      "proteinG": 12,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dominos_pizza_margherita",
+    "name": "Domino's Pizza: пицца Маргарита (кусок)",
+    "brand": "Domino's Pizza",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 241,
+      "proteinG": 10,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dominos_pizza_pepperoni",
+    "name": "Domino's Pizza: пицца Пепперони (кусок)",
+    "brand": "Domino's Pizza",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 282,
+      "proteinG": 11,
+      "fatG": 14,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dominos_pizza_four_cheese",
+    "name": "Domino's Pizza: пицца Четыре сыра (кусок)",
+    "brand": "Domino's Pizza",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 295,
+      "proteinG": 13,
+      "fatG": 15,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dominos_pizza_ham_mushroom",
+    "name": "Domino's Pizza: пицца Ветчина и грибы (кусок)",
+    "brand": "Domino's Pizza",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 237,
+      "proteinG": 11,
+      "fatG": 9,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dominos_pizza_hawaiian",
+    "name": "Domino's Pizza: пицца Гавайская (кусок)",
+    "brand": "Domino's Pizza",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 228,
+      "proteinG": 10,
+      "fatG": 8,
+      "carbG": 29,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dominos_pizza_meat",
+    "name": "Domino's Pizza: пицца Мясная (кусок)",
+    "brand": "Domino's Pizza",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 277,
+      "proteinG": 13,
+      "fatG": 13,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dominos_pizza_chicken_bbq",
+    "name": "Domino's Pizza: пицца Цыплёнок барбекю (кусок)",
+    "brand": "Domino's Pizza",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 110,
+    "per100": {
+      "kcal": 249,
+      "proteinG": 12,
+      "fatG": 9,
+      "carbG": 30,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_dodster_ham",
+    "name": "Додо Пицца: Додстер с ветчиной и сыром",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 180,
+    "per100": {
+      "kcal": 221,
+      "proteinG": 10,
+      "fatG": 9,
+      "carbG": 25,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_dodster_pepperoni",
+    "name": "Додо Пицца: Додстер с пепперони",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 180,
+    "per100": {
+      "kcal": 239,
+      "proteinG": 10,
+      "fatG": 11,
+      "carbG": 25,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_dodster_chicken",
+    "name": "Додо Пицца: Додстер с курицей",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 180,
+    "per100": {
+      "kcal": 216,
+      "proteinG": 11,
+      "fatG": 8,
+      "carbG": 25,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_wings",
+    "name": "Додо Пицца: крылышки куриные",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 236,
+      "proteinG": 18,
+      "fatG": 16,
+      "carbG": 5,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_cheese_sticks",
+    "name": "Додо Пицца: сырные палочки",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 25,
+    "per100": {
+      "kcal": 306,
+      "proteinG": 12,
+      "fatG": 18,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_brownie",
+    "name": "Додо Пицца: брауни",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "sweets",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 428,
+      "proteinG": 5,
+      "fatG": 24,
+      "carbG": 48,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "dodo_cheesecake",
+    "name": "Додо Пицца: чизкейк",
+    "brand": "Додо Пицца",
+    "barcode": null,
+    "category": "sweets",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 100,
+    "per100": {
+      "kcal": 322,
+      "proteinG": 6,
+      "fatG": 22,
+      "carbG": 25,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_hamburger",
+    "name": "Вкусно — и точка: Гамбургер",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 105,
+    "per100": {
+      "kcal": 232,
+      "proteinG": 12,
+      "fatG": 8,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_cheeseburger",
+    "name": "Вкусно — и точка: Чизбургер",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 120,
+    "per100": {
+      "kcal": 255,
+      "proteinG": 13,
+      "fatG": 11,
+      "carbG": 26,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_double_cheese",
+    "name": "Вкусно — и точка: Двойной чизбургер",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 170,
+    "per100": {
+      "kcal": 274,
+      "proteinG": 15,
+      "fatG": 14,
+      "carbG": 22,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_big_hit",
+    "name": "Вкусно — и точка: Биг Хит",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 210,
+    "per100": {
+      "kcal": 241,
+      "proteinG": 11,
+      "fatG": 13,
+      "carbG": 20,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_chicken_burger",
+    "name": "Вкусно — и точка: Чикенбургер",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 160,
+    "per100": {
+      "kcal": 243,
+      "proteinG": 11,
+      "fatG": 11,
+      "carbG": 25,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_big_tasty",
+    "name": "Вкусно — и точка: Биг Тейсти",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 260,
+    "per100": {
+      "kcal": 251,
+      "proteinG": 12,
+      "fatG": 15,
+      "carbG": 17,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_fish",
+    "name": "Вкусно — и точка: Фишбургер",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 140,
+    "per100": {
+      "kcal": 231,
+      "proteinG": 9,
+      "fatG": 11,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_fries",
+    "name": "Вкусно — и точка: Картофель фри",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 301,
+      "proteinG": 3.5,
+      "fatG": 15,
+      "carbG": 38,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_nuggets",
+    "name": "Вкусно — и точка: Наггетсы куриные",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 17,
+    "per100": {
+      "kcal": 260,
+      "proteinG": 15,
+      "fatG": 16,
+      "carbG": 14,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_strips",
+    "name": "Вкусно — и точка: Стрипсы куриные",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 250,
+      "proteinG": 16,
+      "fatG": 14,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_roll_chicken",
+    "name": "Вкусно — и точка: Ролл с курицей",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 180,
+    "per100": {
+      "kcal": 230,
+      "proteinG": 11,
+      "fatG": 10,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_wings",
+    "name": "Вкусно — и точка: Крылышки куриные",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 257,
+      "proteinG": 18,
+      "fatG": 17,
+      "carbG": 8,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "vit_apple_pie",
+    "name": "Вкусно — и точка: Яблочный пирожок",
+    "brand": "Вкусно — и точка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 80,
+    "per100": {
+      "kcal": 272,
+      "proteinG": 3,
+      "fatG": 12,
+      "carbG": 38,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_whopper",
+    "name": "Бургер Кинг: Воппер",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 270,
+    "per100": {
+      "kcal": 234,
+      "proteinG": 12,
+      "fatG": 14,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_double_whopper",
+    "name": "Бургер Кинг: Двойной Воппер",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 350,
+    "per100": {
+      "kcal": 261,
+      "proteinG": 16,
+      "fatG": 17,
+      "carbG": 11,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_cheeseburger",
+    "name": "Бургер Кинг: Чизбургер",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 125,
+    "per100": {
+      "kcal": 255,
+      "proteinG": 13,
+      "fatG": 11,
+      "carbG": 26,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_long_chicken",
+    "name": "Бургер Кинг: Лонг Чикен",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 150,
+    "per100": {
+      "kcal": 250,
+      "proteinG": 10,
+      "fatG": 14,
+      "carbG": 21,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_chicken_king",
+    "name": "Бургер Кинг: Чикен Кинг",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 190,
+    "per100": {
+      "kcal": 248,
+      "proteinG": 11,
+      "fatG": 12,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_nuggets",
+    "name": "Бургер Кинг: Наггетсы",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 17,
+    "per100": {
+      "kcal": 273,
+      "proteinG": 15,
+      "fatG": 17,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_fries",
+    "name": "Бургер Кинг: Картофель фри",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 301,
+      "proteinG": 3.5,
+      "fatG": 15,
+      "carbG": 38,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_onion_rings",
+    "name": "Бургер Кинг: Луковые кольца",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 20,
+    "per100": {
+      "kcal": 279,
+      "proteinG": 4,
+      "fatG": 15,
+      "carbG": 32,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_wings",
+    "name": "Бургер Кинг: Острые крылышки",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 266,
+      "proteinG": 18,
+      "fatG": 18,
+      "carbG": 8,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "bk_caesar_roll",
+    "name": "Бургер Кинг: Цезарь ролл",
+    "brand": "Бургер Кинг",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 200,
+    "per100": {
+      "kcal": 231,
+      "proteinG": 11,
+      "fatG": 11,
+      "carbG": 22,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_leg",
+    "name": "Ростикс: Ножка куриная в панировке",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 100,
+    "per100": {
+      "kcal": 234,
+      "proteinG": 18,
+      "fatG": 14,
+      "carbG": 9,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_wings",
+    "name": "Ростикс: Острые крылышки",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 257,
+      "proteinG": 18,
+      "fatG": 17,
+      "carbG": 8,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_strips",
+    "name": "Ростикс: Стрипсы",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 35,
+    "per100": {
+      "kcal": 232,
+      "proteinG": 19,
+      "fatG": 12,
+      "carbG": 12,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_boxmaster",
+    "name": "Ростикс: Боксмастер",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 250,
+    "per100": {
+      "kcal": 239,
+      "proteinG": 11,
+      "fatG": 11,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_twister",
+    "name": "Ростикс: Твистер",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 200,
+    "per100": {
+      "kcal": 210,
+      "proteinG": 10,
+      "fatG": 10,
+      "carbG": 20,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_burger",
+    "name": "Ростикс: Бургер куриный",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 170,
+    "per100": {
+      "kcal": 248,
+      "proteinG": 11,
+      "fatG": 12,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_fries",
+    "name": "Ростикс: Картофель фри",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 301,
+      "proteinG": 3.5,
+      "fatG": 15,
+      "carbG": 38,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_potato_country",
+    "name": "Ростикс: Картофель по-деревенски",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 232,
+      "proteinG": 3,
+      "fatG": 12,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_nuggets",
+    "name": "Ростикс: Наггетсы",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 17,
+    "per100": {
+      "kcal": 260,
+      "proteinG": 15,
+      "fatG": 16,
+      "carbG": 14,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_coleslaw",
+    "name": "Ростикс: Салат Коул-слоу",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 104,
+      "proteinG": 1,
+      "fatG": 8,
+      "carbG": 7,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "rostics_caesar",
+    "name": "Ростикс: Салат Цезарь",
+    "brand": "Ростикс",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 163,
+      "proteinG": 9,
+      "fatG": 11,
+      "carbG": 7,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_ham",
+    "name": "Теремок: Блин с ветчиной и сыром",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 200,
+    "per100": {
+      "kcal": 209,
+      "proteinG": 10,
+      "fatG": 9,
+      "carbG": 22,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_chicken",
+    "name": "Теремок: Блин с курицей и грибами",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 200,
+    "per100": {
+      "kcal": 192,
+      "proteinG": 9,
+      "fatG": 8,
+      "carbG": 21,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_curd",
+    "name": "Теремок: Блин с творогом",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 160,
+    "per100": {
+      "kcal": 194,
+      "proteinG": 8,
+      "fatG": 6,
+      "carbG": 27,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_meat",
+    "name": "Теремок: Блин с мясом",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 200,
+    "per100": {
+      "kcal": 205,
+      "proteinG": 10,
+      "fatG": 9,
+      "carbG": 21,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_salmon",
+    "name": "Теремок: Блин с лососем и сливочным сыром",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 180,
+    "per100": {
+      "kcal": 219,
+      "proteinG": 10,
+      "fatG": 11,
+      "carbG": 20,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_jam",
+    "name": "Теремок: Блин с вареньем",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "sweets",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 150,
+    "per100": {
+      "kcal": 205,
+      "proteinG": 4,
+      "fatG": 5,
+      "carbG": 36,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_condensed",
+    "name": "Теремок: Блин со сгущёнкой",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "sweets",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 150,
+    "per100": {
+      "kcal": 252,
+      "proteinG": 5,
+      "fatG": 8,
+      "carbG": 40,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_blin_plain",
+    "name": "Теремок: Блин без начинки",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "bread_bakery",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 70,
+    "per100": {
+      "kcal": 208,
+      "proteinG": 6,
+      "fatG": 8,
+      "carbG": 28,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_syrniki",
+    "name": "Теремок: Сырники",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 60,
+    "per100": {
+      "kcal": 217,
+      "proteinG": 12,
+      "fatG": 9,
+      "carbG": 22,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_borscht",
+    "name": "Теремок: Борщ",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 53,
+      "proteinG": 1.5,
+      "fatG": 3,
+      "carbG": 5,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_shchi",
+    "name": "Теремок: Щи",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 44,
+      "proteinG": 1.3,
+      "fatG": 2.5,
+      "carbG": 4,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_solyanka",
+    "name": "Теремок: Солянка",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 69,
+      "proteinG": 4,
+      "fatG": 5,
+      "carbG": 2,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_chicken_noodle",
+    "name": "Теремок: Куриный суп с лапшой",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 46,
+      "proteinG": 3,
+      "fatG": 1.5,
+      "carbG": 5,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_oatmeal",
+    "name": "Теремок: Каша овсяная на молоке",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 106,
+      "proteinG": 3.5,
+      "fatG": 4,
+      "carbG": 14,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "teremok_pelmeni",
+    "name": "Теремок: Пельмени",
+    "brand": "Теремок",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 12,
+    "per100": {
+      "kcal": 234,
+      "proteinG": 11,
+      "fatG": 10,
+      "carbG": 25,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_plain",
+    "name": "Крошка Картошка: Картофель без начинки",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 80,
+      "proteinG": 2.2,
+      "fatG": 0.3,
+      "carbG": 17,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_cheese",
+    "name": "Крошка Картошка: Картофель с сыром",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 160,
+      "proteinG": 5,
+      "fatG": 8,
+      "carbG": 17,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_chicken_mushroom",
+    "name": "Крошка Картошка: Картофель с курицей и грибами",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 129,
+      "proteinG": 6,
+      "fatG": 5,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_ham_cheese",
+    "name": "Крошка Картошка: Картофель с ветчиной и сыром",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 151,
+      "proteinG": 6,
+      "fatG": 7,
+      "carbG": 16,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_meat",
+    "name": "Крошка Картошка: Картофель с мясом",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 142,
+      "proteinG": 7,
+      "fatG": 6,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_tuna",
+    "name": "Крошка Картошка: Картофель с тунцом",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 128,
+      "proteinG": 8,
+      "fatG": 4,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_mushroom",
+    "name": "Крошка Картошка: Картофель с грибами",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 117,
+      "proteinG": 3,
+      "fatG": 5,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_shrimp",
+    "name": "Крошка Картошка: Картофель с креветками",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 133,
+      "proteinG": 7,
+      "fatG": 5,
+      "carbG": 15,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "kk_potato_cabbage_egg",
+    "name": "Крошка Картошка: Картофель с капустой и яйцом",
+    "brand": "Крошка Картошка",
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 120,
+      "proteinG": 4,
+      "fatG": 4,
+      "carbG": 17,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_canada",
+    "name": "Ролл Канада (угорь, сыр, огурец)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 174,
+      "proteinG": 5.5,
+      "fatG": 8,
+      "carbG": 20,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_ebi_tempura",
+    "name": "Ролл с креветкой темпура",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 35,
+    "per100": {
+      "kcal": 196,
+      "proteinG": 6,
+      "fatG": 8,
+      "carbG": 25,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_dragon",
+    "name": "Ролл Дракон (угорь, авокадо)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 35,
+    "per100": {
+      "kcal": 183,
+      "proteinG": 6,
+      "fatG": 7,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_teriyaki_chicken",
+    "name": "Ролл с курицей терияки",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 169,
+      "proteinG": 7,
+      "fatG": 5,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_crab_cheese",
+    "name": "Ролл с крабом и сыром",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 170,
+      "proteinG": 5,
+      "fatG": 6,
+      "carbG": 24,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_salmon_avocado",
+    "name": "Ролл с лососем и авокадо",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 171,
+      "proteinG": 6,
+      "fatG": 7,
+      "carbG": 21,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_baked_shrimp",
+    "name": "Ролл запечённый с креветкой",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 35,
+    "per100": {
+      "kcal": 193,
+      "proteinG": 8,
+      "fatG": 9,
+      "carbG": 20,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "roll_baked_crab",
+    "name": "Ролл запечённый с крабом",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 35,
+    "per100": {
+      "kcal": 193,
+      "proteinG": 6,
+      "fatG": 9,
+      "carbG": 22,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "miso_soup",
+    "name": "Мисо-суп",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 27,
+      "proteinG": 2,
+      "fatG": 1,
+      "carbG": 2.5,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "tom_yum",
+    "name": "Том ям",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 51,
+      "proteinG": 3,
+      "fatG": 3,
+      "carbG": 3,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "ramen_chicken",
+    "name": "Рамен с курицей",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 87,
+      "proteinG": 5,
+      "fatG": 3,
+      "carbG": 10,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "wok_chicken_noodle",
+    "name": "Вок с курицей и лапшой",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 158,
+      "proteinG": 8,
+      "fatG": 6,
+      "carbG": 18,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "wok_beef_noodle",
+    "name": "Вок с говядиной и лапшой",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 167,
+      "proteinG": 9,
+      "fatG": 7,
+      "carbG": 17,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "udon_chicken",
+    "name": "Удон с курицей",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 140,
+      "proteinG": 7,
+      "fatG": 4,
+      "carbG": 19,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "gyoza",
+    "name": "Гёдза (жареные пельмени)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 25,
+    "per100": {
+      "kcal": 175,
+      "proteinG": 8,
+      "fatG": 7,
+      "carbG": 20,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "shrimp_tempura",
+    "name": "Креветки в темпуре",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 25,
+    "per100": {
+      "kcal": 212,
+      "proteinG": 12,
+      "fatG": 12,
+      "carbG": 14,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "chuka_salad",
+    "name": "Салат чука",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 92,
+      "proteinG": 2,
+      "fatG": 4,
+      "carbG": 12,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "edamame",
+    "name": "Эдамаме",
+    "brand": null,
+    "barcode": null,
+    "category": "vegetables",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 121,
+      "proteinG": 11,
+      "fatG": 5,
+      "carbG": 8,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "poke_salmon",
+    "name": "Поке с лососем",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 162,
+      "proteinG": 9,
+      "fatG": 6,
+      "carbG": 18,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "tuna_tartare",
+    "name": "Тартар из тунца",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 138,
+      "proteinG": 18,
+      "fatG": 6,
+      "carbG": 3,
+      "fiberG": 1.0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню"
     },
     "autoPlan": false
   }

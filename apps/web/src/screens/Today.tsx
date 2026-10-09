@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { diffDays, recommendedWaterMl } from '@fitapp/domain';
-import { addWater, ensureSessions, setWater, startWorkout } from '../actions';
+import { addWater, ensureSessions, setWater } from '../actions';
 import { eatenOf, itemsOnDate, logsOnDate, plannedOf } from '../app/derive';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
@@ -9,7 +9,7 @@ import { getDisplayName } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
-import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
+import { BodyweightCard } from './BodyweightMode';
 import { GoalExplainSheet } from './GoalExplain';
 import { AddMeasurementSheet, AddWeightSheet, parseDecimal } from './shared';
 
@@ -23,13 +23,12 @@ export function Today() {
   const name = getDisplayName();
   const bodyweight = useBodyweightMode();
   const w = s.weight;
-  const { run, banner, busy } = useCommand();
+  const { run, banner } = useCommand();
   useEffect(() => {
     if (s.activeVersion) void run((d) => ensureSessions(d));
   }, [s.activeVersion?.id, s.today]);
   const targets = s.activeVersion?.nutrition ?? s.targets?.targets;
   const todaySession = s.plannedSessions.find((p) => p.deletedAt === null && p.plannedDate === s.today && p.status === 'planned');
-  const todayLabel = todaySession ? s.activeVersion?.training.workouts.find((x) => x.key === todaySession.workoutKey)?.label : undefined;
   const weightForWater = w.currentKg;
   const recommended = weightForWater !== null && s.profile ? recommendedWaterMl(weightForWater, s.profile.sex) : (targets?.waterMl ?? 0);
   const eatenToday = eatenOf(logsOnDate(s, s.today));
@@ -104,18 +103,12 @@ export function Today() {
       </section>
 
       {banner}
-      {s.activeVersion && !bodyweight && <BodyweightToggle />}
       {bodyweight && s.activeVersion && <BodyweightCard />}
-      {!bodyweight && todaySession && (
-        <Card>
-          <div className="stack">
-            <div className="row between"><div className="t-caption">Тренировка сегодня</div></div>
-            <div className="t-h2">{todayLabel ?? 'Тренировка'}</div>
-            {s.openSession?.plannedSessionId !== todaySession.id && <Button icon="play" disabled={busy} onClick={async () => { const id = await run((d) => startWorkout(d, todaySession.id)); if (id) go(`workout/${id}`); }}>Начать</Button>}
-          </div>
+      {s.activeVersion && (
+        <Card flat onClick={() => go('training')}>
+          <div className="t-h3">{todaySession || s.openSession || lastWorkoutToday(s) ? 'Сегодня пашем в зале' : 'Выходной. Сегодня кайфуй, но не сильно!'}</div>
         </Card>
       )}
-      {!bodyweight && !todaySession && s.activeVersion && !lastWorkoutToday(s) && <ListItem icon="calendar" title="Сегодня отдых" subtitle="Следующую тренировку смотри на вкладке «Тренировки»" onClick={() => go('training')} />}
       {targets && (plannedToday.kcal > 0 || eatenToday.kcal > 0) && (
         <Card onClick={() => go('nutrition')}>
           <div className="row between">

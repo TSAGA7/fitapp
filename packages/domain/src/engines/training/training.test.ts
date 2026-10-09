@@ -255,3 +255,24 @@ describe('rest suggestion', () => {
     expect(REST_FINISH_MESSAGE).toBe('Ты просто босс! Ты просто начальник!');
   });
 });
+
+describe('abs in every workout and likes', () => {
+  const input = { exercises: catalog, ctx: ctx(), daysPerWeek: 3, goal: 'recomposition' as const, focus: [] as never[], startsOn: '2026-10-08' };
+  const coreCount = (w: { exercises: { exerciseId: string }[] }) => w.exercises.filter((e) => catalog.find((c) => c.id === e.exerciseId)?.movementPattern.startsWith('core_')).length;
+  it('adds up to two core exercises to every workout when asked, for any goal', () => {
+    const plain = buildTrainingPlan(input).plan;
+    const withAbs = buildTrainingPlan({ ...input, absEveryWorkout: true }).plan;
+    expect(withAbs.absEveryWorkout).toBe(true);
+    expect(plain.absEveryWorkout).toBeUndefined();
+    for (const w of withAbs.workouts) expect(coreCount(w)).toBeGreaterThanOrEqual(2);
+    expect(withAbs.workouts.reduce((a, w) => a + coreCount(w), 0)).toBeGreaterThan(plain.workouts.reduce((a, w) => a + coreCount(w), 0));
+  });
+  it('a liked exercise that the pain points removed can come back', () => {
+    const idsOf = (liked?: Set<string>) => buildTrainingPlan({ ...input, ctx: ctx({ liked }) }).plan.workouts.flatMap((w) => w.exercises.map((e) => e.exerciseId));
+    const base = new Set(idsOf());
+    const removed = catalog.filter((e) => e.isCompound && assessExercise(e, ctx()).status === 'avoid');
+    expect(removed.length).toBeGreaterThan(0);
+    const comeBack = removed.filter((e) => !base.has(e.id) && idsOf(new Set([e.id])).includes(e.id));
+    expect(comeBack.length).toBeGreaterThan(0);
+  });
+});

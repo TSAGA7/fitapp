@@ -32,6 +32,7 @@ import {
   type Side,
 } from '@fitapp/domain';
 import { resolveEquipment, safetyContext } from '../app/derive';
+import { rebuildForPreference } from './program';
 
 const baseOf = (deps: AppDeps) => createBase(deps.ids.newId(), deps.clock.now(), deps.deviceId);
 const CALIBRATION_CODES = new Set(['first_execution', 'first_execution_choose_weight', 'layoff_calibrate']);
@@ -618,6 +619,7 @@ export async function setExercisePreference(deps: AppDeps, exerciseId: string, p
     if (existing) await r.userExercises.put({ ...existing, preference });
     else await r.userExercises.put({ ...baseOf(deps), exerciseId, preference });
   });
+  await rebuildForPreference(deps, exerciseId, preference);
 }
 
 /** A workout without equipment (business trip, home). Not a part of the program: the rotation and versions stay untouched. */

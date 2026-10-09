@@ -259,5 +259,152 @@ put('gunkan', 'Гункан (с икрой или лососем)', 'ready_meals
 put('inari', 'Инари (рис в тофу)', 'ready_meals', 'as_sold', 174, 4.0, 6.0, 26.0, 0.6, 30, auto=False, note='Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню')
 put('sashimi_salmon', 'Сашими из лосося', 'fish', 'as_sold', 197, 20.0, 13.0, 0, 0, 15, auto=False, note='Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню')
 
+# ---- bakery, drinks, salads, pizzas and restaurant / fast-food menus (estimates by dish type; kcal computed from macros unless stated)
+EST = 'Оценка по типичному составу блюда; у конкретного заведения и размера порции цифры отличаются, сверь с их меню'
+
+
+def kc(p, f, c):
+    return round(4 * p + 9 * f + 4 * c)
+
+
+def dish(key, name, cat, p, f, c, piece=None, brand=None, fiber=1.0, note=EST, basis='as_sold'):
+    put(key, name, cat, basis, kc(p, f, c), p, f, c, fiber, piece, auto=False, brand=brand, note=note)
+
+
+# pies and buns
+for key, name, p, f, c, piece in [
+    ('pie_potato_fried', 'Пирожок жареный с картошкой', 5, 9, 32, 80), ('pie_cabbage_baked', 'Пирожок печёный с капустой', 5, 6, 34, 80),
+    ('pie_meat_fried', 'Пирожок жареный с мясом', 9, 12, 27, 80), ('pie_apple_baked', 'Пирожок печёный с яблоком', 4, 6, 38, 80),
+    ('pie_cherry_baked', 'Пирожок печёный с вишней', 4, 6, 38, 80), ('pie_curd_baked', 'Пирожок печёный с творогом', 9, 8, 33, 80),
+    ('pie_egg_onion', 'Пирожок печёный с яйцом и луком', 8, 8, 33, 80), ('pie_mushroom', 'Пирожок печёный с грибами', 5, 7, 33, 80),
+    ('pie_jam_fried', 'Пирожок жареный с повидлом', 4, 11, 42, 80),
+    ('bun_cinnamon', 'Булочка с корицей', 6, 12, 52, 100), ('bun_poppy', 'Булочка с маком', 8, 9, 50, 80),
+    ('bun_raisin', 'Булочка с изюмом', 7, 6, 52, 80), ('bun_sugar', 'Плюшка с сахаром', 7, 10, 52, 80),
+    ('bun_cheese', 'Булочка с сыром', 10, 12, 40, 90), ('vatrushka_curd', 'Ватрушка с творогом', 9, 10, 38, 100),
+    ('croissant', 'Круассан', 8, 21, 46, 60), ('croissant_choco', 'Круассан с шоколадом', 7, 21, 50, 70),
+    ('cheburek', 'Чебурек', 10, 20, 25, 120), ('samsa_meat', 'Самса с мясом', 11, 16, 26, 120),
+]:
+    dish(key, name, 'bread_bakery', p, f, c, piece, fiber=1.5)
+
+# alcohol (kcal include alcohol)
+AL = 'Калории включают алкоголь, поэтому не равны сумме БЖУ'
+put('wine_white_dry', 'Вино белое сухое', 'drinks', 'as_sold', 66, 0.1, 0, 0.8, 0, auto=False, note=AL)
+put('wine_red_dry', 'Вино красное сухое', 'drinks', 'as_sold', 68, 0.1, 0, 0.3, 0, auto=False, note=AL)
+put('wine_white_semisweet', 'Вино белое полусладкое', 'drinks', 'as_sold', 78, 0.2, 0, 5.0, 0, auto=False, note=AL)
+put('wine_red_semisweet', 'Вино красное полусладкое', 'drinks', 'as_sold', 82, 0.2, 0, 5.5, 0, auto=False, note=AL)
+put('champagne_brut', 'Шампанское брют', 'drinks', 'as_sold', 76, 0.2, 0, 1.5, 0, auto=False, note=AL)
+put('champagne_semisweet', 'Шампанское полусладкое', 'drinks', 'as_sold', 90, 0.2, 0, 6.0, 0, auto=False, note=AL)
+put('beer_wheat', 'Пиво пшеничное', 'drinks', 'as_sold', 45, 0.5, 0, 3.5, 0, auto=False, note=AL)
+put('beer_ipa', 'Пиво крафтовое IPA', 'drinks', 'as_sold', 58, 0.5, 0, 3.8, 0, auto=False, note=AL)
+
+# salads
+for key, name, p, f, c, fib in [
+    ('salad_olivier', 'Салат Оливье', 6, 16, 8, 1), ('salad_olivier_chicken', 'Салат Оливье с курицей', 8, 12, 8, 1),
+    ('salad_crab', 'Салат крабовый', 5, 11, 7, 0.5), ('salad_mimosa', 'Салат Мимоза', 6, 15, 4, 0.5),
+    ('salad_herring_fur_coat', 'Селёдка под шубой', 4, 12, 8, 1), ('salad_veg_cucumber_tomato', 'Салат овощной: огурцы и помидоры с маслом', 1, 4, 4, 1.2),
+    ('salad_caesar_chicken', 'Салат Цезарь с курицей', 10, 11, 7, 1), ('salad_caesar_shrimp', 'Салат Цезарь с креветками', 9, 10, 6, 1),
+    ('salad_crispy_eggplant', 'Салат с хрустящим баклажаном', 3, 10, 9, 1.5), ('salad_greek', 'Салат греческий', 3, 9, 4, 1.2),
+    ('salad_vinaigrette', 'Винегрет', 1.5, 5, 9, 2),
+]:
+    dish(key, name, 'ready_meals', p, f, c, fiber=fib)
+
+# pizza: the type decides the numbers, the chains differ in names; a slice is about 110 g
+PIZZA = {
+    'margherita': ('Маргарита', 10, 9, 30), 'pepperoni': ('Пепперони', 11, 14, 28), 'four_cheese': ('Четыре сыра', 13, 15, 27),
+    'ham_mushroom': ('Ветчина и грибы', 11, 9, 28), 'hawaiian': ('Гавайская', 10, 8, 29), 'meat': ('Мясная', 13, 13, 27),
+    'cheese': ('Сырная', 12, 12, 29), 'ham_cheese': ('Ветчина и сыр', 12, 10, 28), 'chorizo': ('Чоризо-фреш', 12, 14, 27),
+    'double_pepperoni': ('Двойная пепперони', 13, 17, 26), 'chicken_bbq': ('Цыплёнок барбекю', 12, 9, 30),
+}
+for t, (nm, p, f, c) in PIZZA.items():
+    if t in ('margherita', 'pepperoni'):
+        key = 'pizza_' + t
+        dish(key, f'Пицца {nm} (кусок)', 'ready_meals', p, f, c, 110)
+        continue
+    dish(f'pizza_{t}', f'Пицца {nm} (кусок)', 'ready_meals', p, f, c, 110)
+CHAINS = {
+    'dodo': ('Додо Пицца', ['margherita', 'pepperoni', 'cheese', 'ham_cheese', 'chorizo', 'meat', 'hawaiian', 'double_pepperoni', 'four_cheese', 'chicken_bbq']),
+    'papajohns': ("Papa Johns", ['margherita', 'pepperoni', 'four_cheese', 'hawaiian', 'meat', 'ham_mushroom', 'chicken_bbq']),
+    'dominos': ("Domino's Pizza", ['margherita', 'pepperoni', 'four_cheese', 'ham_mushroom', 'hawaiian', 'meat', 'chicken_bbq']),
+}
+for ck, (cname, types) in CHAINS.items():
+    for t in types:
+        nm, p, f, c = PIZZA[t]
+        dish(f'{ck}_pizza_{t}', f'{cname}: пицца {nm} (кусок)', 'ready_meals', p, f, c, 110, brand=cname)
+dish('dodo_dodster_ham', 'Додо Пицца: Додстер с ветчиной и сыром', 'ready_meals', 10, 9, 25, 180, brand='Додо Пицца')
+dish('dodo_dodster_pepperoni', 'Додо Пицца: Додстер с пепперони', 'ready_meals', 10, 11, 25, 180, brand='Додо Пицца')
+dish('dodo_dodster_chicken', 'Додо Пицца: Додстер с курицей', 'ready_meals', 11, 8, 25, 180, brand='Додо Пицца')
+dish('dodo_wings', 'Додо Пицца: крылышки куриные', 'ready_meals', 18, 16, 5, 30, brand='Додо Пицца')
+dish('dodo_cheese_sticks', 'Додо Пицца: сырные палочки', 'ready_meals', 12, 18, 24, 25, brand='Додо Пицца')
+dish('dodo_brownie', 'Додо Пицца: брауни', 'sweets', 5, 24, 48, 80, brand='Додо Пицца')
+dish('dodo_cheesecake', 'Додо Пицца: чизкейк', 'sweets', 6, 22, 25, 100, brand='Додо Пицца')
+
+# Вкусно — и точка
+VT = 'Вкусно — и точка'
+for key, name, p, f, c, piece in [
+    ('vit_hamburger', 'Гамбургер', 12, 8, 28, 105), ('vit_cheeseburger', 'Чизбургер', 13, 11, 26, 120), ('vit_double_cheese', 'Двойной чизбургер', 15, 14, 22, 170),
+    ('vit_big_hit', 'Биг Хит', 11, 13, 20, 210), ('vit_chicken_burger', 'Чикенбургер', 11, 11, 25, 160), ('vit_big_tasty', 'Биг Тейсти', 12, 15, 17, 260),
+    ('vit_fish', 'Фишбургер', 9, 11, 24, 140), ('vit_fries', 'Картофель фри', 3.5, 15, 38, None), ('vit_nuggets', 'Наггетсы куриные', 15, 16, 14, 17),
+    ('vit_strips', 'Стрипсы куриные', 16, 14, 15, 30), ('vit_roll_chicken', 'Ролл с курицей', 11, 10, 24, 180), ('vit_wings', 'Крылышки куриные', 18, 17, 8, 30),
+    ('vit_apple_pie', 'Яблочный пирожок', 3, 12, 38, 80),
+]:
+    dish(key, f'{VT}: {name}', 'ready_meals', p, f, c, piece, brand=VT)
+
+# Бургер Кинг
+BK = 'Бургер Кинг'
+for key, name, p, f, c, piece in [
+    ('bk_whopper', 'Воппер', 12, 14, 15, 270), ('bk_double_whopper', 'Двойной Воппер', 16, 17, 11, 350), ('bk_cheeseburger', 'Чизбургер', 13, 11, 26, 125),
+    ('bk_long_chicken', 'Лонг Чикен', 10, 14, 21, 150), ('bk_chicken_king', 'Чикен Кинг', 11, 12, 24, 190), ('bk_nuggets', 'Наггетсы', 15, 17, 15, 17),
+    ('bk_fries', 'Картофель фри', 3.5, 15, 38, None), ('bk_onion_rings', 'Луковые кольца', 4, 15, 32, 20), ('bk_wings', 'Острые крылышки', 18, 18, 8, 30),
+    ('bk_caesar_roll', 'Цезарь ролл', 11, 11, 22, 200),
+]:
+    dish(key, f'{BK}: {name}', 'ready_meals', p, f, c, piece, brand=BK)
+
+# Ростикс
+RX = 'Ростикс'
+for key, name, p, f, c, piece in [
+    ('rostics_leg', 'Ножка куриная в панировке', 18, 14, 9, 100), ('rostics_wings', 'Острые крылышки', 18, 17, 8, 30), ('rostics_strips', 'Стрипсы', 19, 12, 12, 35),
+    ('rostics_boxmaster', 'Боксмастер', 11, 11, 24, 250), ('rostics_twister', 'Твистер', 10, 10, 20, 200), ('rostics_burger', 'Бургер куриный', 11, 12, 24, 170),
+    ('rostics_fries', 'Картофель фри', 3.5, 15, 38, None), ('rostics_potato_country', 'Картофель по-деревенски', 3, 12, 28, None), ('rostics_nuggets', 'Наггетсы', 15, 16, 14, 17),
+    ('rostics_coleslaw', 'Салат Коул-слоу', 1, 8, 7, None), ('rostics_caesar', 'Салат Цезарь', 9, 11, 7, None),
+]:
+    dish(key, f'{RX}: {name}', 'ready_meals', p, f, c, piece, brand=RX)
+
+# Теремок
+TM = 'Теремок'
+for key, name, cat, p, f, c, piece in [
+    ('teremok_blin_ham', 'Блин с ветчиной и сыром', 'ready_meals', 10, 9, 22, 200), ('teremok_blin_chicken', 'Блин с курицей и грибами', 'ready_meals', 9, 8, 21, 200),
+    ('teremok_blin_curd', 'Блин с творогом', 'ready_meals', 8, 6, 27, 160), ('teremok_blin_meat', 'Блин с мясом', 'ready_meals', 10, 9, 21, 200),
+    ('teremok_blin_salmon', 'Блин с лососем и сливочным сыром', 'ready_meals', 10, 11, 20, 180), ('teremok_blin_jam', 'Блин с вареньем', 'sweets', 4, 5, 36, 150),
+    ('teremok_blin_condensed', 'Блин со сгущёнкой', 'sweets', 5, 8, 40, 150), ('teremok_blin_plain', 'Блин без начинки', 'bread_bakery', 6, 8, 28, 70),
+    ('teremok_syrniki', 'Сырники', 'ready_meals', 12, 9, 22, 60), ('teremok_borscht', 'Борщ', 'ready_meals', 1.5, 3, 5, None),
+    ('teremok_shchi', 'Щи', 'ready_meals', 1.3, 2.5, 4, None), ('teremok_solyanka', 'Солянка', 'ready_meals', 4, 5, 2, None),
+    ('teremok_chicken_noodle', 'Куриный суп с лапшой', 'ready_meals', 3, 1.5, 5, None), ('teremok_oatmeal', 'Каша овсяная на молоке', 'ready_meals', 3.5, 4, 14, None),
+    ('teremok_pelmeni', 'Пельмени', 'ready_meals', 11, 10, 25, 12),
+]:
+    dish(key, f'{TM}: {name}', cat, p, f, c, piece, brand=TM)
+
+# Крошка Картошка: baked potato with a filling
+KK = 'Крошка Картошка'
+for key, name, p, f, c in [
+    ('kk_potato_plain', 'Картофель без начинки', 2.2, 0.3, 17), ('kk_potato_cheese', 'Картофель с сыром', 5, 8, 17), ('kk_potato_chicken_mushroom', 'Картофель с курицей и грибами', 6, 5, 15),
+    ('kk_potato_ham_cheese', 'Картофель с ветчиной и сыром', 6, 7, 16), ('kk_potato_meat', 'Картофель с мясом', 7, 6, 15), ('kk_potato_tuna', 'Картофель с тунцом', 8, 4, 15),
+    ('kk_potato_mushroom', 'Картофель с грибами', 3, 5, 15), ('kk_potato_shrimp', 'Картофель с креветками', 7, 5, 15), ('kk_potato_cabbage_egg', 'Картофель с капустой и яйцом', 4, 4, 17),
+]:
+    dish(key, f'{KK}: {name}', 'ready_meals', p, f, c, None, brand=KK)
+
+# Japanese restaurants (Якитория, Тануки): more rolls and hot dishes
+for key, name, cat, p, f, c, piece in [
+    ('roll_canada', 'Ролл Канада (угорь, сыр, огурец)', 'ready_meals', 5.5, 8, 20, 30), ('roll_ebi_tempura', 'Ролл с креветкой темпура', 'ready_meals', 6, 8, 25, 35),
+    ('roll_dragon', 'Ролл Дракон (угорь, авокадо)', 'ready_meals', 6, 7, 24, 35), ('roll_teriyaki_chicken', 'Ролл с курицей терияки', 'ready_meals', 7, 5, 24, 30),
+    ('roll_crab_cheese', 'Ролл с крабом и сыром', 'ready_meals', 5, 6, 24, 30), ('roll_salmon_avocado', 'Ролл с лососем и авокадо', 'ready_meals', 6, 7, 21, 30),
+    ('roll_baked_shrimp', 'Ролл запечённый с креветкой', 'ready_meals', 8, 9, 20, 35), ('roll_baked_crab', 'Ролл запечённый с крабом', 'ready_meals', 6, 9, 22, 35),
+    ('miso_soup', 'Мисо-суп', 'ready_meals', 2, 1, 2.5, None), ('tom_yum', 'Том ям', 'ready_meals', 3, 3, 3, None), ('ramen_chicken', 'Рамен с курицей', 'ready_meals', 5, 3, 10, None),
+    ('wok_chicken_noodle', 'Вок с курицей и лапшой', 'ready_meals', 8, 6, 18, None), ('wok_beef_noodle', 'Вок с говядиной и лапшой', 'ready_meals', 9, 7, 17, None),
+    ('udon_chicken', 'Удон с курицей', 'ready_meals', 7, 4, 19, None), ('gyoza', 'Гёдза (жареные пельмени)', 'ready_meals', 8, 7, 20, 25),
+    ('shrimp_tempura', 'Креветки в темпуре', 'ready_meals', 12, 12, 14, 25), ('chuka_salad', 'Салат чука', 'ready_meals', 2, 4, 12, None), ('edamame', 'Эдамаме', 'vegetables', 11, 5, 8, None),
+    ('poke_salmon', 'Поке с лососем', 'ready_meals', 9, 6, 18, None), ('tuna_tartare', 'Тартар из тунца', 'ready_meals', 18, 6, 3, None),
+]:
+    dish(key, name, cat, p, f, c, piece, brand=None)
+
 json.dump(foods, open(PATH, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 print('foods:', len(foods))
