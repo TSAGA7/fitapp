@@ -8,6 +8,9 @@ import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signed } from '../ap
 import { getDisplayName } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
+import { useBodyweightMode } from '../app/prefs';
+import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
+import { GoalExplainSheet } from './GoalExplain';
 import { AddMeasurementSheet, AddWeightSheet } from './shared';
 
 const NBSP = '\u00a0';
@@ -16,7 +19,9 @@ export function Today() {
   const { snapshot: s, act } = useData();
   const [weightOpen, setWeightOpen] = useState(false);
   const [measureOpen, setMeasureOpen] = useState(false);
+  const [explainOpen, setExplainOpen] = useState(false);
   const name = getDisplayName();
+  const bodyweight = useBodyweightMode();
   const w = s.weight;
   const { run, banner, busy } = useCommand();
   useEffect(() => {
@@ -97,7 +102,9 @@ export function Today() {
       </section>
 
       {banner}
-      {todaySession && (
+      {s.activeVersion && !bodyweight && <BodyweightToggle />}
+      {bodyweight && s.activeVersion && <BodyweightCard />}
+      {!bodyweight && todaySession && (
         <Card>
           <div className="stack">
             <div className="row between"><div className="t-caption">Тренировка сегодня</div>{s.openSession?.plannedSessionId === todaySession.id && <span className="t-small">идёт</span>}</div>
@@ -106,7 +113,7 @@ export function Today() {
           </div>
         </Card>
       )}
-      {!todaySession && s.activeVersion && !lastWorkoutToday(s) && <ListItem icon="calendar" title="Сегодня отдых" subtitle="Следующую тренировку смотри на вкладке «Тренировки»" onClick={() => go('training')} />}
+      {!bodyweight && !todaySession && s.activeVersion && !lastWorkoutToday(s) && <ListItem icon="calendar" title="Сегодня отдых" subtitle="Следующую тренировку смотри на вкладке «Тренировки»" onClick={() => go('training')} />}
       {targets && (plannedToday.kcal > 0 || eatenToday.kcal > 0) && (
         <Card onClick={() => go('nutrition')}>
           <div className="row between">
@@ -166,7 +173,7 @@ export function Today() {
             <span className="li-icon lime"><Icon name="drop" /></span>
             <div>
               <div className="t-caption">Вода сегодня</div>
-              <div className="t-h3">{fmt(s.waterMl / 1000, 2)}{NBSP}л</div>
+              <div className="t-h3">{fmt(s.waterMl / 1000, 2)}{NBSP}л{targets ? <span className="t-small"> из ~{fmt(targets.waterMl / 1000, 1)}{NBSP}л</span> : null}</div>
             </div>
           </div>
           <div className="row">
@@ -174,14 +181,28 @@ export function Today() {
             <IconButton icon="plus" label="Добавить 250 мл" onClick={() => void act((d) => addWater(d, s.today, 250))} />
           </div>
         </div>
+        <p className="t-small" style={{ marginTop: 10 }}>Ориентир, не норма: ~33 мл на кг веса. Для сравнения, у национальных академий США (2004) около 3 л напитков в сутки для мужчин и 2,2 л для женщин, ещё ~20% воды приходит с едой. Пей по жажде; в жару и в дни тренировок обычно больше.</p>
       </Card>
 
       {(measureAge === null || measureAge > 14) && (
         <ListItem icon="ruler" title={measureAge === null ? 'Добавь замеры' : 'Пора обновить замеры'} subtitle={measureAge === null ? 'Грудь, талия, бицепс, бедро: так видно прогресс, который не показывают весы' : `Последний замер ${measureAge}${NBSP}${plural(measureAge, ['день', 'дня', 'дней'])} назад`} onClick={() => setMeasureOpen(true)} />
       )}
       {s.primaryGoal && (
-        <ListItem icon="target" title={GOAL_LABELS[s.primaryGoal.type].title} subtitle="Моя цель" onClick={() => go('profile/goals')} />
+        <Card>
+          <div className="stack">
+            <div className="row between">
+              <div>
+                <div className="t-caption">Моя цель</div>
+                <div className="t-h3">{GOAL_LABELS[s.primaryGoal.type].title}</div>
+              </div>
+              <Button size="sm" variant="text" onClick={() => go('profile/goals')}>Изменить</Button>
+            </div>
+            <p className="t-small">{GOAL_LABELS[s.primaryGoal.type].text}</p>
+            <Button variant="secondary" icon="info" onClick={() => setExplainOpen(true)}>Почему такие калории и тренировки</Button>
+          </div>
+        </Card>
       )}
+      {s.primaryGoal && <GoalExplainSheet open={explainOpen} goal={s.primaryGoal.type} onClose={() => setExplainOpen(false)} />}
       <AddWeightSheet open={weightOpen} onClose={() => setWeightOpen(false)} />
       <AddMeasurementSheet open={measureOpen} onClose={() => setMeasureOpen(false)} />
     </main>

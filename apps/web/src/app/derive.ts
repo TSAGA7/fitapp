@@ -1,4 +1,4 @@
-import { sumMacros, type Equipment, type Exercise, type Food, type FoodLog, type Macros, type MealSlot, type PainEvent, type PlanFood, type PlannedItem, type SafetyContext, type UserFood } from '@fitapp/domain';
+import { buildBodyweightWorkout, sumMacros, type WorkoutTemplate, type Equipment, type Exercise, type Food, type FoodLog, type Macros, type MealSlot, type PainEvent, type PlanFood, type PlannedItem, type SafetyContext, type UserFood } from '@fitapp/domain';
 import type { Snapshot } from './snapshot';
 
 export const SLOT_ORDER: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -76,4 +76,9 @@ export function resolveEquipment(ex: Pick<Exercise, 'equipmentRequirements' | 'l
   if (!main) return { equipmentId: null, stepKg: 2.5, minKg: null, maxKg: null };
   const u = userEquipment.find((x) => x.equipmentId === main.id);
   return { equipmentId: main.id, stepKg: u?.stepKg ?? main.defaultStepKg ?? 2.5, minKg: u?.minKg ?? null, maxKg: u?.maxKg ?? null };
+}
+
+/** The workout "own bodyweight" for the current constraints (nothing is saved). */
+export function bodyweightPlan(s: Pick<Snapshot, 'exercises' | 'injuries' | 'painEvents' | 'equipment' | 'userEquipment' | 'profile' | 'userExercises'>, now: string): WorkoutTemplate {
+  return buildBodyweightWorkout({ exercises: s.exercises.filter((e) => e.deletedAt === null), ctx: safetyContext(s, now) });
 }

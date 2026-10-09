@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, addSetToExercise, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt } from '../app/format';
@@ -17,6 +17,8 @@ interface RestState {
   total: number;
   reason: string;
   phrase: number;
+  /** Seconds left while the timer is paused, otherwise null. */
+  pausedLeft: number | null;
 }
 
 const AREA_LABELS: Record<BodyArea, string> = { shoulder: 'Плечо', elbow: 'Локоть', wrist: 'Запястье', neck: 'Шея', upper_back: 'Верх спины', lower_back: 'Поясница', hip: 'Таз', knee: 'Колено', ankle: 'Голеностоп', other: 'Другое' };
@@ -31,6 +33,7 @@ export function Workout({ sessionId }: { sessionId: string }) {
   const [failed, setFailed] = useState<string | null>(null);
   const [rest, setRest] = useState<RestState | null>(null);
   const [finishing, setFinishing] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
 
   const reload = useCallback(async () => {
     try {
@@ -52,10 +55,24 @@ export function Workout({ sessionId }: { sessionId: string }) {
 
   const mutate = async (fn: Parameters<typeof ok>[0], restSec?: number | null, reason = '') => {
     if (await ok(fn)) {
-      if (restSec) setRest({ endsAt: Date.now() + restSec * 1000, total: restSec, reason, phrase: Math.floor(Math.random() * REST_PHRASES.length) });
+      if (restSec) setRest({ endsAt: Date.now() + restSec * 1000, total: restSec, reason, phrase: Math.floor(Math.random() * REST_PHRASES.length), pausedLeft: null });
       await reload();
     }
   };
+
+  if (celebrate) {
+    return (
+      <main className="screen workout">
+        <Card>
+          <div className="stack">
+            <div className="rest-boss t-h2" role="status">{REST_FINISH_MESSAGE}</div>
+            <p className="t-body" style={{ textAlign: 'center' }}>Тренировка записана: {doneSets} из {totalSets} подходов.</p>
+            <Button block onClick={() => go('training')}>К тренировкам</Button>
+          </div>
+        </Card>
+      </main>
+    );
+  }
 
   return (
     <main className="screen workout">
@@ -81,48 +98,46 @@ export function Workout({ sessionId }: { sessionId: string }) {
         </div>
       )}
       {readOnly && <Button block variant="secondary" onClick={() => go('training')}>К тренировкам</Button>}
-      <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) go('training'); }} />
+      <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} />
     </main>
   );
 }
 
 const clock = (sec: number): string => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 
-/** Rest countdown: cues at 7 s and 5 s, a random phrase on the last second, a message when the user finishes the rest. */
+/** Rest countdown: cues at 7 s and 5 s, a random phrase on the last second; can be paused. */
 function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: RestState) => void; onDone: () => void }) {
   const [now, setNow] = useState(Date.now());
-  const [boss, setBoss] = useState(false);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(t);
   }, []);
-  useEffect(() => {
-    if (!boss) return;
-    const t = setTimeout(onDone, 2200);
-    return () => clearTimeout(t);
-  }, [boss, onDone]);
-  const left = Math.max(0, Math.ceil((rest.endsAt - now) / 1000));
-  const cue = restCue(left, () => (rest.phrase + 0.5) / REST_PHRASES.length);
-  const adjust = (delta: number) => onChange({ ...rest, endsAt: Math.max(Date.now() + 1000, rest.endsAt + delta * 1000), total: Math.max(15, rest.total + delta) });
+  const paused = rest.pausedLeft !== null;
+  const left = paused ? (rest.pausedLeft as number) : Math.max(0, Math.ceil((rest.endsAt - now) / 1000));
+  const cue = paused ? 'Пауза' : restCue(left, () => (rest.phrase + 0.5) / REST_PHRASES.length);
+  const adjust = (delta: number) => {
+    if (paused) onChange({ ...rest, pausedLeft: Math.max(1, left + delta), total: Math.max(15, rest.total + delta) });
+    else onChange({ ...rest, endsAt: Math.max(Date.now() + 1000, rest.endsAt + delta * 1000), total: Math.max(15, rest.total + delta) });
+  };
+  const toggle = () => (paused ? onChange({ ...rest, pausedLeft: null, endsAt: Date.now() + left * 1000 }) : onChange({ ...rest, pausedLeft: left }));
   return (
     <Card className="rest-panel" role="timer" aria-live="off">
-      {boss ? (
-        <div className="rest-boss t-h2" role="status">{REST_FINISH_MESSAGE}</div>
-      ) : (
-        <div className="stack">
-          <div className="row between">
-            <span className="row"><Icon name="clock" size={18} /> <span className="t-caption">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</span></span>
-            <span className="row">
-              <Button size="sm" variant="text" onClick={() => adjust(-15)}>−15 с</Button>
-              <Button size="sm" variant="text" onClick={() => adjust(15)}>+15 с</Button>
-            </span>
-          </div>
-          <div className="rest-time" aria-label={`Осталось ${clock(left)}`}>{clock(left)}</div>
-          <ProgressBar value={rest.total > 0 ? 1 - left / rest.total : 1} label="Прогресс перерыва" />
-          <div className="rest-cue t-h3" role="status" aria-live="polite">{cue ?? (left === 0 ? 'Пора!' : '\u00a0')}</div>
-          <Button block onClick={() => setBoss(true)}>Завершить</Button>
+      <div className="stack">
+        <div className="row between">
+          <span className="row"><Icon name="clock" size={18} /> <span className="t-caption">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</span></span>
+          <span className="row">
+            <Button size="sm" variant="text" onClick={() => adjust(-15)}>−15 с</Button>
+            <Button size="sm" variant="text" onClick={() => adjust(15)}>+15 с</Button>
+          </span>
         </div>
-      )}
+        <div className="rest-time" aria-label={`Осталось ${clock(left)}`}>{clock(left)}</div>
+        <ProgressBar value={rest.total > 0 ? 1 - left / rest.total : 1} label="Прогресс перерыва" />
+        <div className="rest-cue t-h3" role="status" aria-live="polite">{cue ?? (left === 0 ? 'Пора!' : '\u00a0')}</div>
+        <div className="row">
+          <Button block variant="secondary" icon={paused ? 'play' : 'clock'} onClick={toggle}>{paused ? 'Продолжить' : 'Пауза'}</Button>
+          <Button block onClick={onDone}>Завершить</Button>
+        </div>
+      </div>
     </Card>
   );
 }
@@ -247,7 +262,12 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run }: CardProps) {
                     {!readOnly && <IconButton icon="close" label="Отменить подход" tone="ghost" onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))} />}
                   </span>
                 )}
-                {l && l.status === 'skipped' && <Badge tone={l.skipReason === 'pain' ? 'danger' : 'neutral'}>{l.skipReason === 'pain' ? 'Боль' : 'Пропущен'}</Badge>}
+                {l && l.status === 'skipped' && (
+                  <span className="row">
+                    <Badge tone={l.skipReason === 'pain' ? 'danger' : 'neutral'}>{l.skipReason === 'pain' ? 'Боль' : 'Пропущен'}</Badge>
+                    {!readOnly && <Button size="sm" variant="text" icon="swap" disabled={busy} onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))}>Вернуть</Button>}
+                  </span>
+                )}
               </div>
             );
           })}
@@ -289,6 +309,7 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run }: CardProps) {
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <Button size="sm" variant="text" icon="skip" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}>Пропустить подход</Button>
               <Button size="sm" variant="text" icon="alert" onClick={() => setPainOpen(true)}>Боль</Button>
+              <Button size="sm" variant="text" icon="plus" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}>Добавить подход</Button>
               <Button size="sm" variant="text" icon="swap" onClick={() => setSwapOpen(true)}>Заменить</Button>
               <Button size="sm" variant="text" icon="edit" onClick={() => setNoteOpen(true)}>Заметка</Button>
               {VACUUM_KEYS.has(exercise.key) && <Button size="sm" variant="text" icon="info" onClick={() => setGuideOpen(true)}>Как это работает</Button>}

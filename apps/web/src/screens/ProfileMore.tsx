@@ -10,6 +10,7 @@ import { parseDecimal, ScreenHeader } from './shared';
 
 const AREA_LABELS: Record<BodyArea, string> = { shoulder: 'Плечо', elbow: 'Локоть', wrist: 'Запястье', neck: 'Шея', upper_back: 'Верх спины', lower_back: 'Поясница', hip: 'Таз', knee: 'Колено', ankle: 'Голеностоп', other: 'Другое' };
 const SIDE_LABELS: Record<Side, string> = { left: 'Слева', right: 'Справа', both: 'Обе стороны' };
+const SHORT_STATUS: Record<InjuryStatus, string> = { active: 'Сейчас', recurring: 'Периодически', past: 'Раньше' };
 const STATUS_LABELS: Record<InjuryStatus, string> = { active: 'Беспокоит сейчас', recurring: 'Периодически', past: 'Было раньше' };
 const TRIGGER_LABELS: Record<TriggerKind, string> = { exercise: 'Определённое упражнение', movement: 'Движение', position: 'Положение', other: 'Другое' };
 const PREF_LABELS: Record<Preference, string> = { love: 'Обожаю', like: 'Люблю', ok: 'Нормально', avoid: 'Не люблю' };
@@ -30,7 +31,7 @@ export function FoodsScreen() {
       <div className="list">
         {foods.map((f) => {
           const u = userFoodOf(s.userFoods, f.id);
-          return <ListItem key={f.id} icon={u?.excluded ? 'close' : 'box'} title={f.name} subtitle={u?.excluded ? 'Исключён' : `${PREF_LABELS[u?.preference ?? 'ok']} · ${AVAIL_LABELS[u?.availability ?? 'always']}`} onClick={() => setOpenId(f.id)} />;
+          return <ListItem key={f.id} icon={u?.excluded ? 'close' : 'basket'} title={f.name} subtitle={u?.excluded ? 'Исключён' : `${PREF_LABELS[u?.preference ?? 'ok']} · ${AVAIL_LABELS[u?.availability ?? 'always']}`} onClick={() => setOpenId(f.id)} />;
         })}
       </div>
       <FoodSheet foodId={openId} onClose={() => setOpenId(null)} />
@@ -173,7 +174,7 @@ function AddInjurySheet({ open, onClose }: { open: boolean; onClose: () => void 
         {banner}
         <div className="chips" role="group" aria-label="Где">{(Object.keys(AREA_LABELS) as BodyArea[]).map((a) => <Chip key={a} pressed={area === a} onClick={() => setArea(a)}>{AREA_LABELS[a]}</Chip>)}</div>
         <Segmented<Side> label="Сторона" value={side} onChange={setSide} options={(Object.keys(SIDE_LABELS) as Side[]).map((k) => ({ value: k, label: SIDE_LABELS[k] }))} small />
-        <Segmented<InjuryStatus> label="Как давно" value={status} onChange={setStatus} options={(Object.keys(STATUS_LABELS) as InjuryStatus[]).map((k) => ({ value: k, label: STATUS_LABELS[k] }))} small />
+        <Segmented<InjuryStatus> label="Как давно" value={status} onChange={setStatus} options={(Object.keys(STATUS_LABELS) as InjuryStatus[]).map((k) => ({ value: k, label: SHORT_STATUS[k] }))} small />
         <div className="t-caption">Когда появляется</div>
         <div className="chips">{(Object.keys(TRIGGER_LABELS) as TriggerKind[]).map((k) => <Chip key={k} pressed={triggers.includes(k)} onClick={() => toggle(k)}>{TRIGGER_LABELS[k]}</Chip>)}</div>
         <TextField label="Например: «при жиме лёжа»" value={text} onChange={(e) => setText(e.target.value)} />

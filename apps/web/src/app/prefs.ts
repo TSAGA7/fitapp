@@ -16,3 +16,37 @@ export function setDisplayName(name: string): void {
     /* storage unavailable: the name is optional */
   }
 }
+
+// ---- "Со своим весом" mode: a temporary status, the program itself is never changed.
+import { useSyncExternalStore } from 'react';
+
+const BW_KEY = 'fitapp.bodyweightMode';
+const listeners = new Set<() => void>();
+let bwCache: boolean | null = null;
+
+function readBw(): boolean {
+  try {
+    return window.localStorage.getItem(BW_KEY) === '1';
+  } catch {
+    return bwCache ?? false;
+  }
+}
+export function setBodyweightMode(on: boolean): void {
+  bwCache = on;
+  try {
+    if (on) window.localStorage.setItem(BW_KEY, '1');
+    else window.localStorage.removeItem(BW_KEY);
+  } catch {
+    /* storage unavailable: the mode lives until the page is closed */
+  }
+  listeners.forEach((l) => l());
+}
+export function useBodyweightMode(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    () => bwCache ?? readBw(),
+  );
+}

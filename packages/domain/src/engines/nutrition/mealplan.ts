@@ -192,6 +192,46 @@ export interface DayPlan {
 
 const dev = (a: number, b: number): number => (b > 0 ? Math.round(((a - b) / b) * 1000) / 1000 : 0);
 
+/**
+ * Day-level correction: the meals are fitted one by one, so the day can end a few percent off the targets.
+ * Moves the amounts of the generated lines (never the kept/locked ones) by one step while the error to the DAY target shrinks.
+ * Amounts stay within 60-150% of what the meal fit chose, so the meals keep their character.
+ */
+function refineDay(lines: PlanLine[], kept: readonly PlanLine[], foods: readonly PlanFood[], dayTarget: Macros): void {
+  const keptSet = new Set<PlanLine>(kept);
+  const free = lines.filter((l) => !keptSet.has(l));
+  const byId = new Map(foods.map((f) => [f.id, f]));
+  const start = new Map(free.map((l) => [l, l.grams]));
+  const total = (): Macros => sumMacros(lines.map((l) => l.macros));
+  let best = error(total(), dayTarget);
+  for (let iter = 0; iter < 300; iter++) {
+    let improved = false;
+    for (const l of free) {
+      const f = byId.get(l.foodId);
+      if (!f) continue;
+      const s = step(f);
+      const g0 = start.get(l) as number;
+      for (const dir of [1, -1]) {
+        const next = l.grams + dir * s;
+        if (next <= 0 || next < g0 * 0.6 || next > g0 * 1.5) continue;
+        if (f.maxPerDayG !== null && next > f.maxPerDayG) continue;
+        const prev = { grams: l.grams, macros: l.macros };
+        l.grams = next;
+        l.macros = macrosForAmount(f.per100, next);
+        const e = error(total(), dayTarget);
+        if (e + 1e-9 < best) {
+          best = e;
+          improved = true;
+        } else {
+          l.grams = prev.grams;
+          l.macros = prev.macros;
+        }
+      }
+    }
+    if (!improved) break;
+  }
+}
+
 export function generateDayPlan(input: DayPlanInput): DayPlan {
   const locked = input.locked ?? [];
   const slots = input.slots ?? SLOTS;
@@ -216,6 +256,7 @@ export function generateDayPlan(input: DayPlanInput): DayPlan {
     const meal = generateMeal({ slot, target, foods: input.foods, rotation: input.seed, avoidFoodIds: input.avoidFoodIds });
     lines.push(...meal);
   }
+  refineDay(lines, keep, input.foods, dayTarget);
   lines.sort((a, b) => SLOTS.indexOf(a.slot) - SLOTS.indexOf(b.slot));
   const totals = sumMacros(lines.map((l) => l.macros));
   return {

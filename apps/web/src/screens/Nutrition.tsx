@@ -124,9 +124,12 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
           </div>
         </div>
         <div className="row between" style={{ marginTop: 12 }}>
-          <span className="t-small">Съедено {fmt(eaten.kcal, 0)} из {fmt(targets.kcal, 0)} ккал</span>
-          {items.length > 0 && <span className="t-small">План {fmt(planned.kcal, 0)} ккал</span>}
+          <span className="t-small">Съедено {fmt(eaten.kcal, 0)} из нормы {fmt(targets.kcal, 0)} ккал</span>
+          {items.length > 0 && <span className="t-small">Рацион {fmt(planned.kcal, 0)} ккал</span>}
         </div>
+        {items.length > 0 && Math.abs(planned.kcal - targets.kcal) > targets.kcal * 0.03 && (
+          <p className="t-small" style={{ marginTop: 6 }}>Норма — сколько нужно на день по твоей цели. Рацион — то, что составлено из продуктов: сейчас он {planned.kcal < targets.kcal ? 'меньше' : 'больше'} нормы на {fmt(Math.abs(targets.kcal - planned.kcal), 0)} ккал. Нажми «Переделать» у приёма пищи или пересобери день, чтобы подогнать.</p>
+        )}
       </Card>
 
       {items.length === 0 && !isPast && (

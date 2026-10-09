@@ -32,6 +32,8 @@ import {
   togglePlannedLock,
   addMetric,
   saveExerciseNote,
+  undoSet,
+  addSetToExercise,
   setExercisePreference,
   startBodyweightWorkout,
 } from '../apps/web/src/actions';
@@ -351,5 +353,24 @@ describe('app flow on the real storage', () => {
     await abandonWorkout(deps, sid);
     const rows = await deps.uow.run((r) => r.plannedSessions.listByDateRange({ from: '2026-09-01', to: '2026-12-31' }));
     expect(rows.some((p) => p.workoutKey === 'bodyweight')).toBe(false);
+  });
+  it('a mistaken skipped set can be restored, and an extra set can be added', async () => {
+    const { deps } = await setup();
+    await ensureSessions(deps);
+    const first = (await loadSnapshot(deps)).plannedSessions.sort((x, y) => (x.plannedDate < y.plannedDate ? -1 : 1))[0]!;
+    const sid = await startWorkout(deps, first.id);
+    const ex = (await loadWorkout(deps, sid)).exercises[0]!;
+    const base = { sessionExerciseId: ex.se.id, exerciseId: ex.exercise.id, variantKey: ex.se.variantKey, contextKey: ex.plan[0]!.contextKey, plannedSetId: ex.plan[0]!.id };
+    await skipSet(deps, { ...base, setNo: 1, reason: 'fatigue' });
+    expect((await loadWorkout(deps, sid)).exercises[0]!.logs.find((l) => l.setNo === 1)?.status).toBe('skipped');
+    await undoSet(deps, ex.se.id, 1);
+    expect((await loadWorkout(deps, sid)).exercises[0]!.logs.find((l) => l.setNo === 1)).toBeUndefined();
+    await logSet(deps, { ...base, setNo: 1, weightKg: 40, reps: 10, rir: 2 });
+    expect((await loadWorkout(deps, sid)).exercises[0]!.logs.find((l) => l.setNo === 1)?.status).toBe('done');
+    const before = ex.plan.length;
+    await addSetToExercise(deps, ex.se.id);
+    const after = (await loadWorkout(deps, sid)).exercises[0]!;
+    expect(after.plan.length).toBe(before + 1);
+    expect(after.plan[after.plan.length - 1]!.setNo).toBe(before + 1);
   });
 });

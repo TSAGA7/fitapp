@@ -8,6 +8,7 @@ import { getDisplayName, setDisplayName } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
 import { ExerciseCatalogScreen } from './ExerciseCatalog';
+import { GoalExplainSheet } from './GoalExplain';
 import { ImportPanel } from './ImportPanel';
 import { TvaGuideScreen } from './TvaGuide';
 import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './ProfileMore';
@@ -46,10 +47,10 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'profile', name: 'Личные данные', to: 'profile/personal' },
   { icon: 'ruler', name: 'Замеры и вес', to: 'profile/body' },
   { icon: 'calendar', name: 'Расписание', to: 'profile/schedule' },
-  { icon: 'box', name: 'Продукты', to: 'profile/foods' },
+  { icon: 'basket', name: 'Продукты', to: 'profile/foods' },
   { icon: 'gear', name: 'Оборудование', to: 'profile/equipment' },
   { icon: 'training', name: 'Каталог упражнений', to: 'profile/exercises' },
-  { icon: 'leaf', name: 'Вакуум и дыхание', to: 'profile/tva' },
+  { icon: 'leaf', name: 'Поперечная мышца', to: 'profile/tva' },
   { icon: 'shield', name: 'Болевые точки', to: 'profile/injuries' },
   { icon: 'history', name: 'История изменений программы', to: 'profile/versions' },
   { icon: 'download', name: 'Экспорт и импорт', to: 'profile/data' },
@@ -159,6 +160,7 @@ function Goals() {
   const [twaist, setTwaist] = useState(g?.targetWaistCm ? String(g.targetWaistCm) : '');
   const [focus, setFocus] = useState<FocusArea[]>(g ? [...g.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area) : []);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [explainOpen, setExplainOpen] = useState(false);
   const toggle = (a: FocusArea) => setFocus((f) => (f.includes(a) ? f.filter((x) => x !== a) : f.length < 3 ? [...f, a] : f));
   const save = async () => {
     const w = tw.trim() ? parseDecimal(tw) : null;
@@ -175,6 +177,8 @@ function Goals() {
   return (
     <main className="screen no-nav">
       <ScreenHeader title="Мои цели" back="profile" />
+      <Button variant="secondary" icon="info" onClick={() => setExplainOpen(true)}>Почему такие калории и тренировки</Button>
+      <GoalExplainSheet open={explainOpen} goal={type} onClose={() => setExplainOpen(false)} />
       <GoalPicker type={type} onType={setType} />
       <div className="grid-2">
         <TextField label="Целевой вес" unit="кг" inputMode="decimal" value={tw} onChange={(e) => setTw(e.target.value)} />

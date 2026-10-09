@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, assessExercise, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
-import { createProgram, ensureSessions, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startBodyweightWorkout, startWorkout } from '../actions';
+import { createProgram, ensureSessions, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
+import { useBodyweightMode } from '../app/prefs';
+import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
 import { ScreenHeader } from './shared';
 
 type View = 'week' | 'month' | 'program' | 'history';
@@ -17,6 +19,7 @@ export function Training() {
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
   const [view, setView] = useState<View>('week');
+  const bodyweight = useBodyweightMode();
 
   // The calendar is derived from the active version: keep the next two weeks created.
   useEffect(() => {
@@ -43,9 +46,10 @@ export function Training() {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
+      <BodyweightToggle />
       <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}
-      {view === 'week' && <Week />}
+      {view === 'week' && (bodyweight ? <BodyweightCard /> : <Week />)}
       {view === 'month' && <MonthView />}
       {view === 'program' && <ProgramView />}
       {view === 'history' && <History />}
@@ -89,15 +93,6 @@ function Week() {
           </div>
         </Card>
       )}
-      <Card flat>
-        <div className="row between">
-          <div>
-            <div className="t-h3">Со своим весом</div>
-            <div className="t-small">Командировка, дом, нет зала: приседания, отжимания, мёртвый жук и другое.</div>
-          </div>
-          <Button size="sm" variant="secondary" icon="play" disabled={busy || !!open} onClick={async () => { const id = await run((d) => startBodyweightWorkout(d)); if (id) go(`workout/${id}`); }}>Начать</Button>
-        </div>
-      </Card>
       {sessions.length === 0 && <p className="note">Ближайших тренировок нет. Проверь дни тренировок в профиле.</p>}
       <div className="stack">
         {sessions.map((p) => {

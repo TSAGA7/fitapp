@@ -3,7 +3,7 @@ import type { Exercise, MuscleGroup } from '@fitapp/domain';
 import { isBodyweightOnly } from '@fitapp/domain';
 import { setExercisePreference } from '../actions';
 import { useData } from '../app/DataContext';
-import { Badge, Chip, TextField } from '../ui';
+import { Chip, TextField } from '../ui';
 import { ScreenHeader } from './shared';
 import { useCommand } from '../app/useCommand';
 
@@ -63,16 +63,15 @@ export function ExerciseCatalogScreen() {
       </div>
       <div className="list">
         {items.map((e) => (
-          <div key={e.id} className="list-item" style={{ alignItems: 'flex-start' }}>
-            <span className="grow">
-              <span className="li-title" style={{ display: 'block' }}>{e.name}</span>
-              <span className="li-sub" style={{ display: 'block' }}>{isBodyweightOnly(e) ? 'Без оборудования' : e.equipmentRequirements.length ? 'Нужно оборудование' : ''}</span>
-              {e.defaultSets && <Badge tone="neutral">{e.defaultSets}×{e.defaultRepRange.min}–{e.defaultRepRange.max}{e.loadUnit === 'seconds' ? ' с' : ''}</Badge>}
-            </span>
-            <span className="row">
+          <div key={e.id} className="list-item ex-row">
+            <div>
+              <div className="li-title">{e.name}</div>
+              <div className="li-sub">{isBodyweightOnly(e) ? 'Без оборудования' : e.equipmentRequirements.length ? 'Нужно оборудование' : ''} · {e.defaultSets}×{e.defaultRepRange.min}–{e.defaultRepRange.max}{e.loadUnit === 'seconds' ? ' с' : ''}</div>
+            </div>
+            <div className="chips">
               <Chip pressed={pref.get(e.id) === 'like'} onClick={() => set(e, 'like')}>Нравится</Chip>
               <Chip pressed={pref.get(e.id) === 'dislike'} onClick={() => set(e, 'dislike')}>Не нравится</Chip>
-            </span>
+            </div>
           </div>
         ))}
         {items.length === 0 && <p className="note">Ничего не найдено.</p>}

@@ -127,6 +127,8 @@ export interface WorkoutRepo {
   listSessionExercises(sessionId: string): Promise<SessionExercise[]>;
   putSetLog(entity: SetLog): Promise<void>;
   listSetLogs(sessionExerciseId: string): Promise<SetLog[]>;
+  /** Removes a set record entered by mistake (soft delete). */
+  softDeleteSetLog(id: string): Promise<void>;
   /** History for progression: all fact sets of one prescription context, oldest first. */
   listSetLogsByContext(contextKey: string): Promise<SetLog[]>;
   listSetLogsByExercise(exerciseId: string): Promise<SetLog[]>;

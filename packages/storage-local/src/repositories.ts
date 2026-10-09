@@ -198,6 +198,10 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
     async putSetLog(entity: SetLog) {
       await setLogs.put(stamp(ENTITY_SCHEMAS.setLogs, 'setLogs', now, entity));
     },
+    async softDeleteSetLog(id: string) {
+      const row = await setLogs.get(id);
+      if (row && row.deletedAt === null) await setLogs.put(stamp(ENTITY_SCHEMAS.setLogs, 'setLogs', now, { ...row, deletedAt: now() }));
+    },
     async listSetLogs(sessionExerciseId: string) {
       return alive(await setLogs.where('sessionExerciseId').equals(sessionExerciseId).toArray()).sort((a, b) => a.setNo - b.setNo);
     },

@@ -8,13 +8,13 @@ export function TvaGuideBody() {
   return (
     <div className="stack">
       <section className="stack">
-        <h3 className="t-h3">Что это за мышца</h3>
+        <h3 className="t-h3">Поперечная мышца живота (transversus abdominis)</h3>
         <p className="t-body">Поперечная мышца живота — самая глубокая из мышц пресса. Она идёт горизонтально, как широкий пояс: от рёбер и поясницы к центру живота. Её задача — держать живот «подобранным», стабилизировать поясницу и таз и создавать давление внутри корпуса, на которое опирается позвоночник.</p>
         <p className="t-body">Она не сжигает жир над собой: жир уходит из‑за дефицита калорий по всему телу. Зато если мышца вялая, живот выпячивается вперёд, а поясница прогибается — это выглядит как «пузо» даже при невысоком проценте жира.</p>
       </section>
 
       <section className="stack">
-        <h3 className="t-h3">Как её тренировать: вакуум</h3>
+        <h3 className="t-h3">Как тренировать поперечную мышцу: вакуум</h3>
         <ol className="t-body">
           <li>Начни лёжа на спине, колени согнуты, стопы на полу. Позже — на четвереньках, затем стоя.</li>
           <li>Сделай спокойный вдох носом, рёбра расходятся в стороны.</li>
@@ -55,7 +55,7 @@ export function TvaGuideScreen() {
   const vacuum = s.exercises.find((e) => e.key === 'vacuum_lying');
   return (
     <main className="screen">
-      <ScreenHeader title="Вакуум и дыхание" back="profile" />
+      <ScreenHeader title="Поперечная мышца живота" back="profile" />
       <Card>
         <TvaGuideBody />
       </Card>

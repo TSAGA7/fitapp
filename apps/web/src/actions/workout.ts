@@ -428,12 +428,35 @@ export async function skipSet(deps: AppDeps, input: Omit<LogSetInput, 'reps' | '
   );
 }
 
+/** Removes the record of a set (done or skipped by mistake): the set becomes available to be done again. */
 export async function undoSet(deps: AppDeps, sessionExerciseId: string, setNo: number, setType: SetType = 'working'): Promise<void> {
   await deps.uow.run(async (r) => {
     const existing = (await r.workouts.listSetLogs(sessionExerciseId)).find((s) => s.setNo === setNo && s.setType === setType);
-    if (!existing) return;
-    // Set logs are append-only records; "undo" turns the entry into a skipped one the user can redo.
-    await r.workouts.putSetLog({ ...existing, status: 'skipped', skipReason: 'other', actualReps: null, actualRir: null, actualWeightKg: null, completedAt: deps.clock.now() });
+    if (existing) await r.workouts.softDeleteSetLog(existing.id);
+  });
+}
+
+/** Adds one more working set to the exercise of this workout (a copy of the last planned set). */
+export async function addSetToExercise(deps: AppDeps, sessionExerciseId: string): Promise<void> {
+  await deps.uow.run(async (r) => {
+    let session: WorkoutSession | undefined;
+    let se: SessionExercise | undefined;
+    for (const s of await r.workouts.listSessions()) {
+      const found = (await r.workouts.listSessionExercises(s.id)).find((e) => e.id === sessionExerciseId);
+      if (found) {
+        se = found;
+        session = s;
+        break;
+      }
+    }
+    if (!se || !session?.plannedSessionId) throw new Error('Упражнение не найдено');
+    const plan = (await r.plannedSessions.listSets(session.plannedSessionId)).filter((p) => p.plannedExerciseKey === se.plannedExerciseKey && p.exerciseId === se.exerciseId).sort((a, b) => a.setNo - b.setNo);
+    const last = plan[plan.length - 1];
+    if (!last) throw new Error('У упражнения нет плана подходов');
+    const { id: _id, ...rest } = last;
+    void _id;
+    await r.plannedSessions.putSets([{ ...rest, ...baseOf(deps), setNo: last.setNo + 1 }]);
+    if (se.status === 'done') await r.workouts.putSessionExercise({ ...se, status: 'planned' });
   });
 }
 

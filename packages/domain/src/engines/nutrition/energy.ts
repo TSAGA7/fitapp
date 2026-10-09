@@ -31,7 +31,7 @@ export const GOAL_ADJUSTMENT: Record<GoalType, number> = {
   strength: 0.05,
   functional_fitness: 0,
 };
-const PROTEIN_PER_KG: Record<GoalType, number> = {
+export const PROTEIN_PER_KG: Record<GoalType, number> = {
   fat_loss: 2.2,
   recomposition: 2.0,
   muscle_gain: 1.8,

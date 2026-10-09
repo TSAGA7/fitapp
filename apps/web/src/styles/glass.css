@@ -84,3 +84,13 @@ body { background: var(--bg); }
 .cal-day[data-planned="true"]:not([data-done="true"])::after { background: transparent; border: 1.5px solid var(--lime, #c6f432); }
 .cal-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 4px 0 10px; border: 1.5px solid var(--lime, #c6f432); }
 .cal-dot.done { background: var(--lime, #c6f432); }
+
+/* ---- layout fixes */
+.screen { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+html, body { overflow-x: hidden; }
+.hero-stats .s-l { min-height: 32px; align-items: flex-start; line-height: 16px; }
+.hero-stats .s-l .dot { margin-top: 4px; flex: none; }
+.sheet { background: rgba(255, 255, 255, 0.97); }
+.segmented button { min-width: 0; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+.ex-row { display: grid; gap: 8px; padding: 14px 16px; border-radius: var(--r-lg); min-width: 0; }
+.ex-row .chips { margin-top: 2px; }

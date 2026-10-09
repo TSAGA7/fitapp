@@ -59,6 +59,14 @@ describe('meal plan', () => {
     expect(Math.abs(a.deviation.proteinG)).toBeLessThan(0.12);
     expect(new Set(a.lines.map((l) => l.slot)).size).toBe(4);
   });
+  it('the day total lands within 4% of the day targets for several seeds', () => {
+    const t = { kcal: 1865, proteinG: 180, fatG: 65, carbG: 140, fiberG: 26, waterMl: 2700 };
+    for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', '2026-10-08', '2026-10-09']) {
+      const d = generateDayPlan({ targets: t, foods, seed }).deviation;
+      expect(Math.abs(d.kcal), seed).toBeLessThan(0.04);
+      expect(Math.abs(d.proteinG), seed).toBeLessThan(0.08);
+    }
+  });
   it('another seed gives another set of foods', () => {
     const ids = (seed: string) => generateDayPlan({ targets, foods, seed }).lines.map((l) => l.foodId).join();
     const variants = new Set(['a', 'b', 'c', 'd', 'e'].map(ids));
