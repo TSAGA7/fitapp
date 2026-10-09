@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { diffDays } from '@fitapp/domain';
-import { addWater, ensureSessions, startWorkout } from '../actions';
+import { diffDays, recommendedWaterMl } from '@fitapp/domain';
+import { addWater, ensureSessions, setWater, startWorkout } from '../actions';
 import { eatenOf, itemsOnDate, logsOnDate, plannedOf } from '../app/derive';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
@@ -11,12 +11,12 @@ import { Button, Card, EmptyState, Icon, IconButton, ListItem, ProgressBar, Spar
 import { useBodyweightMode } from '../app/prefs';
 import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
 import { GoalExplainSheet } from './GoalExplain';
-import { AddMeasurementSheet, AddWeightSheet } from './shared';
+import { AddMeasurementSheet, AddWeightSheet, parseDecimal } from './shared';
 
 const NBSP = '\u00a0';
 
 export function Today() {
-  const { snapshot: s, act } = useData();
+  const { snapshot: s } = useData();
   const [weightOpen, setWeightOpen] = useState(false);
   const [measureOpen, setMeasureOpen] = useState(false);
   const [explainOpen, setExplainOpen] = useState(false);
@@ -30,6 +30,8 @@ export function Today() {
   const targets = s.activeVersion?.nutrition ?? s.targets?.targets;
   const todaySession = s.plannedSessions.find((p) => p.deletedAt === null && p.plannedDate === s.today && p.status === 'planned');
   const todayLabel = todaySession ? s.activeVersion?.training.workouts.find((x) => x.key === todaySession.workoutKey)?.label : undefined;
+  const weightForWater = w.currentKg;
+  const recommended = weightForWater !== null && s.profile ? recommendedWaterMl(weightForWater, s.profile.sex) : (targets?.waterMl ?? 0);
   const eatenToday = eatenOf(logsOnDate(s, s.today));
   const plannedToday = plannedOf(itemsOnDate(s, s.today));
 
@@ -107,9 +109,9 @@ export function Today() {
       {!bodyweight && todaySession && (
         <Card>
           <div className="stack">
-            <div className="row between"><div className="t-caption">Тренировка сегодня</div>{s.openSession?.plannedSessionId === todaySession.id && <span className="t-small">идёт</span>}</div>
+            <div className="row between"><div className="t-caption">Тренировка сегодня</div></div>
             <div className="t-h2">{todayLabel ?? 'Тренировка'}</div>
-            <Button icon="play" disabled={busy} onClick={async () => { const id = await run((d) => startWorkout(d, todaySession.id)); if (id) go(`workout/${id}`); }}>{s.openSession?.plannedSessionId === todaySession.id ? 'Продолжить' : 'Начать'}</Button>
+            {s.openSession?.plannedSessionId !== todaySession.id && <Button icon="play" disabled={busy} onClick={async () => { const id = await run((d) => startWorkout(d, todaySession.id)); if (id) go(`workout/${id}`); }}>Начать</Button>}
           </div>
         </Card>
       )}
@@ -167,22 +169,7 @@ export function Today() {
         </Card>
       )}
 
-      <Card>
-        <div className="row between">
-          <div className="row">
-            <span className="li-icon lime"><Icon name="drop" /></span>
-            <div>
-              <div className="t-caption">Вода сегодня</div>
-              <div className="t-h3">{fmt(s.waterMl / 1000, 2)}{NBSP}л{targets ? <span className="t-small"> из ~{fmt(targets.waterMl / 1000, 1)}{NBSP}л</span> : null}</div>
-            </div>
-          </div>
-          <div className="row">
-            <IconButton icon="minus" label="Убрать 250 мл" disabled={s.waterMl === 0} onClick={() => void act((d) => addWater(d, s.today, -250))} />
-            <IconButton icon="plus" label="Добавить 250 мл" onClick={() => void act((d) => addWater(d, s.today, 250))} />
-          </div>
-        </div>
-        <p className="t-small" style={{ marginTop: 10 }}>Ориентир, не норма: ~33 мл на кг веса. Для сравнения, у национальных академий США (2004) около 3 л напитков в сутки для мужчин и 2,2 л для женщин, ещё ~20% воды приходит с едой. Пей по жажде; в жару и в дни тренировок обычно больше.</p>
-      </Card>
+      <WaterCard recommendedMl={recommended} />
 
       {(measureAge === null || measureAge > 14) && (
         <ListItem icon="ruler" title={measureAge === null ? 'Добавь замеры' : 'Пора обновить замеры'} subtitle={measureAge === null ? 'Грудь, талия, бицепс, бедро: так видно прогресс, который не показывают весы' : `Последний замер ${measureAge}${NBSP}${plural(measureAge, ['день', 'дня', 'дней'])} назад`} onClick={() => setMeasureOpen(true)} />
@@ -211,4 +198,52 @@ export function Today() {
 
 function lastWorkoutToday(s: { workouts: { date: string }[]; today: string }): boolean {
   return s.workouts[0]?.date === s.today;
+}
+
+const WATER_DONE = 'Да ты чё? Базару нет!';
+
+function WaterCard({ recommendedMl }: { recommendedMl: number }) {
+  const { snapshot: s, act } = useData();
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState('');
+  const reached = recommendedMl > 0 && s.waterMl >= recommendedMl;
+  const commit = () => {
+    setEditing(false);
+    const l = parseDecimal(text);
+    if (text.trim() !== '' && Number.isFinite(l) && l >= 0) void act((d) => setWater(d, s.today, l * 1000));
+  };
+  return (
+    <Card>
+      <div className="row between">
+        <div className="row">
+          <span className="li-icon lime"><Icon name="drop" /></span>
+          <div>
+            <div className="t-caption">Вода сегодня</div>
+            <div className="t-h3">
+              {editing ? (
+                <input
+                  className="water-input"
+                  autoFocus
+                  inputMode="decimal"
+                  aria-label="Выпито воды, литров"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onBlur={commit}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditing(false); }}
+                />
+              ) : (
+                <button type="button" className="water-value" aria-label="Ввести количество воды вручную" onClick={() => { setText(String(s.waterMl / 1000).replace('.', ',')); setEditing(true); }}>{fmt(s.waterMl / 1000, 2)}</button>
+              )}
+              {NBSP}л{recommendedMl > 0 ? <span className="t-small"> из ~{fmt(recommendedMl / 1000, 1)}{NBSP}л</span> : null}
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <IconButton icon="minus" label="Убрать 250 мл" disabled={s.waterMl === 0} onClick={() => void act((d) => addWater(d, s.today, -250))} />
+          <IconButton icon="plus" label="Добавить 250 мл" onClick={() => void act((d) => addWater(d, s.today, 250))} />
+        </div>
+      </div>
+      <p className="t-small" style={{ marginTop: 10 }}>{reached ? WATER_DONE : 'Ориентир, не норма: ~33 мл на кг веса для мужчин и ~30 для женщин (у национальных академий США около 3 л напитков в сутки для мужчин и 2,2 л для женщин, ещё ~20% воды приходит с едой). Пей по жажде; в жару и в дни тренировок обычно больше. Чтобы ввести своё число, нажми на литры.'}</p>
+    </Card>
+  );
 }

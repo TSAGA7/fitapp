@@ -56,8 +56,13 @@ export function activityFactor(job: JobActivity, trainingsPerWeek: number): numb
   return Math.round((JOB_FACTOR[job] + 0.025 * sessions) * 1000) / 1000;
 }
 
+/** Water guide in ml: ~33 ml per kg for men / unspecified, ~30 ml per kg for women (US NASEM total-beverage guides are 3.0 vs 2.2 L). A guide, not a norm. */
+export function recommendedWaterMl(weightKg: number, sex: Sex): number {
+  return round(weightKg * (sex === 'female' ? 30 : 33), 50);
+}
+
 /** Splits a calorie target into protein / fat / carbohydrate / fibre / water. Protein and fat are set first, carbs fill the rest. */
-export function macrosForKcal(kcal: number, weightKg: number, goal: GoalType): NutritionTargets {
+export function macrosForKcal(kcal: number, weightKg: number, goal: GoalType, sex: Sex = 'male'): NutritionTargets {
   const proteinG = round(PROTEIN_PER_KG[goal] * weightKg, 5);
   const fatG = round(Math.max(0.8 * weightKg, (0.25 * kcal) / 9), 5);
   const carbG = Math.max(100, Math.ceil((kcal - proteinG * 4 - fatG * 9) / 20) * 5);
@@ -68,7 +73,7 @@ export function macrosForKcal(kcal: number, weightKg: number, goal: GoalType): N
     fatG,
     carbG,
     fiberG: Math.round((14 * total) / 1000),
-    waterMl: round(weightKg * 33, 50),
+    waterMl: recommendedWaterMl(weightKg, sex),
   };
 }
 
@@ -81,7 +86,7 @@ export function computeTargets(i: EnergyInput): EnergyResult {
   const floor = MIN_KCAL[i.sex];
   const wanted = round(tdee * (1 + adjustment), 10);
   const kcal = Math.max(floor, wanted);
-  const targets = macrosForKcal(kcal, i.weightKg, i.goal);
+  const targets = macrosForKcal(kcal, i.weightKg, i.goal, i.sex);
   const notes = [
     `Базовый обмен ${Math.round(bmr)} ккал (формула Миффлина — Сан-Жеора).`,
     `С учётом работы и ${i.trainingsPerWeek} тренировок в неделю расход около ${Math.round(tdee)} ккал.`,

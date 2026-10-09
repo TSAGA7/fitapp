@@ -3,7 +3,7 @@ import { loadSeedCatalog } from '../../../../seed/src';
 const rawSeedCatalog = loadSeedCatalog();
 import type { Food } from '../../model';
 import { analyzeWeight } from '../analysis/weight';
-import { computeTargets, macrosForKcal, MIN_KCAL } from './energy';
+import { computeTargets, macrosForKcal, MIN_KCAL, recommendedWaterMl } from './energy';
 import { suggestTargetAdjustment } from './adjust';
 import { counterpart, macrosForAmount, sumMacros } from './foods';
 import { generateDayPlan, generateMeal, remainingMacros, replaceFood, type PlanFood } from './mealplan';
@@ -30,6 +30,12 @@ describe('energy', () => {
     const r = computeTargets({ ...base, sex: 'female', weightKg: 45, heightCm: 150, ageYears: 50, goal: 'fat_loss' });
     expect(r.targets.kcal).toBeGreaterThanOrEqual(MIN_KCAL.female);
     expect(r.notes.join(' ')).toContain('минимума');
+  });
+  it('water guide depends on sex', () => {
+    expect(recommendedWaterMl(82.5, 'male')).toBe(2700);
+    expect(recommendedWaterMl(82.5, 'female')).toBe(2500);
+    expect(recommendedWaterMl(82.5, 'unspecified')).toBe(2700);
+    expect(macrosForKcal(2000, 82.5, 'fat_loss', 'female').waterMl).toBe(2500);
   });
   it('fat has a floor per kg', () => {
     expect(macrosForKcal(2000, 100, 'fat_loss').fatG).toBeGreaterThanOrEqual(80);
@@ -65,6 +71,19 @@ describe('meal plan', () => {
       const d = generateDayPlan({ targets: t, foods, seed }).deviation;
       expect(Math.abs(d.kcal), seed).toBeLessThan(0.04);
       expect(Math.abs(d.proteinG), seed).toBeLessThan(0.08);
+    }
+  });
+  it('every macro of a day lands within 5% for a whole month of seeds and other targets', () => {
+    const sets = [
+      { kcal: 1865, proteinG: 180, fatG: 65, carbG: 140, fiberG: 26, waterMl: 2700 },
+      { kcal: 1500, proteinG: 120, fatG: 55, carbG: 150, fiberG: 21, waterMl: 2000 },
+      { kcal: 2600, proteinG: 160, fatG: 85, carbG: 300, fiberG: 36, waterMl: 2900 },
+    ];
+    for (const t of sets) {
+      for (let i = 0; i < 30; i++) {
+        const d = generateDayPlan({ targets: t, foods, seed: `2026-10-${i}|1` }).deviation;
+        for (const k of ['kcal', 'proteinG', 'fatG', 'carbG'] as const) expect(Math.abs(d[k]), `${t.kcal} ${i} ${k}`).toBeLessThan(0.05);
+      }
     }
   });
   it('another seed gives another set of foods', () => {

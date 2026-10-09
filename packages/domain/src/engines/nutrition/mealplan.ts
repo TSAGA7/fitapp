@@ -195,7 +195,7 @@ const dev = (a: number, b: number): number => (b > 0 ? Math.round(((a - b) / b) 
 /**
  * Day-level correction: the meals are fitted one by one, so the day can end a few percent off the targets.
  * Moves the amounts of the generated lines (never the kept/locked ones) by one step while the error to the DAY target shrinks.
- * Amounts stay within 60-150% of what the meal fit chose, so the meals keep their character.
+ * Amounts stay within 50-170% of what the meal fit chose, so the meals keep their character.
  */
 function refineDay(lines: PlanLine[], kept: readonly PlanLine[], foods: readonly PlanFood[], dayTarget: Macros): void {
   const keptSet = new Set<PlanLine>(kept);
@@ -213,7 +213,7 @@ function refineDay(lines: PlanLine[], kept: readonly PlanLine[], foods: readonly
       const g0 = start.get(l) as number;
       for (const dir of [1, -1]) {
         const next = l.grams + dir * s;
-        if (next <= 0 || next < g0 * 0.6 || next > g0 * 1.5) continue;
+        if (next <= 0 || next < g0 * 0.5 || next > g0 * 1.7) continue;
         if (f.maxPerDayG !== null && next > f.maxPerDayG) continue;
         const prev = { grams: l.grams, macros: l.macros };
         l.grams = next;
@@ -225,6 +225,35 @@ function refineDay(lines: PlanLine[], kept: readonly PlanLine[], foods: readonly
         } else {
           l.grams = prev.grams;
           l.macros = prev.macros;
+        }
+      }
+    }
+    if (!improved) {
+      // pair moves: more of one product, less of another (trades e.g. fat for carbs at equal calories)
+      for (const a of free) {
+        for (const b of free) {
+          if (a === b) continue;
+          const fa = byId.get(a.foodId);
+          const fb = byId.get(b.foodId);
+          if (!fa || !fb) continue;
+          const na = a.grams + step(fa);
+          const nb = b.grams - step(fb);
+          const ga = start.get(a) as number;
+          const gb = start.get(b) as number;
+          if (nb <= 0 || na > ga * 1.7 || nb < gb * 0.5) continue;
+          if (fa.maxPerDayG !== null && na > fa.maxPerDayG) continue;
+          const prevA = { grams: a.grams, macros: a.macros };
+          const prevB = { grams: b.grams, macros: b.macros };
+          a.grams = na; a.macros = macrosForAmount(fa.per100, na);
+          b.grams = nb; b.macros = macrosForAmount(fb.per100, nb);
+          const e = error(total(), dayTarget);
+          if (e + 1e-9 < best) {
+            best = e;
+            improved = true;
+          } else {
+            a.grams = prevA.grams; a.macros = prevA.macros;
+            b.grams = prevB.grams; b.macros = prevB.macros;
+          }
         }
       }
     }

@@ -4978,5 +4978,365 @@
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
     "autoPlan": false
+  },
+  {
+    "key": "philadelphia_roll",
+    "name": "Ролл Филадельфия",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 160,
+      "proteinG": 6.5,
+      "fatG": 7.0,
+      "carbG": 17.5,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "california_roll",
+    "name": "Ролл Калифорния",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 175,
+      "proteinG": 5.0,
+      "fatG": 7.0,
+      "carbG": 22.0,
+      "fiberG": 0.6
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "baked_roll",
+    "name": "Ролл запечённый (с лососем и сыром)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 35,
+    "per100": {
+      "kcal": 193,
+      "proteinG": 8.0,
+      "fatG": 9.0,
+      "carbG": 20.0,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "tempura_roll",
+    "name": "Ролл темпура (в панировке)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 35,
+    "per100": {
+      "kcal": 220,
+      "proteinG": 5.5,
+      "fatG": 10.0,
+      "carbG": 27.0,
+      "fiberG": 0.8
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "spicy_roll",
+    "name": "Ролл острый с лососем",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 151,
+      "proteinG": 6.5,
+      "fatG": 5.0,
+      "carbG": 20.0,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "unagi_roll",
+    "name": "Ролл с угрём",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 175,
+      "proteinG": 5.5,
+      "fatG": 5.5,
+      "carbG": 26.0,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "chicken_roll",
+    "name": "Ролл с курицей",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 161,
+      "proteinG": 7.0,
+      "fatG": 5.0,
+      "carbG": 22.0,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "maki_salmon",
+    "name": "Маки с лососем",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 25,
+    "per100": {
+      "kcal": 136,
+      "proteinG": 5.5,
+      "fatG": 2.5,
+      "carbG": 23.0,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "maki_tuna",
+    "name": "Маки с тунцом",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 25,
+    "per100": {
+      "kcal": 124,
+      "proteinG": 7.0,
+      "fatG": 0.4,
+      "carbG": 23.0,
+      "fiberG": 0.5
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "maki_cucumber",
+    "name": "Маки с огурцом",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 22,
+    "per100": {
+      "kcal": 104,
+      "proteinG": 2.2,
+      "fatG": 0.3,
+      "carbG": 23.0,
+      "fiberG": 0.8
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "nigiri_salmon",
+    "name": "Нигири с лососем",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 156,
+      "proteinG": 8.0,
+      "fatG": 4.5,
+      "carbG": 21.0,
+      "fiberG": 0.3
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "nigiri_shrimp",
+    "name": "Нигири с креветкой",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 28,
+    "per100": {
+      "kcal": 125,
+      "proteinG": 6.5,
+      "fatG": 0.8,
+      "carbG": 23.0,
+      "fiberG": 0.3
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "gunkan",
+    "name": "Гункан (с икрой или лососем)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 140,
+      "proteinG": 6.0,
+      "fatG": 4.5,
+      "carbG": 19.0,
+      "fiberG": 0.3
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "inari",
+    "name": "Инари (рис в тофу)",
+    "brand": null,
+    "barcode": null,
+    "category": "ready_meals",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 30,
+    "per100": {
+      "kcal": 174,
+      "proteinG": 4.0,
+      "fatG": 6.0,
+      "carbG": 26.0,
+      "fiberG": 0.6
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "sashimi_salmon",
+    "name": "Сашими из лосося",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": 15,
+    "per100": {
+      "kcal": 197,
+      "proteinG": 20.0,
+      "fatG": 13.0,
+      "carbG": 0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Оценка по типичным рецептам доставок (Якитория, Тануки и др.): состав зависит от заведения, вес порции сверь по меню"
+    },
+    "autoPlan": false
   }
 ]

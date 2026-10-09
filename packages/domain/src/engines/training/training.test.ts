@@ -251,7 +251,7 @@ describe('rest suggestion', () => {
     expect(restCue(2)).toBe('Сделай глубокий вдох и выдох');
     expect(REST_PHRASES).toContain(restCue(1, () => 0.5) as never);
     expect(restCue(0, () => 0)).toBe(REST_PHRASES[0]);
-    expect(REST_PHRASES).toHaveLength(10);
+    expect(REST_PHRASES).toHaveLength(11);
     expect(REST_FINISH_MESSAGE).toBe('Ты просто босс! Ты просто начальник!');
   });
 });

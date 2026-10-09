@@ -120,6 +120,16 @@ export async function deleteMetric(deps: AppDeps, id: string): Promise<void> {
   await deps.uow.run((r) => r.metrics.softDelete(id));
 }
 
+/** Sets the water drunk on a day to an exact amount (manual typing). */
+export async function setWater(deps: AppDeps, date: string, ml: number): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const current = await r.dailyLogs.getByDate(date);
+    const next = Math.max(0, Math.min(10000, Math.round(ml)));
+    if (current) await r.dailyLogs.put({ ...current, waterMl: next });
+    else await r.dailyLogs.put({ ...base(deps), date, waterMl: next, note: null });
+  });
+}
+
 /** Adds (or removes, with a negative number) water for a day; never below zero. */
 export async function addWater(deps: AppDeps, date: string, deltaMl: number): Promise<void> {
   await deps.uow.run(async (r) => {
