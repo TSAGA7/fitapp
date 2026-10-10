@@ -9,7 +9,7 @@ import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, TextField } from '../ui';
 import { parseDecimal, RebuildOffer, ScreenHeader } from './shared';
 
-const AREA_LABELS: Record<BodyArea, string> = { shoulder: 'Плечо', elbow: 'Локоть', wrist: 'Запястье', neck: 'Шея', upper_back: 'Верх спины', lower_back: 'Поясница', hip: 'Таз', knee: 'Колено', ankle: 'Голеностоп', other: 'Другое' };
+export const AREA_LABELS: Record<BodyArea, string> = { shoulder: 'Плечо', elbow: 'Локоть', wrist: 'Запястье', neck: 'Шея', upper_back: 'Верх спины', lower_back: 'Поясница', hip: 'Таз', knee: 'Колено', ankle: 'Голеностоп', other: 'Другое' };
 const SIDE_LABELS: Record<Side, string> = { left: 'Слева', right: 'Справа', both: 'Обе стороны' };
 const SHORT_STATUS: Record<InjuryStatus, string> = { active: 'Сейчас', recurring: 'Периодически', past: 'Раньше' };
 const STATUS_LABELS: Record<InjuryStatus, string> = { active: 'Беспокоит сейчас', recurring: 'Периодически', past: 'Было раньше' };

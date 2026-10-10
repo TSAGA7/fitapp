@@ -261,7 +261,7 @@ function StrengthDetail({ exerciseId }: { exerciseId: string }) {
             <LineChart ariaLabel={`Расчётный максимум: ${name}`} series={[{ id: 'e', label: 'e1RM', color: '#a78bfa', area: true, dots: true, points: e.sessions.map((x) => ({ date: x.date, value: x.e1rmKg })) }]} formatY={(v) => fmt(v, 0)} formatX={formatDateShort} formatTip={(p) => `${fmt(p.value)} кг · ${formatDateShort(p.date)}`} />
           </div>
         )}
-        <p className="t-small" style={{ marginTop: 8 }}>Оценка по формуле Эпли: вес × (1 + повторения / 30). Надёжна до 12 повторений.</p>
+        <p className="t-small" style={{ marginTop: 8 }}>Оценка по формуле Эпли: вес × (1 + повторения / 30). Лучше всего работает до 12 повторений: в длинных подходах оценка менее точна, поэтому такие подходы в расчёт не берутся.</p>
       </Card>
       <Card flat>
         <div className="stack">

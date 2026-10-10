@@ -862,14 +862,14 @@ function NormSheet({ open, onClose, current, manual }: { open: boolean; onClose:
         {on && (
           <>
             <div className="field">
-              <span className="lbl">Как тебе назвали норму (Б, Ж, У: белки, жиры, углеводы)</span>
-              <Segmented<NormMode> label="Способ ввода" options={[{ value: 'macros', label: 'Б, Ж, У' }, { value: 'kcal', label: 'Ккал, Б, Ж' }]} value={mode} onChange={setMode} />
+              <Segmented<NormMode> label="Что ты знаешь" options={[{ value: 'macros', label: 'Белки, жиры, углеводы' }, { value: 'kcal', label: 'Ккал, белки, жиры' }]} value={mode} onChange={setMode} />
+              <p className="t-small">{mode === 'macros' ? 'Введи граммы белков, жиров и углеводов, калории посчитаются сами.' : 'Введи калории, граммы белков и жиров: углеводы займут оставшиеся калории.'}</p>
             </div>
             {mode === 'kcal' && <TextField label="Калории" unit="ккал" inputMode="numeric" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} />}
             <div className="grid-3">
               <TextField label="Белки" unit="г" inputMode="decimal" value={v.p} onChange={(e) => setV({ ...v, p: e.target.value })} />
               <TextField label="Жиры" unit="г" inputMode="decimal" value={v.f} onChange={(e) => setV({ ...v, f: e.target.value })} />
-              {mode === 'macros' ? <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} /> : <TextField label="Углеводы (по остатку)" unit="г" value={Number.isFinite(carbs) && carbs >= 0 ? String(carbs) : '—'} readOnly />}
+              {mode === 'macros' ? <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} /> : <TextField label="Углеводы (остаток калорий)" unit="г" value={Number.isFinite(carbs) && carbs >= 0 ? String(carbs) : '—'} readOnly />}
             </div>
             <Card flat>
               <div className="t-h3">{Number.isFinite(kcal) ? `${fmt(kcal, 0)} ккал в день` : 'Заполни поля'}</div>

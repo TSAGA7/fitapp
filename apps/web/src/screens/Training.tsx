@@ -1,6 +1,6 @@
 import { CycleTrainingHint } from './Cycle';
 import { useEffect, useMemo, useState } from 'react';
-import { addDays, assessExercise, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
+import { addDays, assessExercise, reentryAdvice, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
 import { createProgram, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
@@ -12,6 +12,7 @@ import { useBodyweightMode, useVacationMode } from '../app/prefs';
 import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
 import { CardioSheet } from './Cardio';
 import { ExerciseInfoSheet } from './ExerciseInfo';
+import { AREA_LABELS } from './ProfileMore';
 import { ScreenHeader } from './shared';
 
 type View = 'week' | 'month' | 'program' | 'history';
@@ -125,6 +126,7 @@ function Week() {
         </Card>
       )}
       <CycleTrainingHint busy={busy} onLight={nextPlanned && !open ? () => void begin(nextPlanned.id, true) : undefined} />
+      {!open && <ReentryCard busy={busy} onLight={nextPlanned ? () => void begin(nextPlanned.id, true) : undefined} />}
       {advice && !open && <AdviceCard advice={advice} busy={busy} onDeload={nextPlanned ? () => void begin(nextPlanned.id, true) : undefined} />}
       {sessions.length === 0 && <p className="note">Ближайших тренировок нет. Проверь дни тренировок в профиле.</p>}
       <div className="stack">
@@ -175,6 +177,51 @@ const readDismissed = (): string => {
 };
 
 /** Plateau and "time for a lighter week": the engine's suggestion with the reason, an explanation and a one-tap start. */
+const REENTRY_DISMISS_KEY = 'fitapp.reentryDismissed';
+const readReentryDismissed = (): string | null => { try { return localStorage.getItem(REENTRY_DISMISS_KEY); } catch { return null; } };
+
+/** After a pain report or a two-week break: offers (never forces) a rebuilt program or a lighter first workout. */
+function ReentryCard({ busy, onLight }: { busy: boolean; onLight?: () => void }) {
+  const { snapshot: s } = useData();
+  const { ok, banner, busy: working } = useCommand();
+  const [hidden, setHidden] = useState<string | null>(readReentryDismissed());
+  const lastCompletedDate = s.workouts.filter((w) => w.completed && w.sets > 0).map((w) => w.date).sort().pop() ?? null;
+  const advice = reentryAdvice({ today: s.today, lastCompletedDate, programCreatedAt: s.activeVersion?.createdAt ?? null, painEvents: s.painEvents });
+  if (!advice) return null;
+  const id = advice.kind === 'pain' ? advice.painId : `break-${advice.lastDate}`;
+  if (hidden === id) return null;
+  const dismiss = () => { try { localStorage.setItem(REENTRY_DISMISS_KEY, id); } catch { /* lasts until reload */ } setHidden(id); };
+  const off = busy || working;
+  return (
+    <Card>
+      <div className="stack">
+        {banner}
+        {advice.kind === 'pain' ? (
+          <>
+            <div className="row"><Badge tone="warning">Боль</Badge><span className="t-h3">Подстроить программу под боль?</span></div>
+            <p className="t-body">{advice.daysAgo === 0 ? 'Сегодня' : advice.daysAgo === 1 ? 'Вчера' : `${advice.daysAgo} ${plural(advice.daysAgo, ['день', 'дня', 'дней'])} назад`} была отмечена боль: {AREA_LABELS[advice.area].toLowerCase()}. Могу пересобрать программу так, чтобы упражнения, которые её вызывают, заменились безопасными аналогами.</p>
+            <p className="t-small">Первую тренировку после этого лучше сделать облегчённой: вес и объём ниже обычных. Если боль повторяется или сильная, покажись врачу или физиотерапевту: приложение не ставит диагнозы.</p>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <Button size="sm" icon="history" disabled={off} onClick={() => void ok((d) => rebuildTrainingPlan(d, 'Пересборка после боли'))}>Пересобрать программу</Button>
+              {onLight && <Button size="sm" variant="secondary" icon="play" disabled={off} onClick={onLight}>Лёгкая тренировка</Button>}
+              <Button size="sm" variant="text" disabled={off} onClick={dismiss}>Не сейчас</Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="row"><Badge tone="neutral">Перерыв</Badge><span className="t-h3">С возвращением! Начнём полегче</span></div>
+            <p className="t-body">Последняя тренировка была {advice.days} {plural(advice.days, ['день', 'дня', 'дней'])} назад. После перерыва в две недели и больше мышцы и сухожилия лучше возвращать к нагрузке постепенно: первую тренировку можно сделать облегчённой, потом вернуться к обычным весам.</p>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              {onLight && <Button size="sm" icon="play" disabled={off} onClick={onLight}>Начать облегчённую</Button>}
+              <Button size="sm" variant="text" disabled={off} onClick={dismiss}>Обычную</Button>
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 function AdviceCard({ advice, busy, onDeload }: { advice: TrainingAdvice; busy: boolean; onDeload?: () => void }) {
   const { snapshot: s } = useData();
   const [more, setMore] = useState(false);

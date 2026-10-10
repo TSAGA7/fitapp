@@ -7,7 +7,7 @@ import { useData } from '../app/DataContext';
 import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signed } from '../app/format';
 import { getDisplayName, setBeerMl, setDrink, useBeerMl, useDrink, useVacationMode, type Drink } from '../app/prefs';
 import { go } from '../app/router';
-import { Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
+import { Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, Sparkline } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
 import { BodyweightCard } from './BodyweightMode';
 import { FeelingCard } from './Cycle';
@@ -259,6 +259,7 @@ function BeerCard() {
 }
 
 function WaterCard({ recommendedMl }: { recommendedMl: number }) {
+  const [info, setInfo] = useState(false);
   const { snapshot: s, act } = useData();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState('');
@@ -299,7 +300,27 @@ function WaterCard({ recommendedMl }: { recommendedMl: number }) {
           <IconButton icon="plus" label="Добавить 250 мл" onClick={() => void act((d) => addWater(d, s.today, 250))} />
         </div>
       </div>
-      <p className="t-small" style={{ marginTop: 10 }}>{reached ? WATER_DONE : 'Ориентир: ~33 мл на кг веса для мужчин и ~30 для женщин. Всё равно пей по жажде.'}</p>
+      <p className="t-small water-hint" style={{ marginTop: 10 }}>
+        {reached ? WATER_DONE : <>Ориентир: ~33 мл на кг веса для мужчин и ~30 для женщин.<br />Цифры рекомендательные: ориентируйся ещё на жажду и самочувствие.</>}
+        <button type="button" className="info-dot" aria-label="О пользе воды и водном балансе" onClick={() => setInfo(true)}>i</button>
+      </p>
+      <WaterInfoSheet open={info} onClose={() => setInfo(false)} />
     </Card>
+  );
+}
+
+/** Water: only what is established. Sources: EFSA 2010 (adequate intake), ACSM 2007 position statement, Armstrong 2012, Judelson 2007, AUA/EAU stone guidelines. */
+function WaterInfoSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Sheet open={open} title="Зачем следить за водой" onClose={onClose}>
+      <div className="stack">
+        <p className="t-small"><b>Что даёт вода.</b> Вода — среда для всех реакций в клетке, она переносит питательные вещества и кислород, выводит продукты обмена через почки и помогает терморегуляции (потоотделение). Мышцы примерно на 75% состоят из воды.</p>
+        <p className="t-small"><b>Сколько нужно.</b> Европейское агентство по безопасности пищевых продуктов (EFSA, 2010) считает достаточным общий приём воды около 2,5 л в день для мужчин и 2,0 л для женщин. Это вода из всех источников: примерно 20% приходит с едой, остальное с напитками. Чай и кофе в обычных количествах тоже считаются. Жара, тренировки и потение повышают потребность.</p>
+        <p className="t-small"><b>Если воды не хватает.</b> Потеря воды уже на 1–2% массы тела ухудшает внимание и память, настроение, чаще вызывает головную боль и повышает ощущение усилия (Armstrong и др., 2012; Adan, 2012). При потере около 2% и больше падает работоспособность в тренировке, особенно на выносливость; метаанализ Judelson и др. (2007) показал снижение выносливости примерно на 10%, силы на 2%, мощности на 3%. Позиция Американской коллегии спортивной медицины (ACSM, 2007): во время нагрузки не допускать потери больше 2% массы тела.</p>
+        <p className="t-small"><b>Здоровье в долгую.</b> Низкий водный режим связан с более высоким риском мочекаменной болезни: клинические рекомендации (AUA, EAU) советуют пить столько, чтобы суточный объём мочи был не меньше 2–2,5 л. Для рекомпозиции важно и другое: жажду легко принять за голод, а стакан воды перед едой слегка снижает аппетит. Но сама по себе вода жир не сжигает: эффект на расход энергии очень небольшой.</p>
+        <p className="t-small"><b>Как понять, что хватает.</b> Здоровому человеку подходят жажда и цвет мочи: светло-соломенный — норма, тёмный — пора выпить. Не нужно пить «через силу» и больше литра в час: избыток воды за короткое время может опасно разбавить натрий в крови (гипонатриемия), это бывает при многочасовых нагрузках.</p>
+        <p className="t-small">Это общая информация, не медицинская рекомендация. При болезнях сердца и почек, беременности и приёме мочегонных объём воды обсуждай с врачом.</p>
+      </div>
+    </Sheet>
   );
 }

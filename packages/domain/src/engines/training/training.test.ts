@@ -382,3 +382,23 @@ describe('warm-up sets', () => {
     }
   });
 });
+
+import { reentryAdvice } from './reentry';
+describe('reentry advice', () => {
+  const pain = (id: string, at: string) => ({ id, occurredAt: at, area: 'shoulder' as const, exerciseId: null, deletedAt: null });
+  it('offers a rebuild for pain reported after the program was made, and not before', () => {
+    const a = reentryAdvice({ today: '2026-10-10', lastCompletedDate: '2026-10-09', programCreatedAt: '2026-10-01T10:00:00Z', painEvents: [pain('p1', '2026-10-08T09:00:00Z')] });
+    expect(a).toMatchObject({ kind: 'pain', painId: 'p1', daysAgo: 2 });
+    expect(reentryAdvice({ today: '2026-10-10', lastCompletedDate: '2026-10-09', programCreatedAt: '2026-10-09T10:00:00Z', painEvents: [pain('p1', '2026-10-08T09:00:00Z')] })).toBeNull();
+    expect(reentryAdvice({ today: '2026-11-10', lastCompletedDate: '2026-11-09', programCreatedAt: '2026-10-01T10:00:00Z', painEvents: [pain('p1', '2026-10-08T09:00:00Z')] })).toBeNull();
+  });
+  it('offers a lighter start after two weeks without a finished workout', () => {
+    const base = { programCreatedAt: '2026-09-01T10:00:00Z', painEvents: [] };
+    expect(reentryAdvice({ ...base, today: '2026-10-10', lastCompletedDate: '2026-09-26' })).toMatchObject({ kind: 'break', days: 14 });
+    expect(reentryAdvice({ ...base, today: '2026-10-10', lastCompletedDate: '2026-09-27' })).toBeNull();
+    expect(reentryAdvice({ ...base, today: '2026-10-10', lastCompletedDate: null })).toBeNull();
+  });
+  it('pain wins over a break', () => {
+    expect(reentryAdvice({ today: '2026-10-10', lastCompletedDate: '2026-08-01', programCreatedAt: '2026-09-01T10:00:00Z', painEvents: [pain('p2', '2026-10-09T09:00:00Z')] })?.kind).toBe('pain');
+  });
+});
