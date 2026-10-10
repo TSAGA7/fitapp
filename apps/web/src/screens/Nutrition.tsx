@@ -146,6 +146,8 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         )}
       </Card>
 
+      <ListItem icon="edit" title={manual ? 'Норма задана вручную' : 'Норма от тренера'} subtitle={manual ? 'Нажми, чтобы изменить цифры' : 'Ввести свои ккал и БЖУ, рацион подстроится'} onClick={() => setNormOpen(true)} />
+
       {items.length === 0 && !isPast && (
         <Card flat>
           <EmptyState icon="leaf" title="На этот день рациона ещё нет" text="Составлю рацион на неделю из твоих продуктов под норму калорий и БЖУ." action={<Button icon="check" disabled={busy} onClick={() => void run((d) => generateWeekPlan(d, startOfWeek(date, s.profile?.weekStartsOn ?? 'monday'), variation()))}>Составить рацион на неделю</Button>} />
@@ -213,7 +215,6 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
       {!isPast && items.length > 0 && (
         <Button variant="secondary" block icon="history" disabled={busy} onClick={() => void run((d) => regenerateDay(d, date, variation()))}>Переделать день</Button>
       )}
-      <Button variant="secondary" block icon="edit" onClick={() => setNormOpen(true)}>Задать норму вручную</Button>
       {manual ? (
         <Button variant="text" onClick={() => { setManualTargets(false); void run(async (d) => { await recalculateTargets(d); await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000); }); }} disabled={busy}>Вернуть автоматический расчёт нормы</Button>
       ) : (
@@ -624,7 +625,7 @@ function DishForm({ initial, onCancel, onSaved }: { initial?: Food; onCancel: ()
     <div className="stack">
       {banner}
       <TextField label="Название блюда" value={name} onChange={(e) => setName(e.target.value)} placeholder="Например, блины с сыром и грибами" />
-      <div className="t-caption">Ингредиенты: вес как ты их кладёшь в блюдо (сырой, готовый или с упаковки, смотри подпись продукта)</div>
+      <div className="t-caption">Вес указывай в том виде, в котором используешь ингредиент: сухой, сырой, варёный, жареный и так далее. Вид подписан у каждого поля.</div>
       <div className="list">
         {items.map((it, idx) => {
           const f = foods.find((x) => x.id === it.foodId);
@@ -748,41 +749,60 @@ function MonthView() {
   );
 }
 
+type NormMode = 'macros' | 'kcal';
+
+/**
+ * The norm typed by hand, for example dictated by a coach. Coaches name it in one of two ways, so there are two modes:
+ * grams of protein / fat / carbs (calories are worked out), or calories plus protein and fat (carbs fill the rest).
+ */
 function NormSheet({ open, onClose, current, manual }: { open: boolean; onClose: () => void; current: { kcal: number; proteinG: number; fatG: number; carbG: number }; manual: boolean }) {
   const { ok, banner, busy } = useCommand();
   const init = () => ({ kcal: String(Math.round(current.kcal)), p: String(Math.round(current.proteinG)), f: String(Math.round(current.fatG)), c: String(Math.round(current.carbG)) });
+  const [mode, setMode] = useState<NormMode>('macros');
   const [v, setV] = useState(init);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { if (open) { setV(init()); setErr(null); } }, [open]);
-  const kcal = parseDecimal(v.kcal);
+  useEffect(() => { if (open) { setV(init()); setErr(null); setMode('macros'); } }, [open]);
   const p = parseDecimal(v.p);
   const f = parseDecimal(v.f);
-  const c = parseDecimal(v.c);
-  const fromMacros = [p, f, c].every(Number.isFinite) ? Math.round(p * 4 + f * 9 + c * 4) : null;
+  const kcalIn = parseDecimal(v.kcal);
+  const cIn = parseDecimal(v.c);
+  const okNum = (x: number) => Number.isFinite(x) && x >= 0;
+  // what is saved, depending on the mode
+  const kcal = mode === 'macros' ? (okNum(p) && okNum(f) && okNum(cIn) ? Math.round(p * 4 + f * 9 + cIn * 4) : NaN) : kcalIn;
+  const carbs = mode === 'kcal' ? (okNum(kcalIn) && okNum(p) && okNum(f) ? Math.round((kcalIn - p * 4 - f * 9) / 4) : NaN) : cIn;
+  const share = (g: number, k: number) => (Number.isFinite(g) && Number.isFinite(kcal) && kcal > 0 ? Math.round((g * k * 100) / kcal) : null);
+  const sh = { p: share(p, 4), f: share(f, 9), c: share(carbs, 4) };
   const save = async () => {
-    if (![kcal, p, f, c].every((x) => Number.isFinite(x) && x >= 0)) return setErr('Заполни все четыре поля числами');
+    if (![p, f].every(okNum) || !okNum(carbs) || !Number.isFinite(kcal)) return setErr(mode === 'kcal' && Number.isFinite(carbs) && carbs < 0 ? 'Белок и жиры уже превышают калории: углеводов не остаётся. Проверь числа' : 'Заполни все поля числами');
     if (kcal < 800 || kcal > 8000) return setErr('Калории должны быть от 800 до 8000');
     setErr(null);
     const done = await ok(async (d) => {
-      await setManualNutrition(d, { kcal, proteinG: p, fatG: f, carbG: c });
+      await setManualNutrition(d, { kcal, proteinG: p, fatG: f, carbG: carbs });
       await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000);
     });
     if (done) { setManualTargets(true); onClose(); }
   };
   return (
-    <Sheet open={open} title="Норма вручную" onClose={onClose}>
+    <Sheet open={open} title="Норма от тренера" onClose={onClose}>
       <div className="stack-lg">
-        <p className="note">Например, если норму диктует тренер. Приложение подстроит рацион под эти числа и не будет менять норму само, пока ты не вернёшь автоматический расчёт.</p>
-        <TextField label="Калории" unit="ккал" inputMode="numeric" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} />
+        <p className="note">Введи цифры, которые продиктовал тренер. Приложение пересоберёт рацион так, чтобы каждый день попадал в эти числа, и не будет менять норму само, пока ты не вернёшь автоматический расчёт.</p>
+        <div className="field">
+          <span className="lbl">Как тебе назвали норму (Б, Ж, У: белки, жиры, углеводы)</span>
+          <Segmented<NormMode> label="Способ ввода" options={[{ value: 'macros', label: 'Б, Ж, У' }, { value: 'kcal', label: 'Ккал, Б, Ж' }]} value={mode} onChange={setMode} />
+        </div>
+        {mode === 'kcal' && <TextField label="Калории" unit="ккал" inputMode="numeric" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} />}
         <div className="grid-3">
           <TextField label="Белки" unit="г" inputMode="decimal" value={v.p} onChange={(e) => setV({ ...v, p: e.target.value })} />
           <TextField label="Жиры" unit="г" inputMode="decimal" value={v.f} onChange={(e) => setV({ ...v, f: e.target.value })} />
-          <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} />
+          {mode === 'macros' ? <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} /> : <TextField label="Углеводы (по остатку)" unit="г" value={Number.isFinite(carbs) && carbs >= 0 ? String(carbs) : '—'} readOnly />}
         </div>
-        {fromMacros !== null && Number.isFinite(kcal) && Math.abs(fromMacros - kcal) > 100 && <p className="t-small">По граммам выходит около {fromMacros} ккал, а ты указал {Math.round(kcal)}. Это не помешает, просто числа расходятся.</p>}
+        <Card flat>
+          <div className="t-h3">{Number.isFinite(kcal) ? `${fmt(kcal, 0)} ккал в день` : 'Заполни поля'}</div>
+          {sh.p !== null && sh.f !== null && sh.c !== null && <p className="t-small">Доля калорий: белки {sh.p}%, жиры {sh.f}%, углеводы {sh.c}%.</p>}
+        </Card>
         {err && <div className="errbox" role="alert">{err}</div>}
         {banner}
-        <Button block disabled={busy} onClick={() => void save()}>Сохранить норму</Button>
+        <Button block disabled={busy} onClick={() => void save()}>Сохранить и пересобрать рацион</Button>
         {manual && <p className="t-small">Сейчас норма задана вручную.</p>}
       </div>
     </Sheet>

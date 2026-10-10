@@ -45,6 +45,8 @@ export interface WorkoutSummary {
   sets: number;
   names: string[];
   note: string | null;
+  /** Only a finished workout counts as "worked out today". */
+  completed: boolean;
 }
 export interface FoodDay {
   date: LocalDate;
@@ -123,7 +125,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
         }
       }
       if (workouts.length < 60) {
-        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note });
+        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed' });
       }
     }
 

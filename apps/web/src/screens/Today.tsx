@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { diffDays, recommendedWaterMl } from '@fitapp/domain';
+import { diffDays, isTrainingDay, recommendedWaterMl } from '@fitapp/domain';
 import { addWater, ensureSessions, setWater } from '../actions';
 import { eatenOf, itemsOnDate, logsOnDate, plannedOf } from '../app/derive';
 import { useCommand } from '../app/useCommand';
@@ -32,7 +32,15 @@ export function Today() {
   const todaySession = s.plannedSessions.find((p) => p.deletedAt === null && p.plannedDate === s.today && p.status === 'planned');
   const weightForWater = w.currentKg;
   const recommended = weightForWater !== null && s.profile ? recommendedWaterMl(weightForWater, s.profile.sex) : (targets?.waterMl ?? 0);
-  const trainingDay = !!(todaySession || s.openSession || lastWorkoutToday(s));
+  // The plan decides, not what is open right now: a workout started on a day off does not turn the day into a training day.
+  const trainingDay = !!(todaySession || (s.profile && isTrainingDay(s.profile.trainingSchedule, s.today)));
+  const trainedToday = s.workouts.some((x) => x.date === s.today && x.completed && x.sets > 0);
+  const female = s.profile?.sex === 'female';
+  const status = trainedToday
+    ? { cls: 'done', emoji: '🔥', text: `${female ? 'Отлично поработала' : 'Отлично поработал'}, теперь — качественно восстанавливайся!` }
+    : trainingDay
+      ? { cls: 'train', emoji: '💪🏼', text: 'Сегодня пашем в зале' }
+      : { cls: 'rest', emoji: '😎', text: 'Выходной. Сегодня кайфуй, но не сильно!' };
   const eatenToday = eatenOf(logsOnDate(s, s.today));
   const plannedToday = plannedOf(itemsOnDate(s, s.today));
 
@@ -113,9 +121,9 @@ export function Today() {
         </div>
       )}
       {!vacation && s.activeVersion && (
-        <button type="button" className={`day-status ${trainingDay ? 'train' : 'rest'}`} onClick={() => go('training')}>
-          <span className="ds-emoji" aria-hidden="true">{trainingDay ? '💪🏼' : '😎'}</span>
-          <span>{trainingDay ? 'Сегодня пашем в зале' : 'Выходной. Сегодня кайфуй, но не сильно!'}</span>
+        <button type="button" className={`day-status ${status.cls}`} onClick={() => go('training')}>
+          <span className="ds-emoji" aria-hidden="true">{status.emoji}</span>
+          <span>{status.text}</span>
         </button>
       )}
       {targets && (plannedToday.kcal > 0 || eatenToday.kcal > 0) && (
@@ -198,9 +206,6 @@ export function Today() {
   );
 }
 
-function lastWorkoutToday(s: { workouts: { date: string }[]; today: string }): boolean {
-  return s.workouts[0]?.date === s.today;
-}
 
 const WATER_DONE = 'Да ты чё? Базару нет!';
 

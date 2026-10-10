@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCommand } from '../app/useCommand';
-import { ageYears, isLocalDate, type Experience, type FocusArea, type GoalType, type JobActivity, type Sex, type TrainingSchedule, type Weekday, WEEKDAYS } from '@fitapp/domain';
+import { ageYears, diffDays, isLocalDate, toLocalDate, type Experience, type FocusArea, type GoalType, type JobActivity, type Sex, type TrainingSchedule, type Weekday, WEEKDAYS } from '@fitapp/domain';
 import { applyDietMode, saveGoal, updateProfile } from '../actions';
 import { useData } from '../app/DataContext';
 import { deleteMetric } from '../actions';
@@ -11,6 +11,7 @@ import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
 import { ExerciseCatalogScreen } from './ExerciseCatalog';
 import { GoalExplainSheet } from './GoalExplain';
+import { saveBackupFile } from '../app/backupFile';
 import { ImportPanel } from './ImportPanel';
 import { CardioGuideScreen } from './Cardio';
 import { TvaGuideScreen } from './TvaGuide';
@@ -31,6 +32,9 @@ export function Profile({ route }: { route: string[] }) {
       return <Schedule />;
     case 'data':
       return <DataScreen />;
+    case 'autocopy':
+      // Not linked from anywhere: the daily in-app copy works quietly in the background, this is only the way to reach it in an emergency.
+      return <AutoCopyScreen />;
     case 'foods':
       return <FoodsScreen />;
     case 'equipment':
@@ -97,6 +101,7 @@ function ProfileHome() {
         </div>
       </Card>
       <VacationButton />
+      <BackupReminder />
       <div className="grid-3">
         {TILES.map((t) => (
           <button key={t.name} type="button" className="tile" aria-disabled={t.to ? undefined : true} onClick={() => t.to && go(t.to)}>
@@ -119,7 +124,7 @@ function VacationButton() {
   const toggle = async () => {
     if (!on) {
       setBeer(true);
-      window.setTimeout(() => setBeer(false), 2600);
+      window.setTimeout(() => setBeer(false), 4900);
     }
     setVacationMode(!on);
     await run((d) => applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000));
@@ -139,18 +144,74 @@ function VacationButton() {
   );
 }
 
-/** Full-screen "beer pouring in" animation shown when vacation mode is switched on. */
+/** Full-screen "beer being poured" animation shown when vacation mode is switched on: it fills from the very bottom, foam appears near the end. */
 function BeerFill() {
+  const bubbles = Array.from({ length: 120 }, (_, i) => {
+    const size = 3 + ((i * 7) % 10);
+    return { left: (i * 53 + (i % 5) * 9) % 100, size, dur: 1.6 + ((i * 13) % 17) / 10, delay: ((i * 29) % 30) / 10, sway: ((i % 2 ? 1 : -1) * (6 + (i % 7) * 3)) };
+  });
+  const foam = Array.from({ length: 26 }, (_, i) => {
+    const size = 34 + ((i * 17) % 30);
+    return { left: (i * 100) / 25 - 4 + ((i * 7) % 5), size, bottom: 30 + ((i * 11) % 34), delay: 2.2 + ((i * 3) % 10) / 10 };
+  });
   return createPortal(
     <div className="beer-fill" aria-hidden="true">
       <div className="beer-liquid">
-        <div className="beer-foam" />
-        {Array.from({ length: 14 }, (_, i) => (
-          <span key={i} className="beer-bubble" style={{ left: `${5 + ((i * 37) % 90)}%`, animationDelay: `${(i % 7) * 0.12}s`, width: 6 + (i % 4) * 3, height: 6 + (i % 4) * 3 }} />
-        ))}
+        <div className="beer-body">
+          {bubbles.map((b, i) => (
+            <span key={i} className="beer-bubble" style={{ left: `${b.left}%`, width: b.size, height: b.size, ['--dur' as string]: `${b.dur}s`, ['--delay' as string]: `${b.delay}s`, ['--sway' as string]: `${b.sway}px` }} />
+          ))}
+        </div>
+        <span className="beer-wave" />
+        <div className="beer-foam">
+          {foam.map((f, i) => (
+            <i key={i} style={{ left: `${f.left}%`, bottom: f.bottom, width: f.size, height: f.size }} />
+          ))}
+        </div>
       </div>
     </div>,
     document.body,
+  );
+}
+
+const BACKUP_REMIND_DAYS = 7;
+
+/** Under "Отпуск": shown when no backup file has been saved for more than a week. Tapping it does what "Сохранить копию" does. */
+function BackupReminder() {
+  const { runtime, snapshot: s } = useData();
+  const [last, setLast] = useState<string | null | undefined>(undefined);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    void runtime.backup.lastBackupAt().then(setLast);
+  }, [runtime]);
+  if (last === undefined) return null;
+  const since = last ?? s.profile?.createdAt ?? null;
+  if (since === null) return null;
+  const days = diffDays(toLocalDate(since, s.timezone), s.today);
+  if (days <= BACKUP_REMIND_DAYS) return null;
+  const save = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      if ((await saveBackupFile(runtime.backup)) === 'saved') setLast(await runtime.backup.lastBackupAt());
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <button type="button" className="backup-reminder" disabled={busy} onClick={() => void save()}>
+        <span className="vb-ic" aria-hidden="true"><Icon name="download" size={22} /></span>
+        <span className="grow">
+          <span className="li-title" style={{ display: 'block' }}>Сохрани копию данных</span>
+          <span className="t-small">{last === null ? 'Файла копии ещё нет.' : `Последняя копия ${days} ${plural(days, ['день', 'дня', 'дней'])} назад.`} Нажми, выбери «Сохранить в Файлы».</span>
+        </span>
+      </button>
+      {err && <div className="errbox" role="alert">{err}</div>}
+    </>
   );
 }
 
@@ -268,7 +329,7 @@ function Goals() {
       {g && g.type !== type && <div className="warn">Предыдущая цель сохранится в истории, начнётся новая.</div>}
       {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
       <Button block onClick={save}>Сохранить</Button>
-      {offer && <RebuildOffer title="Цель изменилась. Пересобрать?" withDiet onClose={() => setOffer(false)} />}
+      {offer && <RebuildOffer title="Цель изменена. Пересобрать рацион и тренировки?" withDiet onClose={() => setOffer(false)} />}
     </main>
   );
 }
@@ -394,15 +455,15 @@ function AutoBackupCard() {
 function DataScreen() {
   const { runtime } = useData();
   const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const exportJson = async () => {
-    const json = await runtime.backup.exportJson();
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `fitapp-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setMsg('Резервная копия сохранена в загрузки.');
+    setErr(null);
+    setMsg(null);
+    try {
+      if ((await saveBackupFile(runtime.backup)) === 'saved') setMsg('Копия сохранена. Если выбрал «Сохранить в Файлы», она лежит в выбранной папке.');
+    } catch (e) {
+      setErr((e as Error).message);
+    }
   };
   const pst = runtime.persistence;
   return (
@@ -410,20 +471,29 @@ function DataScreen() {
       <ScreenHeader title="Экспорт и импорт" back="profile" />
       <Card>
         <h2 className="t-h3">Резервная копия</h2>
-        <p className="note" style={{ margin: '4px 0 12px' }}>Все данные хранятся только на этом устройстве. Сохраняй копию раз в неделю.</p>
+        <p className="note" style={{ margin: '4px 0 12px' }}>Все данные хранятся только на этом устройстве. Сохраняй копию раз в неделю: нажми кнопку и выбери «Сохранить в Файлы». Если сносить приложение или менять телефон, только такой файл вернёт данные.</p>
         <Button block icon="download" onClick={() => void exportJson()}>Сохранить копию</Button>
         {msg && <div className="ok" style={{ marginTop: 12 }} role="status">{msg}</div>}
+        {err && <div className="errbox" style={{ marginTop: 12 }} role="alert">{err}</div>}
         <p className="note" style={{ marginTop: 12 }}>
           {pst.persisted ? 'Браузер обещал не удалять данные.' : pst.supported ? 'Браузер не гарантирует сохранность данных, копии особенно важны.' : 'Браузер не поддерживает защиту хранилища, копии особенно важны.'}
         </p>
       </Card>
-      <AutoBackupCard />
       <Card>
         <h2 className="t-h3">Импорт</h2>
         <p className="note" style={{ margin: '4px 0 12px' }}>Файл .json (копия Fitapp) или .xlsx (таблица тренировок и питания). Сначала предпросмотр: данные не меняются, пока ты не подтвердишь.</p>
         <ImportPanel />
       </Card>
       <ListItem icon="info" title="Каталог" subtitle={`Упражнений ${runtime.catalog.exercises}, оборудования ${runtime.catalog.equipment}, продуктов ${runtime.catalog.foods}`} />
+    </main>
+  );
+}
+
+function AutoCopyScreen() {
+  return (
+    <main className="screen no-nav">
+      <ScreenHeader title="Служебная копия" back="profile/data" />
+      <AutoBackupCard />
     </main>
   );
 }

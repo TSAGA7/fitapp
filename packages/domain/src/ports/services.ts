@@ -31,7 +31,12 @@ export interface AutoBackupInfo {
 }
 
 export interface BackupService {
-  exportJson(): Promise<string>;
+  /** The whole backup file. By default this counts as "a backup was made"; pass `record: false` when saving may still be cancelled and call `recordBackup()` afterwards. */
+  exportJson(options?: { record?: boolean }): Promise<string>;
+  /** Remembers that the user really saved a backup file just now. */
+  recordBackup(): Promise<void>;
+  /** When the user last saved a backup file (ISO time), or null if never. The in-app automatic copy does not count. */
+  lastBackupAt(): Promise<string | null>;
   /**
    * Daily automatic copy: once per local date it rotates the slots (today's copy becomes "previous") and writes a fresh one.
    * Nothing is written while the app holds no data yet. Returns true when a copy was written.

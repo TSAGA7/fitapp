@@ -131,6 +131,39 @@ export function Workout({ sessionId }: { sessionId: string }) {
 
 const clock = (sec: number): string => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 
+const REST_PRESETS = [30, 60, 90, 120, 180, 240, 300] as const;
+
+/** Type in any rest time. The recommended one stays one tap away: people differ in fitness, so it is advice, not a rule. */
+function RestEditSheet({ open, current, recommended, onClose, onPick }: { open: boolean; current: number; recommended: number; onClose: () => void; onPick: (sec: number) => void }) {
+  const [min, setMin] = useState('');
+  const [sec, setSec] = useState('');
+  useEffect(() => {
+    if (open) {
+      setMin(String(Math.floor(current / 60)));
+      setSec(String(current % 60));
+    }
+  }, [open, current]);
+  const total = (Number.parseInt(min || '0', 10) || 0) * 60 + (Number.parseInt(sec || '0', 10) || 0);
+  const valid = total >= 10 && total <= 1800;
+  return (
+    <Sheet open={open} title="Сколько отдыхать" onClose={onClose}>
+      <div className="stack">
+        <div className="grid-2">
+          <TextField label="Минуты" inputMode="numeric" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, '').slice(0, 2))} />
+          <TextField label="Секунды" inputMode="numeric" value={sec} onChange={(e) => setSec(e.target.value.replace(/\D/g, '').slice(0, 2))} />
+        </div>
+        <div className="chips" role="group" aria-label="Быстрый выбор">
+          {REST_PRESETS.map((p) => <Chip key={p} pressed={total === p} onClick={() => { setMin(String(Math.floor(p / 60))); setSec(String(p % 60)); }}>{clock(p)}</Chip>)}
+        </div>
+        {!valid && <p className="t-small">Укажи время от 0:10 до 30:00.</p>}
+        <Button block disabled={!valid} onClick={() => onPick(total)}>Готово · {clock(valid ? total : current)}</Button>
+        <Button block variant="secondary" onClick={() => onPick(recommended)}>Вернуть рекомендуемое · {clock(recommended)}</Button>
+        <p className="t-small">Рекомендуемое время учитывает упражнение, подход, запас повторений и твою историю. Если оно кажется долгим, сократи.</p>
+      </div>
+    </Sheet>
+  );
+}
+
 /** Rest countdown as a window over the exercises (it can be folded to a small pill): cues at 7 s and 5 s, a random phrase on the last second; can be paused. */
 function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: RestState) => void; onDone: () => void }) {
   const [now, setNow] = useState(Date.now());
@@ -267,6 +300,7 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardP
     trend: ev.trend,
   });
   const restSec = restOverride ?? suggestion.seconds;
+  const [restEditOpen, setRestEditOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -358,7 +392,11 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardP
               </div>
             </div>
             <div className="row between rest-pick">
-              <span className="t-small">Перерыв {clock(restSec)}{restOverride === null ? ` · ${suggestion.reason}` : ' · вручную'}</span>
+              <span className="t-small">
+                Перерыв{' '}
+                <button type="button" className="rest-edit" aria-label={`Перерыв ${clock(restSec)}. Изменить время`} onClick={() => setRestEditOpen(true)}>{clock(restSec)}</button>
+                {restOverride === null ? ` · ${suggestion.reason}` : ' · вручную'}
+              </span>
               <span className="row">
                 <IconButton icon="minus" label="Меньше отдыха" tone="ghost" onClick={() => setRestOverride(Math.max(15, restSec - 15))} />
                 <IconButton icon="plus" label="Больше отдыха" tone="ghost" onClick={() => setRestOverride(Math.min(600, restSec + 15))} />
@@ -379,6 +417,7 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardP
         )}
       </div>
 
+      <RestEditSheet open={restEditOpen} current={restSec} recommended={suggestion.seconds} onClose={() => setRestEditOpen(false)} onPick={(sec) => { setRestOverride(sec === suggestion.seconds ? null : sec); setRestEditOpen(false); }} />
       {infoOpen && <ExerciseInfoSheet exercise={exercise} onClose={() => setInfoOpen(false)} />}
       <PainSheet
         open={painOpen}

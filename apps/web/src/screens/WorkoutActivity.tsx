@@ -12,7 +12,7 @@ const clock = (sec: number): string => {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
 };
 const minutes = (sec: number): string => `${Math.max(1, Math.round(sec / 60))} мин`;
-export const kcalRange = (a: Pick<ActivityEstimate, 'kcalLow' | 'kcalHigh'>): string => `≈ ${a.kcalLow}–${a.kcalHigh}`;
+export const kcalRange = (a: Pick<ActivityEstimate, 'kcalMid'>): string => `≈ ${a.kcalMid}`;
 const thousands = (n: number): string => n.toLocaleString('ru-RU').replace(/\s/g, ' ');
 
 /** Body weight for the estimate: the latest weigh-in, otherwise a neutral default. */
@@ -39,7 +39,7 @@ export function KcalInfoSheet({ open, onClose, bodyKg }: { open: boolean; onClos
   return (
     <Sheet open={open} title="Как считаются калории" onClose={onClose}>
       <div className="stack">
-        <p className="t-body">Это приблизительная оценка активных калорий, то есть сверх того, что тело тратит в покое. Поэтому показан диапазон: у конкретного человека формула ошибается примерно на ±{Math.round(KCAL_SPREAD * 100)}%.</p>
+        <p className="t-body">Это приблизительная оценка активных калорий, то есть сверх того, что тело тратит в покое. Показано среднее значение: у конкретного человека формула ошибается примерно на ±{Math.round(KCAL_SPREAD * 100)}%.</p>
         <p className="t-body"><b>Как считаем.</b> Берём время работы и время пауз между подходами. Один повтор занимает около {SEC_PER_REP} секунд. Каждое занятие умножаем на его интенсивность (MET, из справочника физической активности) и на твой вес ({fmt(bodyKg, 1)} кг):</p>
         <ul className="t-small">
           <li>базовое упражнение (присед, жим, тяга): +{NET_MET.compound} MET сверх покоя;</li>
@@ -47,7 +47,7 @@ export function KcalInfoSheet({ open, onClose, bodyKg }: { open: boolean; onClos
           <li>удержание и кардио: +{NET_MET.timed} MET;</li>
           <li>пауза между подходами: +{NET_MET.rest} MET.</li>
         </ul>
-        <p className="t-small">Килограммы на штанге почти не меняют расход, поэтому тоннаж показан отдельно, как мера прогресса. Время считается до последнего записанного подхода плюс короткий отдых, чтобы забытое открытое приложение не накручивало минуты.</p>
+        <p className="t-small">Килограммы на штанге почти не меняют расход, поэтому тоннаж показан отдельно, как мера прогресса. Время считается от первого подхода: сколько страница была открыта до него, не важно. Перерыв между подходами дольше 8 минут не учитывается, после последнего подхода засчитывается не больше 5 минут отдыха. Цифра растёт по ходу тренировки: сразу после каждого подхода и пока ты отдыхаешь.</p>
         <div className="note">Эти калории <b>не уменьшают</b> и не увеличивают твою норму питания и рацион. Они показаны только для наглядности: ты работаешь, а цифры это видят.</div>
         <Button block onClick={onClose}>Понятно</Button>
       </div>
@@ -61,7 +61,7 @@ export function ActivityBar({ view, doneSets, totalSets }: { view: WorkoutView; 
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState(false);
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 15_000);
+    const t = setInterval(() => setNow(Date.now()), 5_000);
     return () => clearInterval(t);
   }, []);
   const a = useMemo(() => {

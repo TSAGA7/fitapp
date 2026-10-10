@@ -87,6 +87,16 @@ describe('meal plan', () => {
       }
     }
   });
+  it('a norm dictated by a coach (any split of protein, fat and carbs) is matched within 5% for a month of days', () => {
+    const norms: Array<[number, number, number]> = [[160, 70, 230], [150, 60, 150], [140, 60, 430], [200, 90, 370], [130, 45, 160], [180, 50, 170], [150, 100, 160], [120, 40, 160]];
+    for (const [proteinG, fatG, carbG] of norms) {
+      const t = { kcal: Math.round(proteinG * 4 + fatG * 9 + carbG * 4), proteinG, fatG, carbG, fiberG: 25, waterMl: 2500 };
+      for (let i = 0; i < 30; i++) {
+        const d = generateDayPlan({ targets: t, foods, seed: `2026-10-${i}|1` }).deviation;
+        for (const k of ['kcal', 'proteinG', 'fatG', 'carbG'] as const) expect(Math.abs(d[k]), `${proteinG}/${fatG}/${carbG} day ${i} ${k}`).toBeLessThan(0.05);
+      }
+    }
+  });
   it('vacation mode builds the day from holiday food only and still lands near the calories', () => {
     const t = { kcal: 1865, proteinG: 180, fatG: 65, carbG: 140, fiberG: 26, waterMl: 2700 };
     const holiday = /^(pizza_|[a-z]+_pizza_|vit_|bk_|rostics_|roll_|maki_|nigiri_|sushi_rolls|gunkan|philadelphia_roll|california_roll|baked_roll|tempura_roll|spicy_roll|unagi_roll|chicken_roll|inari|dodo_|cheburek|samsa_meat|teremok_|potato_fries|nuggets_chicken|gyoza|shrimp_tempura|salad_|pie_|bun_|croissant|vatrushka_|latte|cappuccino|americano|raf|flat_white|juice_|cola|sprite|fanta|energy_drink|beer_|wine_|champagne_|prosecco_)/;

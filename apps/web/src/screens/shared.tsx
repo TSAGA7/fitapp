@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import type { MetricType } from '@fitapp/domain';
 import { addMetric, applyDietMode, rebuildTrainingPlan } from '../actions';
 import { useCommand } from '../app/useCommand';
@@ -6,7 +7,7 @@ import { useData } from '../app/DataContext';
 import { BODY_MEASUREMENTS, METRIC_LABELS } from '../app/format';
 import { goBack } from '../app/router';
 import { isLocalDate } from '@fitapp/domain';
-import { Button, Card, IconButton, SelectField, Sheet, TextField } from '../ui';
+import { Button, IconButton, SelectField, Sheet, TextField } from '../ui';
 
 const isoToRu = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : '');
 
@@ -115,21 +116,38 @@ export function AddMeasurementSheet({ open, onClose, type: fixedType }: { open: 
 }
 
 /** "Пересобрать?": shown only after the change was saved. Rebuilds the training program (and, after a goal change, the menu from today). */
+/** A dialog at the top of the screen after saving a change that affects the plan: rebuild the training and the menu now, or later. */
 export function RebuildOffer({ title, withDiet, onClose }: { title: string; withDiet?: boolean; onClose: () => void }) {
   const { ok, banner, busy } = useCommand();
   const [done, setDone] = useState(false);
-  if (done) return <div className="ok" role="status">Готово: программа{withDiet ? ' и рацион' : ''} пересобраны под новые данные.</div>;
-  return (
-    <Card>
-      <div className="stack">
-        <div className="t-h3">{title}</div>
-        <p className="t-small">Тренировки{withDiet ? ' и рацион' : ''} подстроятся под сохранённое. Выполненное и отмеченное не тронем, старые версии останутся в истории. Можно и позже, на вкладке «Тренировки».</p>
-        {banner}
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          <Button size="sm" icon="history" disabled={busy} onClick={async () => { if (await ok(async (d) => { await rebuildTrainingPlan(d); if (withDiet) await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000); })) setDone(true); }}>Пересобрать</Button>
-          <Button size="sm" variant="text" disabled={busy} onClick={onClose}>Позже</Button>
-        </div>
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !busy && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [busy, onClose]);
+  return createPortal(
+    <div className="offer-top-wrap" role="presentation">
+      <div className="offer-backdrop" onClick={() => !busy && onClose()} />
+      <div className="offer-top" role="alertdialog" aria-modal="true" aria-label={title}>
+        {done ? (
+          <div className="stack">
+            <div className="t-h3">Готово</div>
+            <p className="t-small">Тренировки{withDiet ? ' и рацион' : ''} пересобраны под новые данные.</p>
+            <Button size="sm" onClick={onClose}>Закрыть</Button>
+          </div>
+        ) : (
+          <div className="stack">
+            <div className="t-h3">{title}</div>
+            <p className="t-small">Тренировки{withDiet ? ' и рацион' : ''} подстроятся под сохранённое. Выполненное и отмеченное не тронем, старые версии останутся в истории. Можно и позже, на вкладке «Тренировки».</p>
+            {banner}
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <Button size="sm" icon="history" disabled={busy} onClick={async () => { if (await ok(async (d) => { await rebuildTrainingPlan(d); if (withDiet) await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000); })) setDone(true); }}>Пересобрать</Button>
+              <Button size="sm" variant="text" disabled={busy} onClick={onClose}>Позже</Button>
+            </div>
+          </div>
+        )}
       </div>
-    </Card>
+    </div>,
+    document.body,
   );
 }

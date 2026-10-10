@@ -43,16 +43,25 @@ const MAX_ELAPSED_SEC = 4 * 3600;
 
 const roundTo = (n: number, step: number): number => Math.round(n / step) * step;
 
+/** The pause between two sets that still counts as "in the workout"; a longer gap is a break the athlete took (a call, a coffee). */
+const MAX_GAP_SEC = 8 * 60;
+/** Lead-in before the first set (warming up, setting the weight) that counts, however long the workout page stood open before it. */
+const MAX_LEAD_SEC = 3 * 60;
+
 /**
- * Seconds from the start of the workout to its end. A forgotten open app must not inflate the time:
- * the end is the last completed set plus a rest allowance (5 min while live, 2 min after finishing).
+ * Seconds the workout really took. Time is counted from the first set: the page may have been opened hours before the
+ * first working set, and a break longer than 8 minutes between sets is not counted. After the last set a short rest is
+ * allowed (5 min while live, 2 min after finishing), so a forgotten open app does not inflate the time.
  */
 export function sessionElapsedSec(input: { startedAtMs: number; completedAtMs: readonly number[]; endedAtMs: number | null; nowMs: number }): number {
   const live = input.endedAtMs === null;
-  let end = input.endedAtMs ?? input.nowMs;
-  const last = input.completedAtMs.length > 0 ? Math.max(...input.completedAtMs) : null;
-  if (last !== null) end = Math.min(end, last + (live ? 5 : 2) * 60_000);
-  return Math.min(MAX_ELAPSED_SEC, Math.max(0, Math.round((end - input.startedAtMs) / 1000)));
+  const end = input.endedAtMs ?? input.nowMs;
+  const done = [...input.completedAtMs].sort((a, b) => a - b);
+  if (done.length === 0) return Math.min(MAX_LEAD_SEC, Math.max(0, Math.round((end - input.startedAtMs) / 1000)));
+  let sec = Math.min(MAX_LEAD_SEC, Math.max(0, (done[0]! - input.startedAtMs) / 1000));
+  for (let i = 1; i < done.length; i++) sec += Math.min(MAX_GAP_SEC, (done[i]! - done[i - 1]!) / 1000);
+  sec += Math.min((live ? 5 : 2) * 60, Math.max(0, (end - done[done.length - 1]!) / 1000));
+  return Math.min(MAX_ELAPSED_SEC, Math.max(0, Math.round(sec)));
 }
 
 export function estimateWorkout(input: { bodyWeightKg: number; exercises: readonly ActivityExercise[]; elapsedSec: number }): ActivityEstimate {

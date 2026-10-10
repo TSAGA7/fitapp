@@ -315,12 +315,17 @@ describe('workout activity', () => {
     expect(e.workSec).toBe(60);
     expect(e.tonnageKg).toBe(0);
   });
-  it('a forgotten open app does not inflate the time', () => {
+  it('a forgotten open app and a long break do not inflate the time', () => {
     const start = Date.parse('2026-10-10T10:00:00Z');
-    const done = [start + 10 * 60_000, start + 40 * 60_000];
-    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: null, nowMs: start + 5 * 3600_000 })).toBe(45 * 60);
-    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: start + 3 * 3600_000, nowMs: start + 4 * 3600_000 })).toBe(42 * 60);
+    const min = 60_000;
+    const done = [start + 10 * min, start + 14 * min, start + 17 * min];
+    // lead-in capped at 3 min, gaps as they were, then 5 minutes of rest allowed while live
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: null, nowMs: start + 5 * 3600_000 })).toBe((3 + 4 + 3 + 5) * 60);
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: start + 3 * 3600_000, nowMs: start + 4 * 3600_000 })).toBe((3 + 4 + 3 + 2) * 60);
+    // a break of an hour between two sets counts as 8 minutes
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [start + min, start + 61 * min], endedAtMs: start + 62 * min, nowMs: start + 62 * min })).toBe((1 + 8 + 1) * 60);
     expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [], endedAtMs: null, nowMs: start + 90_000 })).toBe(90);
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [], endedAtMs: null, nowMs: start + 3 * 3600_000 })).toBe(180);
   });
   it('compares with the previous time: up, down, same, first', () => {
     expect(compareProgress({ weightKg: 62.5, reps: 8 }, { weightKg: 60, reps: 8 })?.verdict).toBe('up');

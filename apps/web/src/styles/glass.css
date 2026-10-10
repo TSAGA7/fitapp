@@ -291,16 +291,22 @@ html, body { overflow-x: hidden; }
 [data-theme='dark'] .sum-tile { background: rgba(255, 255, 255, .06); }
 [data-theme='dark'] .sum-group.up { color: #4ade80; } [data-theme='dark'] .sum-group.down { color: #fbbf24; }
 
-/* Vacation: the screen fills up with beer */
-.beer-fill { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; animation: beer-out .6s ease 1.9s forwards; }
-.beer-liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; transform: translateY(100%); background: linear-gradient(to top, #b45309 0%, #d97706 35%, #fbbf24 80%, #fcd34d 100%); animation: beer-rise 1.4s cubic-bezier(.3,.7,.3,1) forwards; }
-.beer-foam { animation: beer-foam-out .4s ease 1.3s forwards; position: absolute; left: -5%; right: -5%; top: -34px; height: 56px; background: #fffbeb; border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%; box-shadow: 0 -8px 0 -2px #fff, 24px -14px 0 4px #fffbeb, -30px -12px 0 6px #fffbeb, 110px -10px 0 2px #fffbeb; }
-.beer-bubble { position: absolute; bottom: -20px; border-radius: 50%; background: rgba(255, 255, 255, .55); animation: beer-bubble 1.3s ease-in infinite; }
-@keyframes beer-rise { to { transform: translateY(-6%); } }
-@keyframes beer-bubble { to { transform: translateY(-70vh); opacity: 0; } }
-@keyframes beer-foam-out { to { opacity: 0; } }
+/* Vacation: beer is poured in from the bottom of the screen up to the top; foam builds up at the very end, then everything fades */
+.beer-fill { position: fixed; left: 0; right: 0; top: 0; bottom: -140px; z-index: -1; pointer-events: none; overflow: hidden; animation: beer-out .7s ease 4.1s forwards; }
+.beer-liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; transform: translateY(100%); animation: beer-rise 3.6s cubic-bezier(.45,.05,.4,1) forwards; }
+.beer-body { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(to top, #92400e 0%, #b45309 25%, #d97706 60%, #f5a524 85%, #fbbf24 100%); }
+.beer-body::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,.0), rgba(255,255,255,.10) 30%, rgba(255,255,255,.0) 55%, rgba(255,255,255,.08) 80%, rgba(255,255,255,0)); }
+.beer-wave { position: absolute; left: 0; right: 0; top: -16px; height: 18px; width: 200%; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 18V9Q15 0 30 9T60 9T90 9T120 9V18Z' fill='%23fbbf24'/%3E%3C/svg%3E") repeat-x; background-size: 120px 18px; animation: beer-wave 1.6s linear infinite; }
+.beer-bubble { position: absolute; bottom: -14px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), rgba(255,255,255,.45) 55%, rgba(255,255,255,.12)); animation: beer-bubble var(--dur, 2.2s) linear var(--delay, 0s) infinite; }
+.beer-foam { position: absolute; left: -4%; right: -4%; bottom: calc(100% - 22px); height: 96px; opacity: 0; transform-origin: 50% 100%; animation: beer-foam-in 1.5s ease-out 2.2s forwards; }
+.beer-foam::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 52px; background: linear-gradient(to top, #fde68a, #fffbeb 55%, #ffffff); }
+.beer-foam i { position: absolute; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #ffffff, #fffbeb 70%, #fde68a); }
+@keyframes beer-rise { 0% { transform: translateY(100%); } 100% { transform: translateY(5%); } }
+@keyframes beer-wave { to { transform: translateX(-120px); } }
+@keyframes beer-bubble { 0% { transform: translate(0, 0); opacity: 0; } 8% { opacity: .9; } 50% { transform: translate(var(--sway, 8px), -55vh); } 100% { transform: translate(calc(var(--sway, 8px) * -1), -125vh); opacity: .4; } }
+@keyframes beer-foam-in { 0% { opacity: 0; transform: scaleY(.1); } 30% { opacity: 1; } 100% { opacity: 1; transform: scaleY(1); } }
 @keyframes beer-out { to { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .beer-liquid { animation-duration: .01s; } .beer-bubble { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .beer-liquid { animation-duration: .01s; } .beer-bubble, .beer-wave { animation: none; } .beer-foam { animation-delay: 0s; animation-duration: .01s; } }
 
 /* Exercise technique sheet */
 .exinfo section { display: grid; gap: 6px; }
@@ -309,3 +315,19 @@ html, body { overflow-x: hidden; }
 .exinfo-list.bad li::marker { color: var(--danger); }
 .var-pick { display: grid; gap: 6px; }
 .convert-hint { display: grid; gap: 4px; justify-items: start; }
+
+.rest-edit { font: inherit; font-weight: 700; color: var(--primary); background: none; border: 0; border-bottom: 1px dashed currentColor; padding: 0 2px; cursor: pointer; }
+
+.day-status.done { background: linear-gradient(135deg, rgba(56, 189, 248, 0.28), rgba(52, 211, 153, 0.30)); color: #0c4a6e; border-color: rgba(14, 165, 233, 0.25); }
+[data-theme='dark'] .day-status.done { background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(52, 211, 153, 0.2)); color: #bae6fd; border-color: rgba(56, 189, 248, 0.28); }
+
+/* Dialog at the top of the screen (rebuild offer) */
+.offer-top-wrap { position: fixed; inset: 0; z-index: 80; }
+.offer-backdrop { position: absolute; inset: 0; background: rgba(2, 6, 23, 0.45); animation: offer-fade .2s ease; }
+.offer-top { position: absolute; left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 12px); max-width: 520px; margin: 0 auto; padding: 18px; border-radius: var(--r-xl); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-pop); animation: offer-drop .28s cubic-bezier(.2,.8,.2,1); }
+@keyframes offer-drop { from { transform: translateY(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes offer-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.backup-reminder { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font-family: inherit; color: inherit; padding: 14px 16px; border-radius: var(--r-xl); border: 1px solid rgba(245, 158, 11, 0.45); background: linear-gradient(135deg, rgba(245, 158, 11, 0.20), rgba(251, 191, 36, 0.10)); cursor: pointer; }
+.backup-reminder .vb-ic { flex: none; display: inline-flex; }
+.backup-reminder:disabled { opacity: .6; }

@@ -59,10 +59,18 @@ export class LocalBackupService implements BackupService {
   ) {}
 
   /** Everything the user owns (including deletion markers). The bundled catalog is not exported. */
-  async exportJson(): Promise<string> {
+  async exportJson(options?: { record?: boolean }): Promise<string> {
     const { json, createdAt } = await this.buildJson();
-    await setMeta(this.db, META_KEYS.lastBackupAt, createdAt);
+    if (options?.record !== false) await setMeta(this.db, META_KEYS.lastBackupAt, createdAt);
     return json;
+  }
+
+  async recordBackup(): Promise<void> {
+    await setMeta(this.db, META_KEYS.lastBackupAt, this.clock.now());
+  }
+
+  async lastBackupAt(): Promise<string | null> {
+    return (await getMeta<string>(this.db, META_KEYS.lastBackupAt)) ?? null;
   }
 
   async autoBackup(localDate: string): Promise<boolean> {

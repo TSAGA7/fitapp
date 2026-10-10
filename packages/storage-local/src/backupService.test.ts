@@ -60,6 +60,20 @@ describe('export', () => {
     expect(Object.keys(file.stores)).toHaveLength(29);
     expect(await getMeta(a.s.db, META_KEYS.lastBackupAt)).toBe(file.createdAt);
   });
+  it('a cancelled save does not count as a backup until it is recorded', async () => {
+    const { a } = await pair();
+    await populate(a.s);
+    expect(await a.s.backup.lastBackupAt()).toBeNull();
+    await a.s.backup.exportJson({ record: false });
+    expect(await a.s.backup.lastBackupAt()).toBeNull();
+    await a.s.backup.recordBackup();
+    expect(await a.s.backup.lastBackupAt()).not.toBeNull();
+    // the hidden in-app copy never counts as a saved file
+    const b2 = await pair();
+    await populate(b2.a.s);
+    await b2.a.s.backup.autoBackup('2026-10-10');
+    expect(await b2.a.s.backup.lastBackupAt()).toBeNull();
+  });
   it('an empty database exports a valid empty file', async () => {
     const { a, b } = await pair();
     const preview = await b.s.backup.previewImport(await a.s.backup.exportJson());
