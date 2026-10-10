@@ -446,7 +446,7 @@ describe('app flow on the real storage', () => {
     const { deps } = await setup();
     const sid = await startBodyweightWorkout(deps);
     const view = await loadWorkout(deps, sid);
-    expect(view.label).toBe('Со своим весом');
+    expect(view.label).toBe('Дома');
     expect(view.exercises.length).toBeGreaterThanOrEqual(6);
     expect(view.exercises.every((e) => e.exercise.equipmentRequirements.length === 0 || e.exercise.equipmentRequirements.some((g) => g.every((k) => k === 'floor_mat')))).toBe(true);
     expect(view.exercises[0]!.plan.length).toBeGreaterThan(0);

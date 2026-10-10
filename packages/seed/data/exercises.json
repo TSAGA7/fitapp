@@ -10547,5 +10547,3450 @@
         "При боли в плече выбери нейтральный хват."
       ]
     }
+  },
+  {
+    "key": "wall_pushup",
+    "name": "Отжимания от стены",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Корпус прямой",
+      "Локти под углом 45°"
+    ],
+    "curatedSubstituteKeys": [
+      "knee_pushup",
+      "incline_pushup",
+      "pushup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань в шаге от стены, ладони на стене чуть шире плеч на уровне груди.",
+        "Сгибай локти, пока грудь не приблизится к стене.",
+        "Оттолкнись до выпрямления рук."
+      ],
+      "nuances": [
+        "Чем дальше ноги от стены, тем тяжелее."
+      ],
+      "mistakes": [
+        "Таз отстаёт от корпуса. Держи тело прямым."
+      ],
+      "focus": [
+        "Самый лёгкий вариант отжиманий: подходит для старта или разминки."
+      ]
+    }
+  },
+  {
+    "key": "archer_pushup",
+    "name": "Отжимания лучника",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delts",
+      "abs"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "wrist": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 3,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 4,
+      "max": 8
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Одна рука работает, другая прямая",
+      "Корпус не крутится"
+    ],
+    "curatedSubstituteKeys": [
+      "pushup",
+      "decline_pushup",
+      "incline_pushup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Упор лёжа, руки очень широко. Опускайся на одну руку, вторую оставь прямой и расслабленной.",
+        "Вернись вверх усилием рабочей руки.",
+        "Чередуй стороны."
+      ],
+      "nuances": [
+        "Помогающая рука нужна только для баланса."
+      ],
+      "mistakes": [
+        "Разворот корпуса. Держи плечи параллельно полу."
+      ],
+      "focus": [
+        "Подводящий вариант к отжиманию на одной руке."
+      ]
+    }
+  },
+  {
+    "key": "scapular_pushup",
+    "name": "Отжимания лопатками",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "upper_back"
+    ],
+    "secondaryMuscles": [
+      "chest",
+      "front_delts"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 2,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Руки прямые",
+      "Двигаются только лопатки"
+    ],
+    "curatedSubstituteKeys": [
+      "prone_y_raise",
+      "reverse_snow_angel"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Упор лёжа на прямых руках.",
+        "Сведи лопатки, грудь опускается чуть вниз.",
+        "Разведи лопатки, оттолкнувшись от пола, спина слегка округляется вверх."
+      ],
+      "nuances": [
+        "Амплитуда маленькая, это работа над лопатками, а не отжимание."
+      ],
+      "mistakes": [
+        "Сгибание локтей. Руки остаются прямыми."
+      ],
+      "focus": [
+        "Подходит для разминки и контроля лопаток."
+      ]
+    }
+  },
+  {
+    "key": "inverted_row_table",
+    "name": "Тяга лёжа под столом",
+    "movementPattern": "horizontal_pull",
+    "primaryMuscles": [
+      "upper_back",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "rear_delts",
+      "abs"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 6,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Тело прямое, как доска",
+      "Тяни грудь к краю стола"
+    ],
+    "curatedSubstituteKeys": [
+      "cable_row_neutral",
+      "one_arm_db_row_bench",
+      "seal_row_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте под прочный стол, возьмись за край обеими руками, ноги вперёд, пятки на полу.",
+        "Подтяни грудь к краю стола, сводя лопатки.",
+        "Медленно вернись на прямые руки."
+      ],
+      "nuances": [
+        "Чем более горизонтально тело, тем тяжелее. Согни колени, чтобы облегчить."
+      ],
+      "mistakes": [
+        "Провисает таз. Напряги ягодицы и пресс."
+      ],
+      "focus": [
+        "Только прочный и устойчивый стол, который не поедет и не перевернётся."
+      ]
+    }
+  },
+  {
+    "key": "sumo_squat_bw",
+    "name": "Приседания сумо",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "quads",
+      "glutes",
+      "adductors"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Ноги шире плеч, носки врозь",
+      "Колени по линии носков"
+    ],
+    "curatedSubstituteKeys": [
+      "bodyweight_squat",
+      "goblet_squat_db",
+      "leg_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Ноги шире плеч, носки развёрнуты на 30–45°.",
+        "Приседай вниз, колени идут по линии носков, спина прямая.",
+        "Выпрямись, сжимая ягодицы."
+      ],
+      "nuances": [
+        "Хорошо включает внутреннюю поверхность бедра."
+      ],
+      "mistakes": [
+        "Колени заваливаются внутрь. Разводи их в стороны."
+      ],
+      "focus": [
+        "Колени по носкам, корпус прямой."
+      ]
+    }
+  },
+  {
+    "key": "cossack_squat",
+    "name": "Казачий присед",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "adductors",
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 2
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 6,
+      "max": 10
+    },
+    "defaultRestSec": 75,
+    "cues": [
+      "Одна нога прямая, на пятке",
+      "Спина прямая"
+    ],
+    "curatedSubstituteKeys": [
+      "lateral_lunge_bw",
+      "sumo_squat_bw",
+      "split_squat_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань широко, носки немного врозь.",
+        "Перенеси вес на одну ногу, присядь на неё, вторая нога прямая, носок вверх.",
+        "Выпрямись и перейди на другую сторону."
+      ],
+      "nuances": [
+        "Амплитуда зависит от подвижности: начни с небольшой."
+      ],
+      "mistakes": [
+        "Пятка опорной ноги отрывается. Не уходи глубже, чем позволяет подвижность."
+      ],
+      "focus": [
+        "Растяжка и сила внутренней поверхности бедра одновременно."
+      ]
+    }
+  },
+  {
+    "key": "lateral_lunge_bw",
+    "name": "Боковые выпады",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes",
+      "adductors"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Шаг в сторону, таз назад",
+      "Опорная нога прямая"
+    ],
+    "curatedSubstituteKeys": [
+      "cossack_squat",
+      "reverse_lunge_bw",
+      "split_squat_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Шагни широко в сторону, перенеси вес на шагнувшую ногу.",
+        "Присядь, таз отводи назад, вторая нога прямая.",
+        "Оттолкнись и вернись в стойку."
+      ],
+      "nuances": [
+        "Колено смотрит по линии носка."
+      ],
+      "mistakes": [
+        "Корпус наклоняется вперёд. Держи грудь вверх."
+      ],
+      "focus": [
+        "Работает то, на что присаживаешься."
+      ]
+    }
+  },
+  {
+    "key": "curtsy_lunge",
+    "name": "Выпад-реверанс",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "glutes",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Нога идёт назад по диагонали",
+      "Корпус прямой"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_lunge_bw",
+      "split_squat_bw",
+      "lateral_lunge_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань прямо, отведи ногу назад-в сторону за опорную, как в реверансе.",
+        "Опустись, колено задней ноги к полу.",
+        "Вернись в стойку и повтори."
+      ],
+      "nuances": [
+        "Хорошо включает среднюю ягодичную."
+      ],
+      "mistakes": [
+        "Колено опорной ноги уходит внутрь. Держи линию носка."
+      ],
+      "focus": [
+        "Баланс и ягодицы."
+      ]
+    }
+  },
+  {
+    "key": "walking_lunge_bw",
+    "name": "Выпады в ходьбе",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 20
+    },
+    "defaultRestSec": 75,
+    "cues": [
+      "Шаги широкие",
+      "Корпус прямой"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_lunge_bw",
+      "split_squat_bw",
+      "walking_lunge_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Сделай широкий шаг вперёд, опустись до комфортного сгибания обеих ног.",
+        "Оттолкнись передней ногой и шагни следующей."
+      ],
+      "nuances": [
+        "Нужно свободное место 4–5 шагов."
+      ],
+      "mistakes": [
+        "Колено уходит далеко за носок. Шаг должен быть шире."
+      ],
+      "focus": [
+        "Идти ровно, не раскачиваясь."
+      ]
+    }
+  },
+  {
+    "key": "bulgarian_split_squat_bw",
+    "name": "Болгарский сплит-присед (с опорой на стул)",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 2,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Задняя нога на опоре",
+      "Корпус слегка вперёд"
+    ],
+    "curatedSubstituteKeys": [
+      "split_squat_bw",
+      "reverse_lunge_bw",
+      "bulgarian_split_squat_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь заднюю ногу носком на стул или диван, передняя нога на шаг вперёд.",
+        "Опустись вертикально вниз, переднее колено по линии носка.",
+        "Вернись вверх усилием передней ноги."
+      ],
+      "nuances": [
+        "Чем дальше передняя нога, тем больше ягодицы; ближе: больше квадрицепсы."
+      ],
+      "mistakes": [
+        "Весь вес на задней ноге. Работать должна передняя."
+      ],
+      "focus": [
+        "Опора устойчивая, нога подальше от стула."
+      ]
+    }
+  },
+  {
+    "key": "step_up_bw",
+    "name": "Зашагивания на опору",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 2,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Вся ступня на опоре",
+      "Толкайся рабочей ногой"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_lunge_bw",
+      "step_up_db",
+      "split_squat_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь ногу на устойчивую опору (ступень, прочный стул) так, чтобы колено было около 90°.",
+        "Поднимись усилием рабочей ноги, не отталкиваясь от пола.",
+        "Медленно опустись обратно."
+      ],
+      "nuances": [
+        "Высота опоры меняет нагрузку."
+      ],
+      "mistakes": [
+        "Отталкивание нижней ногой. Работать должна верхняя."
+      ],
+      "focus": [
+        "Квадрицепсы и ягодицы одной ноги."
+      ]
+    }
+  },
+  {
+    "key": "hip_thrust_bw",
+    "name": "Ягодичный мост со стопами на опоре",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Подбородок к груди",
+      "Вверху ягодицы сжаты"
+    ],
+    "curatedSubstituteKeys": [
+      "glute_bridge_bw",
+      "single_leg_glute_bridge",
+      "hip_thrust_barbell"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте спиной на пол, стопы на диван или стул, колени согнуты.",
+        "Поднимай таз, сжимая ягодицы, до прямой линии от плеч до коленей.",
+        "Опусти таз, не касаясь пола полностью."
+      ],
+      "nuances": [
+        "Пауза 1–2 секунды вверху усиливает работу ягодиц."
+      ],
+      "mistakes": [
+        "Прогиб в пояснице вверху. Остановись на прямой линии."
+      ],
+      "focus": [
+        "Чувствуй ягодицы, а не поясницу."
+      ]
+    }
+  },
+  {
+    "key": "glute_bridge_march",
+    "name": "Ягодичный мост с подъёмом ног",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "abs"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 14
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Таз ровный, не вращается",
+      "Ягодицы напряжены"
+    ],
+    "curatedSubstituteKeys": [
+      "glute_bridge_bw",
+      "single_leg_glute_bridge",
+      "hip_thrust_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Подними таз в мост.",
+        "Удерживая таз ровно, поочерёдно поднимай колени к груди.",
+        "Опусти таз."
+      ],
+      "nuances": [
+        "Усложнение обычного моста через баланс."
+      ],
+      "mistakes": [
+        "Таз заваливается в сторону. Напряги ягодицы."
+      ],
+      "focus": [
+        "Таз ровный на протяжении всех подъёмов."
+      ]
+    }
+  },
+  {
+    "key": "donkey_kick",
+    "name": "Ослиные махи",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Спина ровная",
+      "Пятка к потолку"
+    ],
+    "curatedSubstituteKeys": [
+      "glute_bridge_bw",
+      "fire_hydrant",
+      "cable_glute_kickback"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на четвереньки, колено согнуто на 90°.",
+        "Поднимай бедро вверх, стопа смотрит в потолок.",
+        "Вернись, не касаясь коленом пола."
+      ],
+      "nuances": [
+        "Амплитуда до прямой линии бедра с корпусом."
+      ],
+      "mistakes": [
+        "Прогиб в пояснице. Держи корпус неподвижным."
+      ],
+      "focus": [
+        "Сжимай ягодицу вверху."
+      ]
+    }
+  },
+  {
+    "key": "fire_hydrant",
+    "name": "Пожарный гидрант",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": false,
+    "jointStress": {},
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Таз не поворачивается",
+      "Колено в сторону"
+    ],
+    "curatedSubstituteKeys": [
+      "donkey_kick",
+      "clamshell",
+      "band_lateral_walk"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на четвереньки.",
+        "Отведи согнутое колено в сторону до уровня таза.",
+        "Вернись в исходное положение."
+      ],
+      "nuances": [
+        "Работает средняя ягодичная, которая стабилизирует таз при ходьбе."
+      ],
+      "mistakes": [
+        "Корпус заваливается в бок. Держи таз неподвижным."
+      ],
+      "focus": [
+        "Таз стоит ровно."
+      ]
+    }
+  },
+  {
+    "key": "clamshell",
+    "name": "Ракушка",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": false,
+    "jointStress": {},
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Стопы вместе",
+      "Таз не откатывается назад"
+    ],
+    "curatedSubstituteKeys": [
+      "fire_hydrant",
+      "donkey_kick",
+      "band_clamshell"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте на бок, колени согнуты, стопы вместе.",
+        "Раскрой верхнее колено, не отрывая стоп друг от друга.",
+        "Медленно закрой."
+      ],
+      "nuances": [
+        "Мягкая активация средней ягодичной, хорошо перед основной тренировкой."
+      ],
+      "mistakes": [
+        "Таз заваливается назад. Держи его вертикально."
+      ],
+      "focus": [
+        "Чувствуй работу сбоку таза."
+      ]
+    }
+  },
+  {
+    "key": "slider_leg_curl",
+    "name": "Сгибание ног со скольжением (на полотенце)",
+    "movementPattern": "knee_flexion",
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "glutes"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "knee": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 6,
+      "max": 12
+    },
+    "defaultRestSec": 75,
+    "cues": [
+      "Таз поднят",
+      "Подтягивай пятки медленно"
+    ],
+    "curatedSubstituteKeys": [
+      "single_leg_rdl_bw",
+      "seated_leg_curl",
+      "lying_leg_curl"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте на спину, пятки на полотенце на гладком полу, таз поднят.",
+        "Медленно выпрямляй ноги, скользя пятками.",
+        "Подтяни пятки обратно, не опуская таз."
+      ],
+      "nuances": [
+        "На ковре не скользит: нужен ламинат или плитка."
+      ],
+      "mistakes": [
+        "Таз опускается. Держи мост до конца подхода."
+      ],
+      "focus": [
+        "Задняя поверхность бедра, а не поясница."
+      ]
+    }
+  },
+  {
+    "key": "calf_raise_single_bw",
+    "name": "Подъёмы на носок на одной ноге",
+    "movementPattern": "calf_raise",
+    "primaryMuscles": [
+      "calves"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "ankle": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Опора рукой для баланса",
+      "Полная амплитуда"
+    ],
+    "curatedSubstituteKeys": [
+      "bodyweight_calf_raise",
+      "standing_calf_raise_machine"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на одной ноге на краю ступени или на полу, держись за опору.",
+        "Поднимись на носок максимально высоко.",
+        "Медленно опустись вниз до растяжения."
+      ],
+      "nuances": [
+        "Темп вниз 3 секунды делает нагрузку серьёзной без веса."
+      ],
+      "mistakes": [
+        "Раскачивание. Двигайся плавно."
+      ],
+      "focus": [
+        "Полная амплитуда: вверх и до растяжения вниз."
+      ]
+    }
+  },
+  {
+    "key": "side_lying_leg_raise",
+    "name": "Подъём ноги лёжа на боку",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": false,
+    "jointStress": {},
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Корпус ровный",
+      "Носок смотрит вперёд"
+    ],
+    "curatedSubstituteKeys": [
+      "clamshell",
+      "fire_hydrant",
+      "hip_abduction_machine_ex"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте на бок, нижняя нога согнута, верхняя прямая.",
+        "Подними верхнюю ногу до 45°, носок вперёд.",
+        "Медленно опусти."
+      ],
+      "nuances": [
+        "Подъём чуть назад (не вперёд) сильнее включает ягодицу."
+      ],
+      "mistakes": [
+        "Ногу поднимают рывком и слишком высоко. Остановись на 45°."
+      ],
+      "focus": [
+        "Работа сбоку таза."
+      ]
+    }
+  },
+  {
+    "key": "v_up",
+    "name": "V-образные подъёмы",
+    "movementPattern": "core_flexion",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Лопатки и ноги поднимаются одновременно",
+      "Движение подконтрольное"
+    ],
+    "curatedSubstituteKeys": [
+      "crunch_floor",
+      "reverse_crunch",
+      "hollow_hold"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте на спину, руки за головой или вытянуты, ноги прямые.",
+        "Одновременно поднимай корпус и прямые ноги, образуя «V».",
+        "Медленно вернись."
+      ],
+      "nuances": [
+        "Колени можно согнуть, чтобы облегчить."
+      ],
+      "mistakes": [
+        "Рывки инерцией. Двигайся плавно."
+      ],
+      "focus": [
+        "Прямая работа мышц пресса, поясница прижата."
+      ]
+    }
+  },
+  {
+    "key": "side_plank_hip_dip",
+    "name": "Боковая планка с опусканием таза",
+    "movementPattern": "core_antirotation",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "abs"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 15
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Корпус в одну линию",
+      "Опускай таз к полу плавно"
+    ],
+    "curatedSubstituteKeys": [
+      "side_plank",
+      "russian_twist",
+      "plank"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Боковая планка на предплечье.",
+        "Плавно опусти таз к полу.",
+        "Подними таз обратно выше исходного."
+      ],
+      "nuances": [
+        "Сложнее статической боковой планки."
+      ],
+      "mistakes": [
+        "Корпус складывается вперёд. Грудь смотрит прямо."
+      ],
+      "focus": [
+        "Работает боковая линия живота."
+      ]
+    }
+  },
+  {
+    "key": "reverse_snow_angel",
+    "name": "Снежный ангел лёжа на животе",
+    "movementPattern": "rear_delt_fly",
+    "primaryMuscles": [
+      "rear_delts",
+      "upper_back"
+    ],
+    "secondaryMuscles": [
+      "lower_back"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 14
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Лоб на полу",
+      "Руки скользят над полом"
+    ],
+    "curatedSubstituteKeys": [
+      "prone_y_raise",
+      "reverse_pec_deck",
+      "face_pull"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте на живот, руки вдоль тела, ладони вниз.",
+        "Подними руки и разводи их по дуге вверх над головой, как снежный ангел.",
+        "Вернись обратно, не опуская рук на пол."
+      ],
+      "nuances": [
+        "Хорошая нагрузка для верха спины после сидячей работы."
+      ],
+      "mistakes": [
+        "Шея запрокидывается. Смотри в пол."
+      ],
+      "focus": [
+        "Лопатки работают, шея расслаблена."
+      ]
+    }
+  },
+  {
+    "key": "wall_angel",
+    "name": "Ангелы у стены",
+    "movementPattern": "rear_delt_fly",
+    "primaryMuscles": [
+      "upper_back",
+      "rear_delts"
+    ],
+    "secondaryMuscles": [
+      "lower_back"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 2,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 45,
+    "cues": [
+      "Поясница и лопатки у стены",
+      "Предплечья скользят по стене"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_snow_angel",
+      "prone_y_raise",
+      "scapular_pushup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань спиной к стене, затылок, лопатки и таз касаются её, руки согнуты, предплечья на стене.",
+        "Скользи руками вверх до выпрямления, не отрывая их от стены.",
+        "Вернись вниз."
+      ],
+      "nuances": [
+        "Мягкая мобилизация плеч и верха спины."
+      ],
+      "mistakes": [
+        "Поясница отрывается от стены. Не прогибайся."
+      ],
+      "focus": [
+        "Это не нагрузка, а контроль положения плеч."
+      ]
+    }
+  },
+  {
+    "key": "band_squat",
+    "name": "Присед с резинкой",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено вперёд по линии носка, не заваливай его внутрь"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка под стопами, на плечах",
+      "Колени по носкам"
+    ],
+    "curatedSubstituteKeys": [
+      "bodyweight_squat",
+      "goblet_squat_db",
+      "sumo_squat_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на резинку, концы закрепи на плечах.",
+        "Присядь до комфортной глубины, спина прямая.",
+        "Выпрямись, сжимая ягодицы."
+      ],
+      "nuances": [
+        "Резинка добавляет нагрузку сверху амплитуды.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Колени заваливаются внутрь."
+      ],
+      "focus": [
+        "Колени по линии носков."
+      ]
+    }
+  },
+  {
+    "key": "band_rdl",
+    "name": "Румынская тяга с резинкой",
+    "movementPattern": "hinge",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "lower_back"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "lower_back": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка под стопами",
+      "Таз назад, спина ровная"
+    ],
+    "curatedSubstituteKeys": [
+      "rdl_db",
+      "single_leg_rdl_bw",
+      "cable_pull_through"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на середину резинки, возьми концы в руки.",
+        "Отводи таз назад, наклоняя корпус со ровной спиной.",
+        "Выпрямись, сжимая ягодицы."
+      ],
+      "nuances": [
+        "Колени чуть согнуты и неподвижны.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Округление спины. Прекрати наклон, когда спина начинает округляться."
+      ],
+      "focus": [
+        "Растяжение задней поверхности бедра."
+      ]
+    }
+  },
+  {
+    "key": "band_good_morning",
+    "name": "Наклоны «good morning» с резинкой",
+    "movementPattern": "hinge",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "lower_back"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "lower_back": 1,
+      "hip": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка под стопами и на плечах",
+      "Спина ровная"
+    ],
+    "curatedSubstituteKeys": [
+      "band_rdl",
+      "rdl_db",
+      "back_extension_45"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на резинку, перекинь её через плечи.",
+        "Отведи таз назад, корпус наклоняется вперёд.",
+        "Вернись вверх усилием ягодиц."
+      ],
+      "nuances": [
+        "Нагрузка на спину выше, чем в тяге: начинай с лёгкой.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Округление спины."
+      ],
+      "focus": [
+        "Таз назад, спина ровная."
+      ]
+    }
+  },
+  {
+    "key": "band_glute_bridge",
+    "name": "Ягодичный мост с резинкой над коленями",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка над коленями",
+      "Колени не сближаются"
+    ],
+    "curatedSubstituteKeys": [
+      "glute_bridge_bw",
+      "hip_thrust_bw",
+      "band_lateral_walk"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте на спину, резинка над коленями, стопы на полу.",
+        "Поднимай таз, одновременно слегка раздвигая колени.",
+        "Вернись вниз."
+      ],
+      "nuances": [
+        "Сжимай ягодицы вверху на 1–2 секунды.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Колени сходятся."
+      ],
+      "focus": [
+        "Ягодицы, особенно средняя."
+      ]
+    }
+  },
+  {
+    "key": "band_kickback",
+    "name": "Отведение ноги назад с резинкой",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка вокруг стоп",
+      "Корпус не прогибается"
+    ],
+    "curatedSubstituteKeys": [
+      "donkey_kick",
+      "cable_glute_kickback",
+      "glute_bridge_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на четвереньки, резинка вокруг стоп.",
+        "Выпрями ногу назад, сжимая ягодицу.",
+        "Вернись, не касаясь коленом пола."
+      ],
+      "nuances": [
+        "Амплитуда небольшая, но контролируемая.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Прогиб в пояснице."
+      ],
+      "focus": [
+        "Ягодицы, а не поясница."
+      ]
+    }
+  },
+  {
+    "key": "band_clamshell",
+    "name": "Ракушка с резинкой",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": false,
+    "jointStress": {},
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка над коленями",
+      "Таз не откатывается"
+    ],
+    "curatedSubstituteKeys": [
+      "clamshell",
+      "fire_hydrant",
+      "band_lateral_walk"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Лягте на бок, резинка над коленями, стопы вместе.",
+        "Раскрой верхнее колено против сопротивления.",
+        "Медленно закрой."
+      ],
+      "nuances": [
+        "Работа средней ягодичной с сопротивлением.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Таз заваливается назад."
+      ],
+      "focus": [
+        "Чувствуй сбоку таза."
+      ]
+    }
+  },
+  {
+    "key": "band_abduction_standing",
+    "name": "Отведение ноги в сторону с резинкой стоя",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "knee": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 18
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Корпус прямой",
+      "Нога идёт в сторону"
+    ],
+    "curatedSubstituteKeys": [
+      "band_lateral_walk",
+      "hip_abduction_machine_ex",
+      "side_lying_leg_raise"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Резинка вокруг стоп, держись за опору.",
+        "Отведи ногу в сторону, не наклоняя корпус.",
+        "Вернись контролируемо."
+      ],
+      "nuances": [
+        "Опорная нога слегка согнута.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Наклон корпуса. Держись прямо."
+      ],
+      "focus": [
+        "Средняя ягодичная."
+      ]
+    }
+  },
+  {
+    "key": "band_row_seated",
+    "name": "Тяга резинки сидя",
+    "movementPattern": "horizontal_pull",
+    "primaryMuscles": [
+      "upper_back",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "rear_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка вокруг стоп",
+      "Спина прямая"
+    ],
+    "curatedSubstituteKeys": [
+      "cable_row_neutral",
+      "inverted_row_table",
+      "one_arm_db_row_bench"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Сядь, ноги вытянуты, резинка вокруг стоп, концы в руках.",
+        "Тяни локти назад, сводя лопатки.",
+        "Плавно вернись."
+      ],
+      "nuances": [
+        "Локти идут вдоль корпуса.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Откидывание корпуса назад."
+      ],
+      "focus": [
+        "Середина спины, лопатки."
+      ]
+    }
+  },
+  {
+    "key": "band_lat_pulldown",
+    "name": "Тяга резинки сверху (к груди)",
+    "movementPattern": "vertical_pull",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "upper_back"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка закреплена над головой",
+      "Локти к бокам"
+    ],
+    "curatedSubstituteKeys": [
+      "lat_pulldown_neutral",
+      "straight_arm_pulldown",
+      "band_assisted_pullup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Закрепи резинку над собой (турник, дверной якорь), встань на колени.",
+        "Тяни локти вниз и к бокам, как в верхней тяге.",
+        "Медленно вернись."
+      ],
+      "nuances": [
+        "Закрепление должно быть надёжным.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Тянут руками, а не спиной. Думай о локтях."
+      ],
+      "focus": [
+        "Широчайшие."
+      ]
+    }
+  },
+  {
+    "key": "band_assisted_pullup",
+    "name": "Подтягивания с резинкой-помощником",
+    "movementPattern": "vertical_pull",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "upper_back"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band",
+        "pullup_bar"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 4,
+      "max": 10
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Резинка под коленом или стопой",
+      "Грудь к турнику"
+    ],
+    "curatedSubstituteKeys": [
+      "assisted_pullup_ex",
+      "band_lat_pulldown",
+      "pullup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Закрепи резинку на турнике и вставь в неё колено или стопу.",
+        "Подтянись до уровня подбородка выше турника.",
+        "Опускайся медленно."
+      ],
+      "nuances": [
+        "Здесь тяжёлая резинка помогает сильнее, то есть упражнение легче. Со временем переходи на более лёгкую.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Рывок корпусом."
+      ],
+      "focus": [
+        "Широчайшие, плечи опущены."
+      ]
+    }
+  },
+  {
+    "key": "band_pullapart",
+    "name": "Разведение резинки перед собой",
+    "movementPattern": "rear_delt_fly",
+    "primaryMuscles": [
+      "rear_delts",
+      "upper_back"
+    ],
+    "secondaryMuscles": [
+      "side_delts"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Руки прямые",
+      "Лопатки сводятся"
+    ],
+    "curatedSubstituteKeys": [
+      "face_pull",
+      "reverse_pec_deck",
+      "rear_delt_fly_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Держи резинку перед собой на уровне груди, руки прямые.",
+        "Разводи руки в стороны, сводя лопатки.",
+        "Медленно вернись."
+      ],
+      "nuances": [
+        "Отличная осанка для сидячей работы.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Плечи поднимаются к ушам."
+      ],
+      "focus": [
+        "Задние дельты и середина спины."
+      ]
+    }
+  },
+  {
+    "key": "band_face_pull",
+    "name": "Тяга резинки к лицу",
+    "movementPattern": "rear_delt_fly",
+    "primaryMuscles": [
+      "rear_delts",
+      "upper_back"
+    ],
+    "secondaryMuscles": [
+      "biceps"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 18
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка на уровне лица",
+      "Локти выше кистей"
+    ],
+    "curatedSubstituteKeys": [
+      "face_pull",
+      "band_pullapart",
+      "reverse_pec_deck"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Закрепи резинку на уровне лица, возьми концы.",
+        "Тяни к лицу, разводя локти в стороны.",
+        "Вернись контролируемо."
+      ],
+      "nuances": [
+        "Локти высоко, кисти по сторонам от лица.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Тянут корпусом назад."
+      ],
+      "focus": [
+        "Задние дельты и ротаторы плеча."
+      ]
+    }
+  },
+  {
+    "key": "band_chest_press",
+    "name": "Жим резинки от груди",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка за спиной",
+      "Локти под 45°"
+    ],
+    "curatedSubstituteKeys": [
+      "pushup",
+      "chest_press_machine_seated",
+      "db_flat_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Пропусти резинку за спиной, концы в руках на уровне груди.",
+        "Выжми руки вперёд до выпрямления.",
+        "Медленно вернись."
+      ],
+      "nuances": [
+        "Лёгкая резинка для начала.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Плечи уходят вперёд."
+      ],
+      "focus": [
+        "Грудь и трицепсы."
+      ]
+    }
+  },
+  {
+    "key": "band_chest_fly",
+    "name": "Сведение рук с резинкой",
+    "movementPattern": "chest_fly",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "front_delts"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка за спиной",
+      "Локти чуть согнуты"
+    ],
+    "curatedSubstituteKeys": [
+      "pec_deck_fly",
+      "cable_crossover_fly",
+      "pushup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Резинка за спиной, руки в стороны.",
+        "Сведи руки перед собой дугой.",
+        "Медленно разведи."
+      ],
+      "nuances": [
+        "Движение дугой, не как жим.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Локти сгибаются в жим."
+      ],
+      "focus": [
+        "Грудные мышцы."
+      ]
+    }
+  },
+  {
+    "key": "band_overhead_press",
+    "name": "Жим резинки над головой",
+    "movementPattern": "vertical_push",
+    "primaryMuscles": [
+      "front_delts",
+      "side_delts"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 14
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка под стопами",
+      "Корпус прямой"
+    ],
+    "curatedSubstituteKeys": [
+      "db_shoulder_press_neutral",
+      "shoulder_press_machine_ex",
+      "pike_pushup"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на резинку, концы на уровне плеч.",
+        "Выжми руки вверх до выпрямления.",
+        "Медленно вернись."
+      ],
+      "nuances": [
+        "Не прогибайся в пояснице.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Прогиб в пояснице."
+      ],
+      "focus": [
+        "Плечи и трицепсы."
+      ]
+    }
+  },
+  {
+    "key": "band_lateral_raise",
+    "name": "Разведение рук в стороны с резинкой",
+    "movementPattern": "lateral_raise",
+    "primaryMuscles": [
+      "side_delts"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 20
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка под стопами",
+      "Локти чуть согнуты"
+    ],
+    "curatedSubstituteKeys": [
+      "lateral_raise_db",
+      "cable_lateral_raise",
+      "machine_lateral_raise"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на резинку, концы в руках вдоль тела.",
+        "Подними руки в стороны до уровня плеч.",
+        "Медленно опусти."
+      ],
+      "nuances": [
+        "Подъём до уровня плеч, не выше.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Плечи поднимаются к ушам."
+      ],
+      "focus": [
+        "Средние дельты."
+      ]
+    }
+  },
+  {
+    "key": "band_front_raise",
+    "name": "Подъём рук вперёд с резинкой",
+    "movementPattern": "lateral_raise",
+    "primaryMuscles": [
+      "front_delts"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 12,
+      "max": 18
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка под стопами",
+      "Корпус неподвижен"
+    ],
+    "curatedSubstituteKeys": [
+      "front_raise_db",
+      "band_lateral_raise",
+      "db_shoulder_press_neutral"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на резинку, концы в руках.",
+        "Подними прямые руки вперёд до уровня плеч.",
+        "Опусти контролируемо."
+      ],
+      "nuances": [
+        "Передняя дельта и так нагружена в жимах: используй редко.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Раскачивание."
+      ],
+      "focus": [
+        "Передние дельты."
+      ]
+    }
+  },
+  {
+    "key": "band_curl",
+    "name": "Сгибание рук с резинкой",
+    "movementPattern": "elbow_flexion",
+    "primaryMuscles": [
+      "biceps"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка под стопами",
+      "Локти прижаты"
+    ],
+    "curatedSubstituteKeys": [
+      "db_curl",
+      "ez_curl",
+      "cable_curl"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на резинку, концы в руках.",
+        "Согни руки, не отрывая локтей от корпуса.",
+        "Плавно разогни."
+      ],
+      "nuances": [
+        "Максимум напряжения в верхней точке.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Раскачивание корпусом."
+      ],
+      "focus": [
+        "Бицепс."
+      ]
+    }
+  },
+  {
+    "key": "band_triceps_pushdown",
+    "name": "Разгибание рук с резинкой вниз",
+    "movementPattern": "elbow_extension",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка закреплена сверху",
+      "Локти прижаты"
+    ],
+    "curatedSubstituteKeys": [
+      "cable_pushdown_rope",
+      "cable_pushdown_bar",
+      "overhead_cable_extension"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Закрепи резинку над собой, возьми концы.",
+        "Разгибай руки вниз, локти прижаты к корпусу.",
+        "Плавно вернись."
+      ],
+      "nuances": [
+        "Закрепление должно быть надёжным.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Локти уходят вперёд."
+      ],
+      "focus": [
+        "Трицепс."
+      ]
+    }
+  },
+  {
+    "key": "band_overhead_triceps",
+    "name": "Разгибание рук с резинкой за головой",
+    "movementPattern": "elbow_extension",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "elbow": 1,
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Локти вверх и неподвижны",
+      "Резинка под стопой"
+    ],
+    "curatedSubstituteKeys": [
+      "overhead_cable_extension",
+      "skull_crusher_ez",
+      "cable_pushdown_rope"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань на конец резинки, второй конец держи за головой двумя руками.",
+        "Разгибай руки вверх.",
+        "Согни медленно."
+      ],
+      "nuances": [
+        "Растяжка длинной головки трицепса.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Локти разъезжаются."
+      ],
+      "focus": [
+        "Трицепс в растянутом положении."
+      ]
+    }
+  },
+  {
+    "key": "band_pushup_resisted",
+    "name": "Отжимания с резинкой на спине",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delts",
+      "abs"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "wrist": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка вокруг спины и рук",
+      "Корпус прямой"
+    ],
+    "curatedSubstituteKeys": [
+      "pushup",
+      "decline_pushup",
+      "band_chest_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Пропусти резинку за спиной и закрепи концы под ладонями.",
+        "Отожмись как обычно.",
+        "Усилие растёт вверху."
+      ],
+      "nuances": [
+        "Подходит, когда обычные отжимания стали лёгкими.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Провисание таза."
+      ],
+      "focus": [
+        "Грудь и трицепсы."
+      ]
+    }
+  },
+  {
+    "key": "band_pallof_press",
+    "name": "Жим Паллова с резинкой",
+    "movementPattern": "core_antirotation",
+    "primaryMuscles": [
+      "obliques",
+      "abs"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {},
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка сбоку на уровне груди",
+      "Корпус не вращается"
+    ],
+    "curatedSubstituteKeys": [
+      "pallof_press",
+      "plank",
+      "band_woodchop"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Встань боком к якорю, резинка у груди.",
+        "Выжми руки вперёд, не давая корпусу повернуться.",
+        "Удержи 1–2 секунды и вернись."
+      ],
+      "nuances": [
+        "Чем дальше от якоря, тем тяжелее.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Корпус поворачивается."
+      ],
+      "focus": [
+        "Пресс как стабилизатор."
+      ]
+    }
+  },
+  {
+    "key": "band_woodchop",
+    "name": "Дровосек с резинкой",
+    "movementPattern": "core_antirotation",
+    "primaryMuscles": [
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "abs",
+      "glutes"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Держи спину ровной, не прогибайся в пояснице"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Движение от корпуса",
+      "Руки прямые"
+    ],
+    "curatedSubstituteKeys": [
+      "cable_woodchop",
+      "band_pallof_press",
+      "russian_twist"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Закрепи резинку сбоку внизу, возьми её двумя руками.",
+        "По диагонали потяни руки вверх и в сторону, поворачивая корпус.",
+        "Плавно вернись."
+      ],
+      "nuances": [
+        "Вращение идёт от корпуса, не от рук.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Работают только руки."
+      ],
+      "focus": [
+        "Косые мышцы живота."
+      ]
+    }
+  },
+  {
+    "key": "band_straight_arm_pulldown",
+    "name": "Тяга резинки прямыми руками",
+    "movementPattern": "vertical_pull",
+    "primaryMuscles": [
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "abs"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 1,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Плечи вниз, не поднимай их к ушам; при боли уменьши амплитуду"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "resistance_band"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "rep_only",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Резинка над головой",
+      "Руки почти прямые"
+    ],
+    "curatedSubstituteKeys": [
+      "straight_arm_pulldown",
+      "band_lat_pulldown",
+      "db_pullover"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Средняя резинка",
+        "note": "Выбирай такую, чтобы последние 2–3 повторения шли тяжело, но чисто"
+      },
+      {
+        "key": "light",
+        "label": "Лёгкая резинка",
+        "note": "Если техника страдает или не набираются повторения"
+      },
+      {
+        "key": "heavy",
+        "label": "Тяжёлая резинка",
+        "note": "Когда средняя даётся на верхней границе повторений"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Закрепи резинку над собой, шаг назад.",
+        "Тяни прямые руки вниз до бёдер.",
+        "Плавно вернись."
+      ],
+      "nuances": [
+        "Широчайшие в изоляции.",
+        "Сила резинки растёт к концу движения: вернись назад медленно, не давай ей «хлопнуть»."
+      ],
+      "mistakes": [
+        "Сгибание локтей."
+      ],
+      "focus": [
+        "Широчайшие."
+      ]
+    }
   }
 ]

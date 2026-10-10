@@ -79,6 +79,6 @@ export function resolveEquipment(ex: Pick<Exercise, 'equipmentRequirements' | 'l
 }
 
 /** The workout "own bodyweight" for the current constraints (nothing is saved). */
-export function bodyweightPlan(s: Pick<Snapshot, 'exercises' | 'injuries' | 'painEvents' | 'equipment' | 'userEquipment' | 'profile' | 'userExercises'>, now: string): WorkoutTemplate {
-  return buildBodyweightWorkout({ exercises: s.exercises.filter((e) => e.deletedAt === null), ctx: safetyContext(s, now) });
+export function bodyweightPlan(s: Pick<Snapshot, 'exercises' | 'injuries' | 'painEvents' | 'equipment' | 'userEquipment' | 'profile' | 'userExercises'>, now: string, homeEquipment: readonly string[] = []): WorkoutTemplate {
+  return buildBodyweightWorkout({ exercises: s.exercises.filter((e) => e.deletedAt === null), ctx: safetyContext(s, now), homeEquipment });
 }

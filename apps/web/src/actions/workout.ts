@@ -359,7 +359,7 @@ export async function loadWorkout(deps: AppDeps, sessionId: string): Promise<Wor
         ...(await noteAndRestInfo(r, deps, session, se, exercise.id, notes)),
       });
     }
-    return { session, plannedSession: ps, version, label: ps?.workoutKey === BODYWEIGHT_KEY ? 'Со своим весом' : (template?.label ?? 'Тренировка'), exercises };
+    return { session, plannedSession: ps, version, label: ps?.workoutKey === BODYWEIGHT_KEY ? 'Дома' : (template?.label ?? 'Тренировка'), exercises };
   });
 }
 
@@ -694,7 +694,7 @@ export async function setExercisePreference(deps: AppDeps, exerciseId: string, p
 }
 
 /** A workout without equipment (business trip, home). Not a part of the program: the rotation and versions stay untouched. */
-export async function startBodyweightWorkout(deps: AppDeps): Promise<string> {
+export async function startBodyweightWorkout(deps: AppDeps, homeEquipment: readonly string[] = []): Promise<string> {
   return deps.uow.run(async (r) => {
     const profile = await r.profile.get();
     const version = await activeVersion(r);
@@ -707,8 +707,8 @@ export async function startBodyweightWorkout(deps: AppDeps): Promise<string> {
       { injuries, painEvents: await r.painEvents.listAll(), equipment: await r.equipment.listAll(), userEquipment: await r.userEquipment.listAll(), profile, userExercises },
       deps.clock.now(),
     );
-    const template = buildBodyweightWorkout({ exercises: (await r.exercises.listAll()) as Exercise[], ctx });
-    if (template.exercises.length === 0) throw new Error('Не нашлось подходящих упражнений без оборудования');
+    const template = buildBodyweightWorkout({ exercises: (await r.exercises.listAll()) as Exercise[], ctx, homeEquipment });
+    if (template.exercises.length === 0) throw new Error('Не нашлось подходящих упражнений для домашней тренировки');
     const today = deps.clock.today(profile.timezone);
     const ps: PlannedSession = { ...baseOf(deps), versionId: version.id, workoutKey: BODYWEIGHT_KEY, plannedDate: today, status: 'planned', originalDate: null, movedReason: null };
     await r.plannedSessions.put(ps);

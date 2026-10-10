@@ -402,3 +402,16 @@ describe('reentry advice', () => {
     expect(reentryAdvice({ today: '2026-10-10', lastCompletedDate: '2026-08-01', programCreatedAt: '2026-09-01T10:00:00Z', painEvents: [pain('p2', '2026-10-09T09:00:00Z')] })?.kind).toBe('pain');
   });
 });
+
+describe('home workout with equipment', () => {
+  it('uses bands and dumbbells when they are at home, and band exercises carry light/medium/heavy variants', () => {
+    const w = buildBodyweightWorkout({ exercises: catalog, ctx: ctx({ availableEquipment: new Set() }), homeEquipment: ['resistance_band'] });
+    const keys = w.exercises.map((e) => catalog.find((c) => c.id === e.exerciseId)?.key);
+    expect(keys).toContain('band_squat');
+    const band = catalog.find((c) => c.key === 'band_squat')!;
+    expect(band.variants.map((v) => v.key)).toEqual(['default', 'light', 'heavy']);
+    expect(band.loadUnit).toBe('bodyweight');
+    const none = buildBodyweightWorkout({ exercises: catalog, ctx: ctx({ availableEquipment: new Set() }) });
+    expect(none.exercises.map((e) => catalog.find((c) => c.id === e.exerciseId)?.key).some((k) => k?.startsWith('band_'))).toBe(false);
+  });
+});

@@ -51,6 +51,42 @@ export function useBodyweightMode(): boolean {
   );
 }
 
+// ---- home equipment: what the person has at home (used by the "Дом" workout)
+const HOME_KEY = 'fitapp.homeEquipment';
+const homeListeners = new Set<() => void>();
+let homeCache: string[] | null = null;
+function readHome(): string[] {
+  try {
+    const raw = window.localStorage.getItem(HOME_KEY);
+    const v = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return homeCache ?? [];
+  }
+}
+export function setHomeEquipment(keys: string[]): void {
+  homeCache = keys;
+  try {
+    window.localStorage.setItem(HOME_KEY, JSON.stringify(keys));
+  } catch {
+    /* storage unavailable: the choice lives until the page is closed */
+  }
+  homeListeners.forEach((l) => l());
+}
+export function getHomeEquipment(): string[] {
+  return homeCache ?? readHome();
+}
+export function useHomeEquipment(): string[] {
+  const raw = useSyncExternalStore(
+    (cb) => {
+      homeListeners.add(cb);
+      return () => homeListeners.delete(cb);
+    },
+    () => (homeCache ? JSON.stringify(homeCache) : (() => { try { return window.localStorage.getItem(HOME_KEY) ?? '[]'; } catch { return '[]'; } })()),
+  );
+  try { return JSON.parse(raw) as string[]; } catch { return []; }
+}
+
 // ---- theme: follows the system by default, or is forced light / dark
 export type ThemeChoice = 'system' | 'light' | 'dark';
 const THEME_KEY = 'fitapp.theme';

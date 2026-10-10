@@ -260,6 +260,7 @@ function BeerCard() {
 
 function WaterCard({ recommendedMl }: { recommendedMl: number }) {
   const [info, setInfo] = useState(false);
+  const sex = useData().snapshot.profile?.sex;
   const { snapshot: s, act } = useData();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState('');
@@ -301,7 +302,9 @@ function WaterCard({ recommendedMl }: { recommendedMl: number }) {
         </div>
       </div>
       <p className="t-small water-hint" style={{ marginTop: 10 }}>
-        {reached ? WATER_DONE : <>Ориентир: ~33 мл на кг веса для мужчин и ~30 для женщин.<br />Цифры рекомендательные: ориентируйся ещё на жажду и самочувствие.</>}
+        {reached ? WATER_DONE : sex === 'male' ? <>Ориентир: ~33 мл на кг веса. Цифра рекомендательная: ориентируйся на жажду и самочувствие.</>
+          : sex === 'female' ? <>Ориентир: ~30 мл на кг веса. Цифра рекомендательная: ориентируйся на жажду и самочувствие.</>
+          : <>Ориентир: ~33 мл на кг веса для мужчин и ~30 для женщин.<br />Цифры рекомендательные: ориентируйся на жажду и самочувствие.</>}
         <button type="button" className="info-dot" aria-label="О пользе воды и водном балансе" onClick={() => setInfo(true)}>i</button>
       </p>
       <WaterInfoSheet open={info} onClose={() => setInfo(false)} />

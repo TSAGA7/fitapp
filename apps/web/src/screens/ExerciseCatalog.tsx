@@ -9,7 +9,7 @@ import { ScreenHeader } from './shared';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { useCommand } from '../app/useCommand';
 
-type Filter = 'all' | 'like' | 'dislike' | 'core' | 'legs' | 'chest' | 'back' | 'shoulders' | 'arms' | 'bodyweight';
+type Filter = 'all' | 'like' | 'dislike' | 'core' | 'legs' | 'chest' | 'back' | 'shoulders' | 'arms' | 'bodyweight' | 'band';
 const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
   { value: 'all', label: 'Все' },
   { value: 'like', label: 'Нравятся' },
@@ -20,9 +20,10 @@ const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
   { value: 'back', label: 'Спина' },
   { value: 'shoulders', label: 'Плечи' },
   { value: 'arms', label: 'Руки' },
-  { value: 'bodyweight', label: 'Со своим весом' },
+  { value: 'bodyweight', label: 'Без оборудования' },
+  { value: 'band', label: 'С резинкой' },
 ];
-const GROUPS: Record<Exclude<Filter, 'all' | 'like' | 'dislike' | 'bodyweight'>, readonly MuscleGroup[]> = {
+const GROUPS: Record<Exclude<Filter, 'all' | 'like' | 'dislike' | 'bodyweight' | 'band'>, readonly MuscleGroup[]> = {
   core: ['abs', 'obliques'],
   legs: ['quads', 'hamstrings', 'glutes', 'adductors', 'calves'],
   chest: ['chest'],
@@ -48,6 +49,7 @@ export function ExerciseCatalogScreen() {
         if (filter === 'all') return true;
         if (filter === 'like' || filter === 'dislike') return pref.get(e.id) === filter;
         if (filter === 'bodyweight') return isBodyweightOnly(e);
+        if (filter === 'band') return e.equipmentRequirements.some((g) => g.includes('resistance_band'));
         return e.primaryMuscles.some((m) => GROUPS[filter].includes(m));
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'ru'));

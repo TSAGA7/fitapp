@@ -9,7 +9,7 @@ import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
 import { useBodyweightMode, useVacationMode } from '../app/prefs';
-import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
+import { BodyweightCard, PlaceSwitch } from './BodyweightMode';
 import { CardioSheet } from './Cardio';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { AREA_LABELS } from './ProfileMore';
@@ -64,7 +64,7 @@ export function Training() {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
-      <div className="chips" role="group" aria-label="Режим тренировки"><BodyweightToggle /><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
+      <div className="row between"><div className="grow"><PlaceSwitch /></div><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
       <CardioSheet open={cardioOpen} onClose={() => setCardioOpen(false)} />
       <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}

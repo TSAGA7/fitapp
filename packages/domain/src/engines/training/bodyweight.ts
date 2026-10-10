@@ -1,14 +1,19 @@
 import type { Exercise, PlannedExercise, WorkoutTemplate } from '../../model';
 import { assessExercise, type SafetyContext } from './safety';
 
-/** Slots of the "own bodyweight" workout (business trips, home): the first available exercise of each list wins. */
+/**
+ * Slots of the home / bodyweight workout: the first available exercise of each list wins. Exercises that need equipment come first,
+ * so what the person has at home is used, and the plain bodyweight option is the fallback.
+ */
 const BODYWEIGHT_SLOTS: readonly (readonly string[])[] = [
   ['vacuum_lying', 'vacuum_standing', 'breathing_90_90'],
-  ['bodyweight_squat', 'wall_sit'],
-  ['pushup', 'incline_pushup', 'knee_pushup'],
-  ['reverse_lunge_bw', 'split_squat_bw'],
-  ['glute_bridge_bw', 'single_leg_glute_bridge'],
-  ['pike_pushup', 'prone_y_raise'],
+  ['goblet_squat_db', 'kettlebell_goblet_squat', 'band_squat', 'bodyweight_squat', 'sumo_squat_bw', 'wall_sit'],
+  ['db_flat_press', 'pushup', 'band_chest_press', 'incline_pushup', 'knee_pushup'],
+  ['pullup', 'one_arm_db_row_bench', 'band_row_seated', 'inverted_row_table'],
+  ['reverse_lunge_db', 'reverse_lunge_bw', 'split_squat_bw', 'bulgarian_split_squat_bw'],
+  ['rdl_db', 'band_rdl'],
+  ['glute_bridge_bw', 'single_leg_glute_bridge', 'hip_thrust_bw'],
+  ['db_shoulder_press_neutral', 'band_overhead_press', 'pike_pushup', 'prone_y_raise'],
   ['dead_bug', 'heel_slide'],
   ['plank', 'side_plank', 'hollow_hold'],
 ];
@@ -21,7 +26,8 @@ export const isBodyweightOnly = (ex: Pick<Exercise, 'equipmentRequirements'>): b
 export interface BodyweightWorkoutInput {
   exercises: readonly Exercise[];
   ctx: SafetyContext;
-  /** Extra exercises the user wants in the workout, appended at the end. */
+  /** What the person has at home (equipment keys); the floor mat is always assumed. Empty = bodyweight only. */
+  homeEquipment?: readonly string[];
 }
 
 /**
@@ -29,8 +35,8 @@ export interface BodyweightWorkoutInput {
  * deterministic for the same input.
  */
 export function buildBodyweightWorkout(input: BodyweightWorkoutInput): WorkoutTemplate {
-  const ctx: SafetyContext = { ...input.ctx, availableEquipment: new Set(['floor_mat']) };
-  const pool = input.exercises.filter((e) => e.deletedAt === null && isBodyweightOnly(e));
+  const ctx: SafetyContext = { ...input.ctx, availableEquipment: new Set(['floor_mat', ...(input.homeEquipment ?? [])]) };
+  const pool = input.exercises.filter((e) => e.deletedAt === null);
   const used = new Set<string>();
   const exercises: PlannedExercise[] = [];
   for (const keys of BODYWEIGHT_SLOTS) {
@@ -58,5 +64,5 @@ export function buildBodyweightWorkout(input: BodyweightWorkoutInput): WorkoutTe
       progression: { type: ex.progressionType, stepKg: null },
     });
   }
-  return { key: 'bodyweight', label: 'Со своим весом', focus: [], exercises };
+  return { key: 'bodyweight', label: 'Дома', focus: [], exercises };
 }
