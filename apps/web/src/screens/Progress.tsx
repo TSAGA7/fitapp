@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { addDays, compareMonths, movingAverage, planStreakWeeks, summarizeSeries, trainingDays, trainingLevel, type MetricType, type VolumeLevel, type WeightPoint } from '@fitapp/domain';
 import { deleteMetric } from '../actions';
 import { useData } from '../app/DataContext';
-import { BODY_MEASUREMENTS, cm, deltaTone, fmt, formatDateLong, formatDateShort, formatDay, kg, METRIC_LABELS, signedKg, toUnit, wnum, wUnit, MUSCLE_LABELS, plural, signed } from '../app/format';
+import { BODY_MEASUREMENTS, cm, deltaTone, fmt, formatDateLong, formatDateShort, formatDay, kg, METRIC_LABELS, signedKg, liftKg, liftNum, liftSigned, liftUnit, toLift, wnum, wUnit, MUSCLE_LABELS, plural, signed } from '../app/format';
 import { getWeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, MetricCard, Segmented, type ChartSeries } from '../ui';
@@ -56,8 +56,8 @@ function WeightTab() {
   const raw = s.weightPoints.filter(inRange);
   const avg = movingAverage(s.weightPoints, 7).filter(inRange);
   const series: ChartSeries[] = [
-    { id: 'avg', label: 'Среднее за 7 дней', color: '#16a34a', area: true, width: 3, points: avg.map((p) => ({ date: p.date, value: toUnit(p.kg) })) },
-    { id: 'raw', label: 'Вес', color: '#86c9a5', width: 1.5, dots: true, faint: true, points: raw.map((p) => ({ date: p.date, value: toUnit(p.kg) })) },
+    { id: 'avg', label: 'Среднее за 7 дней', color: '#16a34a', area: true, width: 3, points: avg.map((p) => ({ date: p.date, value: p.kg })) },
+    { id: 'raw', label: 'Вес', color: '#86c9a5', width: 1.5, dots: true, faint: true, points: raw.map((p) => ({ date: p.date, value: p.kg })) },
   ];
   const delta =
     w.monthChangeKg !== null ? `${signedKg(w.monthChangeKg)} · за 30 дней` : w.sinceStartKg !== null ? `${signedKg(w.sinceStartKg)} · за ${w.sinceStartDays}${NBSP}дн.` : 'Динамика появится после недели записей';
@@ -197,7 +197,7 @@ function VolumeCard() {
   );
 }
 
-const tonnes = (kgValue: number): string => (getWeightUnit() === 'lb' ? `${fmt(Math.round(toUnit(kgValue)), 0)} lb` : kgValue >= 10_000 ? `${fmt(kgValue / 1000, 1)} т` : `${fmt(kgValue, 0)} кг`);
+const tonnes = (kgValue: number): string => (getWeightUnit() === 'lb' ? `${fmt(Math.round(toLift(kgValue)), 0)} lb` : kgValue >= 10_000 ? `${fmt(kgValue / 1000, 1)} т` : `${fmt(kgValue, 0)} кг`);
 
 /** Compares two numbers in words, in the person's own direction. */
 function trend(cur: number, prev: number): { text: string; tone: 'good' | 'bad' | 'flat' } {
@@ -302,7 +302,7 @@ function StrengthTab() {
             {fresh.map((e) => (
               <div key={e.exerciseId} className="hist">
                 <span className="grow">{s.exerciseNames[e.exerciseId] ?? e.exerciseId}</span>
-                <strong>e1RM {wnum(e.records.e1rm.kg)}{NBSP}{wUnit()}</strong>
+                <strong>e1RM {liftNum(e.records.e1rm.kg)}{NBSP}{liftUnit()}</strong>
               </div>
             ))}
             <p className="t-small">e1RM — расчётный максимум на одно повторение. Это оценка по подходам, а не проверенный максимум.</p>
@@ -316,7 +316,7 @@ function StrengthTab() {
             key={e.exerciseId}
             icon="training"
             title={s.exerciseNames[e.exerciseId] ?? e.exerciseId}
-            subtitle={`e1RM ${wnum(e.lastE1rmKg)} ${wUnit()} · ${e.sessions.length} ${plural(e.sessions.length, ['тренировка', 'тренировки', 'тренировок'])} · лучший вес ${kg(e.records.weight.kg)}`}
+            subtitle={`e1RM ${liftNum(e.lastE1rmKg)} ${liftUnit()} · ${e.sessions.length} ${plural(e.sessions.length, ['тренировка', 'тренировки', 'тренировок'])} · лучший вес ${liftKg(e.records.weight.kg)}`}
             trailing={e.e1rmDeltaPct !== null ? <span className={e.e1rmDeltaPct > 0 ? 'tone-good' : e.e1rmDeltaPct < 0 ? 'tone-bad' : 'tone-flat'}>{signed(e.e1rmDeltaPct)}{NBSP}%</span> : undefined}
             onClick={() => go(`progress/strength/${encodeURIComponent(e.exerciseId)}`)}
           />
@@ -343,11 +343,11 @@ function StrengthDetail({ exerciseId }: { exerciseId: string }) {
       <ScreenHeader title={name} back="progress/strength" />
       <Card>
         <div className="t-caption">Расчётный максимум (e1RM)</div>
-        <div className="t-num">{wnum(e.lastE1rmKg)}<span className="t-h3 muted"> {wUnit()}</span></div>
+        <div className="t-num">{liftNum(e.lastE1rmKg)}<span className="t-h3 muted"> {liftUnit()}</span></div>
         {e.e1rmDeltaPct !== null && <div className={`t-caption ${e.e1rmDeltaPct > 0 ? 'tone-good' : e.e1rmDeltaPct < 0 ? 'tone-bad' : 'tone-flat'}`}>{signed(e.e1rmDeltaPct)}{NBSP}% с {formatDateLong(e.sessions[0]!.date)}</div>}
         {e.sessions.length >= 2 && (
           <div style={{ marginTop: 10 }}>
-            <LineChart ariaLabel={`Расчётный максимум: ${name}`} series={[{ id: 'e', label: 'e1RM', color: '#a78bfa', area: true, dots: true, points: e.sessions.map((x) => ({ date: x.date, value: toUnit(x.e1rmKg) })) }]} formatY={(v) => fmt(v, 0)} formatX={formatDateShort} formatTip={(p) => `${fmt(p.value)} ${wUnit()} · ${formatDateShort(p.date)}`} />
+            <LineChart ariaLabel={`Расчётный максимум: ${name}`} series={[{ id: 'e', label: 'e1RM', color: '#a78bfa', area: true, dots: true, points: e.sessions.map((x) => ({ date: x.date, value: toLift(x.e1rmKg) })) }]} formatY={(v) => fmt(v, 0)} formatX={formatDateShort} formatTip={(p) => `${fmt(p.value)} ${liftUnit()} · ${formatDateShort(p.date)}`} />
           </div>
         )}
         <p className="t-small" style={{ marginTop: 8 }}>Оценка по формуле Эпли: вес × (1 + повторения / 30). Лучше всего работает до 12 повторений: в длинных подходах оценка менее точна, поэтому такие подходы в расчёт не берутся.</p>
@@ -355,22 +355,22 @@ function StrengthDetail({ exerciseId }: { exerciseId: string }) {
       <Card flat>
         <div className="stack">
           <div className="t-h3">🏆 Рекорды</div>
-          <div className="hist"><span className="grow">Расчётный максимум</span><strong>{wnum(e.records.e1rm.kg)}{NBSP}{wUnit()}</strong><span className="muted">{formatDateShort(e.records.e1rm.date)}</span></div>
+          <div className="hist"><span className="grow">Расчётный максимум</span><strong>{liftNum(e.records.e1rm.kg)}{NBSP}{liftUnit()}</strong><span className="muted">{formatDateShort(e.records.e1rm.date)}</span></div>
           <div className="hist"><span className="grow">Самый тяжёлый подход</span><strong>{fmt(e.records.weight.kg)}{NBSP}×{NBSP}{e.records.weight.reps}</strong><span className="muted">{formatDateShort(e.records.weight.date)}</span></div>
-          <div className="hist"><span className="grow">Максимум тоннажа за тренировку</span><strong>{wnum(e.records.volume.kg, 0)}{NBSP}{wUnit()}</strong><span className="muted">{formatDateShort(e.records.volume.date)}</span></div>
+          <div className="hist"><span className="grow">Максимум тоннажа за тренировку</span><strong>{liftNum(e.records.volume.kg, 0)}{NBSP}{liftUnit()}</strong><span className="muted">{formatDateShort(e.records.volume.date)}</span></div>
         </div>
       </Card>
       <Card>
         <div className="t-caption">Лучший вес за тренировку</div>
-        <div className="t-num">{wnum(e.lastTopWeightKg)}<span className="t-h3 muted"> {wUnit()}</span></div>
+        <div className="t-num">{liftNum(e.lastTopWeightKg)}<span className="t-h3 muted"> {liftUnit()}</span></div>
         {e.sessions.length >= 2 && (
           <div className={`t-caption ${e.deltaKg > 0 ? 'tone-good' : e.deltaKg < 0 ? 'tone-bad' : 'tone-flat'}`}>
-            {signedKg(e.deltaKg)}{e.deltaPct !== null ? ` (${signed(e.deltaPct)}%)` : ''} с {formatDateLong(e.sessions[0]!.date)}
+            {liftSigned(e.deltaKg)}{e.deltaPct !== null ? ` (${signed(e.deltaPct)}%)` : ''} с {formatDateLong(e.sessions[0]!.date)}
           </div>
         )}
         {e.sessions.length >= 2 ? (
           <div style={{ marginTop: 10 }}>
-            <LineChart ariaLabel={`График: ${name}`} series={[{ id: 'w', label: 'Вес', color: '#16a34a', area: true, dots: true, points: e.sessions.map((x) => ({ date: x.date, value: toUnit(x.topWeightKg) })) }]} formatY={(v) => fmt(v, 0)} formatX={formatDateShort} formatTip={(p) => `${fmt(p.value)} ${wUnit()} · ${formatDateShort(p.date)}`} />
+            <LineChart ariaLabel={`График: ${name}`} series={[{ id: 'w', label: 'Вес', color: '#16a34a', area: true, dots: true, points: e.sessions.map((x) => ({ date: x.date, value: toLift(x.topWeightKg) })) }]} formatY={(v) => fmt(v, 0)} formatX={formatDateShort} formatTip={(p) => `${fmt(p.value)} ${liftUnit()} · ${formatDateShort(p.date)}`} />
           </div>
         ) : (
           <p className="note" style={{ marginTop: 8 }}>График появится после второй тренировки.</p>

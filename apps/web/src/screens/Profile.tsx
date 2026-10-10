@@ -5,8 +5,8 @@ import { ageYears, diffDays, isLocalDate, recommendTargetWeight, toLocalDate, ty
 import { applyDietMode, saveGoal, updateProfile } from '../actions';
 import { useData } from '../app/DataContext';
 import { deleteMetric } from '../actions';
-import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, fromUnit, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, toUnit, wUnit, wnum, WEEKDAY_SHORT, cm } from '../app/format';
-import { getDisplayName, setActivityBar, setDisplayName, setRestTimer, setTheme, setVacationMode, setWeightUnit, useActivityBar, useRestTimer, useTheme, useVacationMode, useWeightUnit, type ThemeChoice } from '../app/prefs';
+import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, WEEKDAY_SHORT, cm } from '../app/format';
+import { getDisplayName, setActivityBar, setDisplayName, setRestTimer, setTheme, setVacationMode, useActivityBar, useRestTimer, useTheme, useVacationMode, type ThemeChoice } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
 import { CycleScreen, CycleTile } from './Cycle';
@@ -287,17 +287,6 @@ function RestTimerPicker() {
   );
 }
 
-function UnitPicker() {
-  const unit = useWeightUnit();
-  return (
-    <div className="field">
-      <span className="lbl">Единицы веса</span>
-      <Segmented<'kg' | 'lb'> label="Единицы веса" options={[{ value: 'kg', label: 'Килограммы (кг)' }, { value: 'lb', label: 'Фунты (lb)' }]} value={unit} onChange={setWeightUnit} />
-      <span className="hint">Данные хранятся в килограммах, меняется только то, как веса показываются и вводятся.</span>
-    </div>
-  );
-}
-
 function ZonePicker() {
   const { snapshot: s, act } = useData();
   const p = s.profile!;
@@ -318,7 +307,6 @@ function SettingsScreen() {
         <ThemePicker />
         <ActivityBarPicker />
         <RestTimerPicker />
-        <UnitPicker />
         <ZonePicker />
         <ListItem icon="history" title="История изменений программы" subtitle="Служебный журнал версий нормы и тренировок" onClick={() => go('profile/versions')} />
       </div>
@@ -371,7 +359,7 @@ function Goals() {
   const { snapshot: s, act } = useData();
   const g = s.primaryGoal;
   const [type, setType] = useState<GoalType>(g?.type ?? 'fat_loss');
-  const [tw, setTw] = useState(g?.targetWeightKg ? fmt(toUnit(g.targetWeightKg), 1) : '');
+  const [tw, setTw] = useState(g?.targetWeightKg ? fmt(g.targetWeightKg, 1) : '');
   const [twaist, setTwaist] = useState(g?.targetWaistCm ? String(g.targetWaistCm) : '');
   const [focus, setFocus] = useState<FocusArea[]>(g ? [...g.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area) : []);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -381,9 +369,9 @@ function Goals() {
   const rec = s.profile && s.weight.currentKg !== null ? recommendTargetWeight({ sex: s.profile.sex, heightCm: s.profile.heightCm, weightKg: s.weight.currentKg, goal: type, waistCm: waistNow }) : null;
   const toggle = (a: FocusArea) => setFocus((f) => (f.includes(a) ? f.filter((x) => x !== a) : f.length < 3 ? [...f, a] : f));
   const save = async () => {
-    const w = tw.trim() ? Math.round(fromUnit(parseDecimal(tw)) * 100) / 100 : null;
+    const w = tw.trim() ? Math.round(parseDecimal(tw) * 100) / 100 : null;
     const waist = twaist.trim() ? parseDecimal(twaist) : null;
-    if (w !== null && (!Number.isFinite(w) || w < 30 || w > 300)) return setMsg({ ok: false, text: `Целевой вес: от ${wnum(30, 0)} до ${wnum(300, 0)} ${wUnit()}` });
+    if (w !== null && (!Number.isFinite(w) || w < 30 || w > 300)) return setMsg({ ok: false, text: 'Целевой вес: от 30 до 300 кг' });
     if (waist !== null && (!Number.isFinite(waist) || waist < 40 || waist > 200)) return setMsg({ ok: false, text: 'Целевая талия: от 40 до 200 см' });
     try {
       const changed = !g || g.type !== type || [...g.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area).join() !== focus.join();
@@ -401,16 +389,16 @@ function Goals() {
       <GoalExplainSheet open={explainOpen} goal={type} onClose={() => setExplainOpen(false)} />
       <GoalPicker type={type} onType={setType} />
       <div className="grid-2">
-        <TextField label="Целевой вес" unit={wUnit()} inputMode="decimal" value={tw} onChange={(e) => setTw(e.target.value)} placeholder={rec ? fmt(toUnit(rec.kg), 1) : undefined} />
+        <TextField label="Целевой вес" unit="кг" inputMode="decimal" value={tw} onChange={(e) => setTw(e.target.value)} placeholder={rec ? fmt(rec.kg, 1) : undefined} />
         <TextField label="Целевая талия" unit="см" inputMode="decimal" value={twaist} onChange={(e) => setTwaist(e.target.value)} />
       </div>
       {rec && (
         <Card flat>
           <div className="stack tight">
-            <div className="t-small">Ориентир приложения: <b>{kg(rec.kg)}</b> (диапазон {wnum(rec.minKg, 1)}–{wnum(rec.maxKg, 1)} {wUnit()})</div>
+            <div className="t-small">Ориентир приложения: <b>{kg(rec.kg)}</b> (диапазон {fmt(rec.minKg, 1)}–{fmt(rec.maxKg, 1)} кг)</div>
             <p className="t-small">{rec.basis}. Это не норма и не обещание: расчёт по росту, весу, цели и талии. Если у тебя другая цифра (например, от тренера), впиши свою.</p>
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              <Button size="sm" variant="secondary" onClick={() => setTw(fmt(toUnit(rec.kg), 1))}>Взять ориентир</Button>
+              <Button size="sm" variant="secondary" onClick={() => setTw(fmt(rec.kg, 1))}>Взять ориентир</Button>
               {tw.trim() !== '' && <Button size="sm" variant="text" onClick={() => setTw('')}>Без цели по весу</Button>}
             </div>
           </div>

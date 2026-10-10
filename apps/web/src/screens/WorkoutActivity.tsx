@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { estimateWorkout, sessionElapsedSec, KCAL_SPREAD, NET_MET, SEC_PER_REP, type ActivityEstimate, type ActivityExercise, type BestSet, type ProgressVerdict, type WorkoutSummary } from '@fitapp/domain';
 import { loadWorkoutSummary, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
-import { fmt, toUnit, wUnit } from '../app/format';
+import { useWeightUnit } from '../app/prefs';
+import { fmt, liftUnit, toLift } from '../app/format';
 import { Button, Card, Icon, Sheet } from '../ui';
 
 const clock = (sec: number): string => {
@@ -58,6 +59,7 @@ export function KcalInfoSheet({ open, onClose, bodyKg }: { open: boolean; onClos
 /** Live bar over an open workout: time, sets, tonnage and the kcal range. It can be switched off in the profile. */
 export function ActivityBar({ view, doneSets, totalSets }: { view: WorkoutView; doneSets: number; totalSets: number }) {
   const bodyKg = useBodyWeight();
+  useWeightUnit();
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState(false);
   useEffect(() => {
@@ -74,7 +76,7 @@ export function ActivityBar({ view, doneSets, totalSets }: { view: WorkoutView; 
       <div className="act-bar" role="group" aria-label="Активность на тренировке">
         <div className="act-cell"><span className="act-v">{clock(a.elapsedSec)}</span><span className="act-l">время</span></div>
         <div className="act-cell"><span className="act-v">{doneSets}/{totalSets}</span><span className="act-l">подходы</span></div>
-        <div className="act-cell"><span className="act-v">{a.tonnageKg > 0 ? thousands(Math.round(toUnit(a.tonnageKg))) : '0'}</span><span className="act-l">тоннаж, {wUnit()}</span></div>
+        <div className="act-cell"><span className="act-v">{a.tonnageKg > 0 ? thousands(Math.round(toLift(a.tonnageKg))) : '0'}</span><span className="act-l">тоннаж, {liftUnit()}</span></div>
         <button type="button" className="act-cell act-kcal" aria-label="Как считаются калории" onClick={() => setInfo(true)}>
           <span className="act-v">{a.sets > 0 ? kcalRange(a) : '—'}</span>
           <span className="act-l">ккал <Icon name="info" size={12} /></span>
@@ -92,7 +94,7 @@ const VERDICT: Record<ProgressVerdict, { label: string; mark: string; tone: stri
   first: { label: 'Первый раз', mark: '★', tone: 'first' },
 };
 
-const setText = (b: BestSet, timed: boolean): string => (timed ? `${b.reps} с` : b.weightKg !== null && b.weightKg > 0 ? `${fmt(toUnit(b.weightKg), 2)} × ${b.reps}` : `${b.reps} повт.`);
+const setText = (b: BestSet, timed: boolean): string => (timed ? `${b.reps} с` : b.weightKg !== null && b.weightKg > 0 ? `${fmt(toLift(b.weightKg), 2)} × ${b.reps}` : `${b.reps} повт.`);
 
 /** After "Завершить" (and when an old workout is opened): totals and, per exercise, progress or regress against the previous time. */
 export function WorkoutSummaryCard({ sessionId, title }: { sessionId: string; title?: string }) {
@@ -123,7 +125,7 @@ export function WorkoutSummaryCard({ sessionId, title }: { sessionId: string; ti
           <div className="sum-grid">
             <div className="sum-tile"><span className="sum-v">{minutes(a.elapsedSec)}</span><span className="sum-l">время</span></div>
             <div className="sum-tile"><span className="sum-v">{a.sets}</span><span className="sum-l">подходов</span></div>
-            <div className="sum-tile"><span className="sum-v">{thousands(Math.round(toUnit(a.tonnageKg)))}</span><span className="sum-l">тоннаж, {wUnit()}</span></div>
+            <div className="sum-tile"><span className="sum-v">{thousands(Math.round(toLift(a.tonnageKg)))}</span><span className="sum-l">тоннаж, {liftUnit()}</span></div>
             <button type="button" className="sum-tile sum-kcal" onClick={() => setInfo(true)} aria-label="Как считаются калории">
               <span className="sum-v">{a.sets > 0 ? kcalRange(a) : '—'}</span>
               <span className="sum-l">ккал, примерно <Icon name="info" size={12} /></span>

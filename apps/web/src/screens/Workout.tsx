@@ -3,8 +3,8 @@ import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRes
 import { abandonWorkout, addSetToExercise, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
-import { fmt, fromUnit, toUnit, wUnit } from '../app/format';
-import { getRestTimer, getWeightUnit } from '../app/prefs';
+import { fmt, fromLift, liftUnit, toLift } from '../app/format';
+import { getRestTimer, getWeightUnit, setWeightUnit, useWeightUnit, type WeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, Icon, IconButton, ListItem, ProgressBar, Sheet, TextField } from '../ui';
@@ -133,6 +133,23 @@ export function Workout({ sessionId }: { sessionId: string }) {
 const clock = (sec: number): string => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 
 const REST_PRESETS = [30, 60, 90, 120, 180, 240, 300] as const;
+
+/** Kilograms or pounds for the weights of this workout (some gyms label plates in lb). Stored weights stay in kg. */
+function UnitSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const unit = useWeightUnit();
+  const pick = (u: WeightUnit) => { setWeightUnit(u); onClose(); };
+  return (
+    <Sheet open={open} title="Единицы веса" onClose={onClose}>
+      <div className="stack">
+        <div className="chips" role="group" aria-label="Единицы веса">
+          <Chip pressed={unit === 'kg'} onClick={() => pick('kg')}>Килограммы (кг)</Chip>
+          <Chip pressed={unit === 'lb'} onClick={() => pick('lb')}>Фунты (lb)</Chip>
+        </div>
+        <p className="t-small">Выбери то, что написано на тренажёре или блинах. Меняется только показ и ввод весов в тренировках и силовой статистике: вес тела остаётся в килограммах, а записи хранятся в килограммах и пересчитываются сами (1 кг ≈ 2,2 lb).</p>
+      </div>
+    </Sheet>
+  );
+}
 
 /** Type in any rest time. The recommended one stays one tap away: people differ in fitness, so it is advice, not a rule. */
 function RestEditSheet({ open, current, recommended, onClose, onPick }: { open: boolean; current: number; recommended: number; onClose: () => void; onPick: (sec: number) => void }) {
@@ -266,7 +283,7 @@ function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutEx
         return (
           <div key={no} className="set-row">
             <span className="t-caption">Разминка {no}</span>
-            <span className="t-small">{fmt(toUnit(w.weightKg), 2)} {wUnit()} × {w.reps}</span>
+            <span className="t-small">{fmt(toLift(w.weightKg), 2)} {liftUnit()} × {w.reps}</span>
             {d ? (
               <span className="row">
                 <Badge>Готово</Badge>
@@ -308,7 +325,7 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
     lastNo.current = nextNo;
     const prev = logOf(nextNo - 1);
     const w = prev?.actualWeightKg ?? target?.targetWeightKg ?? null;
-    setWeight(w === null ? '' : fmt(toUnit(w), 2));
+    setWeight(w === null ? '' : fmt(toLift(w), 2));
     setReps(String(target?.repMax ?? 10));
     setRir(exercise.progressionType === 'time' ? 3 : null);
   }, [nextNo, target?.id]);
@@ -320,14 +337,14 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
   const lb = getWeightUnit() === 'lb';
   const stepKg = ev.stepKg > 0 ? ev.stepKg : 2.5;
   // the plus/minus step in the shown unit: the machine's step in kg, or a round 2,5 / 5 lb
-  const step = lb ? Math.max(2.5, Math.round(toUnit(stepKg) / 2.5) * 2.5) : stepKg;
+  const step = lb ? Math.max(2.5, Math.round(toLift(stepKg) / 2.5) * 2.5) : stepKg;
   const wShown = weight.trim() === '' ? null : parseDecimal(weight);
-  const w = wShown === null ? null : Math.round(fromUnit(wShown) * 1000) / 1000;
+  const w = wShown === null ? null : Math.round(fromLift(wShown) * 1000) / 1000;
   const r = parseDecimal(reps);
   const bump = (delta: number) => {
     const cur = wShown ?? 0;
     let next = Math.max(0, Math.round((cur + delta) * 100) / 100);
-    if (ev.maxKg !== null) next = Math.min(next, toUnit(ev.maxKg));
+    if (ev.maxKg !== null) next = Math.min(next, toLift(ev.maxKg));
     setWeight(fmt(next, 2));
   };
   const canLog = !readOnly && !busy && rir !== null && Number.isFinite(r) && r >= 1 && (weight.trim() === '' || (w !== null && Number.isFinite(w) && w >= 0));
@@ -350,6 +367,8 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
   });
   const restSec = restOverride ?? suggestion.seconds;
   const [restEditOpen, setRestEditOpen] = useState(false);
+  const [unitOpen, setUnitOpen] = useState(false);
+  useWeightUnit();
   const [noteOpen, setNoteOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -358,7 +377,7 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
   const allSettled = plan.length > 0 && settled >= plan.length;
   const headline = allSettled
     ? 'Все подходы выполнены'
-    : `${se.replacedFromExerciseId ? 'Замена · ' : ''}Подход ${nextNo}: ${target ? (target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toUnit(target.targetWeightKg), 2)} ${wUnit()}`) : ''} × ${target ? (target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`) : ''}${unit}`;
+    : `${se.replacedFromExerciseId ? 'Замена · ' : ''}Подход ${nextNo}: ${target ? (target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(target.targetWeightKg), 2)} ${liftUnit()}`) : ''} × ${target ? (target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`) : ''}${unit}`;
 
   return (
     <Card className={`ex-acc ${open ? 'open' : ''}`}>
@@ -402,10 +421,10 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
             return (
               <div key={p.id} className="set-row" aria-current={current ? 'step' : undefined}>
                 <span className="t-caption">Подход {p.setNo}</span>
-                <span className="t-small">{p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toUnit(p.targetWeightKg), 2)} ${wUnit()}`} × {p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}{unit}, запас {p.targetRir.min}–{p.targetRir.max}</span>
+                <span className="t-small">{p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(p.targetWeightKg), 2)} ${liftUnit()}`} × {p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}{unit}, запас {p.targetRir.min}–{p.targetRir.max}</span>
                 {l && l.status === 'done' && (
                   <span className="row">
-                    <b className="t-body">{l.actualWeightKg === null ? '' : `${fmt(toUnit(l.actualWeightKg), 2)} × `}{l.actualReps}{unit} · RIR {l.actualRir}</b>
+                    <b className="t-body">{l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}{l.actualReps}{unit} · RIR {l.actualRir}</b>
                     {!readOnly && <IconButton icon="close" label="Отменить подход" tone="ghost" onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))} />}
                   </span>
                 )}
@@ -419,7 +438,7 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
             );
           })}
           {working.filter((l) => l.setNo > plan.length && l.status === 'done').map((l) => (
-            <div key={l.id} className="set-row"><span className="t-caption">Доп. {l.setNo}</span><b className="t-body">{l.actualWeightKg === null ? '' : `${fmt(toUnit(l.actualWeightKg), 2)} × `}{l.actualReps} · RIR {l.actualRir}</b></div>
+            <div key={l.id} className="set-row"><span className="t-caption">Доп. {l.setNo}</span><b className="t-body">{l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}{l.actualReps} · RIR {l.actualRir}</b></div>
           ))}
         </div>
 
@@ -429,7 +448,7 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
             {exercise.loadUnit !== 'seconds' && (
               <div className="row" style={{ alignItems: 'flex-end' }}>
                 <IconButton icon="minus" label="Меньше веса" onClick={() => bump(-step)} />
-                <div className="grow"><TextField label={exercise.loadUnit === 'bodyweight' ? 'Доп. вес (необязательно)' : 'Вес'} unit={wUnit()} inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} /></div>
+                <div className="grow"><TextField label={exercise.loadUnit === 'bodyweight' ? 'Доп. вес (необязательно)' : 'Вес'} unit={<button type="button" className="rest-edit" aria-label={`Единицы веса: ${liftUnit()}. Изменить`} onClick={() => setUnitOpen(true)}>{liftUnit()}</button>} inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} /></div>
                 <IconButton icon="plus" label="Больше веса" onClick={() => bump(step)} />
               </div>
             )}
@@ -470,6 +489,7 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
         )}
       </div>
 
+      <UnitSheet open={unitOpen} onClose={() => setUnitOpen(false)} />
       <RestEditSheet open={restEditOpen} current={restSec} recommended={suggestion.seconds} onClose={() => setRestEditOpen(false)} onPick={(sec) => { setRestOverride(sec === suggestion.seconds ? null : sec); setRestEditOpen(false); }} />
       {infoOpen && <ExerciseInfoSheet exercise={exercise} onClose={() => setInfoOpen(false)} />}
       <PainSheet

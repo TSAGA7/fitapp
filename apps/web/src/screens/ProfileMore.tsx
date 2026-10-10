@@ -4,7 +4,7 @@ import { addInjury, deleteInjury, resolveInjury, setEquipmentAvailable, setEquip
 import { useData } from '../app/DataContext';
 import { go } from '../app/router';
 import { userFoodOf } from '../app/derive';
-import { fmt, formatDay, fromUnit, toUnit, wUnit } from '../app/format';
+import { fmt, formatDay, fromLift, liftUnit, toLift } from '../app/format';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, TextField } from '../ui';
 import { parseDecimal, RebuildOffer, ScreenHeader } from './shared';
@@ -100,7 +100,7 @@ export function EquipmentScreen() {
               <button type="button" className="check" role="checkbox" aria-checked={available} aria-label={`${e.name}: ${available ? 'есть' : 'нет'}`} onClick={() => void ok((d) => setEquipmentAvailable(d, e.id, !available)).then((done) => done && setChanged(true))}>
                 {available && <Icon name="check" size={20} />}
               </button>
-              <button type="button" className="eq-main" onClick={() => { setStepFor(e.id); setStep(u?.stepKg ? String(e.category === 'cardio' ? u.stepKg : Math.round(toUnit(u.stepKg) * 100) / 100) : ''); setMax(u?.maxKg ? String(u.maxKg) : ''); }}>
+              <button type="button" className="eq-main" onClick={() => { setStepFor(e.id); setStep(u?.stepKg ? String(e.category === 'cardio' ? u.stepKg : Math.round(toLift(u.stepKg) * 100) / 100) : ''); setMax(u?.maxKg ? String(u.maxKg) : ''); }}>
                 <span className="li-title" style={{ display: 'block' }}>{e.name}</span>
                 <span className={`li-sub ${available ? 'eq-yes' : 'eq-no'}`} style={{ display: 'block' }}>{available ? 'Есть' : 'Нет'}{e.category === 'cardio' ? (u?.maxKg ? ` · максимум ${fmt(u.maxKg, e.key === 'treadmill' ? 1 : 0)}${e.key === 'treadmill' ? ' км/ч' : ' ур.'}` : '') : u?.stepKg ? ` · шаг веса ${fmt(u.stepKg, 2)} кг` : ''}</span>
               </button>
@@ -119,9 +119,9 @@ export function EquipmentScreen() {
           </div>
         ) : (
           <div className="stack">
-            <p className="t-small">Минимальный шаг веса в твоём зале (например, {wUnit() === 'lb' ? '5 или 10 lb' : '2,5 или 5 кг'} на блоке). От него зависит следующая рекомендация.</p>
-            <TextField label="Шаг веса" unit={wUnit()} inputMode="decimal" value={step} onChange={(e) => setStep(e.target.value)} />
-            <Button block disabled={!(v > 0) && step.trim() !== ''} onClick={async () => { if (current && (await ok((d) => setEquipmentStep(d, current.id, step.trim() === '' ? null : Math.round(fromUnit(v) * 1000) / 1000)))) setStepFor(null); }}>Сохранить</Button>
+            <p className="t-small">Минимальный шаг веса в твоём зале (например, {liftUnit() === 'lb' ? '5 или 10 lb' : '2,5 или 5 кг'} на блоке). От него зависит следующая рекомендация.</p>
+            <TextField label="Шаг веса" unit={liftUnit()} inputMode="decimal" value={step} onChange={(e) => setStep(e.target.value)} />
+            <Button block disabled={!(v > 0) && step.trim() !== ''} onClick={async () => { if (current && (await ok((d) => setEquipmentStep(d, current.id, step.trim() === '' ? null : Math.round(fromLift(v) * 1000) / 1000)))) setStepFor(null); }}>Сохранить</Button>
           </div>
         )}
       </Sheet>

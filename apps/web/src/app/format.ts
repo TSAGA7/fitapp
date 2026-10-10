@@ -26,15 +26,19 @@ export function fmt(n: number, digits = 1): string {
 }
 export const signed = (n: number, digits = 1): string => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n), digits);
 const LB_PER_KG = 2.2046226218;
-/** Weights are stored in kg. These convert to and from what the person chose to see. */
-export const wUnit = (): string => (getWeightUnit() === 'lb' ? 'lb' : 'кг');
-export const toUnit = (kgValue: number): number => (getWeightUnit() === 'lb' ? kgValue * LB_PER_KG : kgValue);
-export const fromUnit = (value: number): number => (getWeightUnit() === 'lb' ? value / LB_PER_KG : value);
-/** A number in the chosen unit, no label. */
-export const wnum = (n: number, digits = 1): string => fmt(toUnit(n), getWeightUnit() === 'lb' ? Math.min(digits, 1) : digits);
-export const kg = (n: number, digits = 1): string => `${wnum(n, digits)}${NBSP}${wUnit()}`;
-/** A signed change in the chosen unit with the label. */
-export const signedKg = (n: number, digits = 1): string => `${signed(toUnit(n), getWeightUnit() === 'lb' ? Math.min(digits, 1) : digits)}${NBSP}${wUnit()}`;
+/** Body weight is always shown in kg. */
+export const wUnit = (): string => 'кг';
+export const wnum = (n: number, digits = 1): string => fmt(n, digits);
+export const kg = (n: number, digits = 1): string => `${fmt(n, digits)}${NBSP}кг`;
+export const signedKg = (n: number, digits = 1): string => `${signed(n, digits)}${NBSP}кг`;
+
+/** Weights lifted in a workout are stored in kg; the gym may show lb, so they can be shown and typed in either. */
+export const liftUnit = (): string => (getWeightUnit() === 'lb' ? 'lb' : 'кг');
+export const toLift = (kgValue: number): number => (getWeightUnit() === 'lb' ? kgValue * LB_PER_KG : kgValue);
+export const fromLift = (value: number): number => (getWeightUnit() === 'lb' ? value / LB_PER_KG : value);
+export const liftNum = (n: number, digits = 1): string => fmt(toLift(n), getWeightUnit() === 'lb' ? Math.min(digits, 1) : digits);
+export const liftKg = (n: number, digits = 1): string => `${liftNum(n, digits)}${NBSP}${liftUnit()}`;
+export const liftSigned = (n: number, digits = 1): string => `${signed(toLift(n), getWeightUnit() === 'lb' ? Math.min(digits, 1) : digits)}${NBSP}${liftUnit()}`;
 export const cm = (n: number): string => `${fmt(n, 1)}${NBSP}см`;
 export const plural = (n: number, forms: readonly [string, string, string]): string => {
   const a = Math.abs(n) % 100;

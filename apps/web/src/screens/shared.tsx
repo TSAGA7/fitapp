@@ -4,7 +4,7 @@ import type { MetricType } from '@fitapp/domain';
 import { addMetric, applyDietMode, rebuildTrainingPlan } from '../actions';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
-import { BODY_MEASUREMENTS, fromUnit, METRIC_LABELS, wnum, wUnit } from '../app/format';
+import { BODY_MEASUREMENTS, METRIC_LABELS } from '../app/format';
 import { goBack } from '../app/router';
 import { isLocalDate } from '@fitapp/domain';
 import { Button, IconButton, SelectField, Sheet, TextField } from '../ui';
@@ -49,8 +49,8 @@ export function AddWeightSheet({ open, onClose }: { open: boolean; onClose: () =
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const submit = async () => {
-    const v = fromUnit(parseDecimal(value));
-    if (!Number.isFinite(v) || v < 30 || v > 300) return setError(`Введи вес в ${wUnit() === 'lb' ? 'фунтах' : 'килограммах'}, от ${wnum(30, 0)} до ${wnum(300, 0)}`);
+    const v = parseDecimal(value);
+    if (!Number.isFinite(v) || v < 30 || v > 300) return setError('Введи вес в килограммах, от 30 до 300');
     setBusy(true);
     try {
       await act((deps) => addMetric(deps, { type: 'weight', value: Math.round(v * 100) / 100, date }));
@@ -66,7 +66,7 @@ export function AddWeightSheet({ open, onClose }: { open: boolean; onClose: () =
   return (
     <Sheet open={open} title="Записать вес" onClose={onClose}>
       <div className="stack">
-        <TextField label="Вес утром" unit={wUnit()} inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} placeholder={snapshot.weight.currentKg ? wnum(snapshot.weight.currentKg) : wUnit() === 'lb' ? '181,0' : '82,5'} error={error} />
+        <TextField label="Вес утром" unit="кг" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} placeholder={snapshot.weight.currentKg ? String(snapshot.weight.currentKg).replace('.', ',') : '82,5'} error={error} />
         <TextField label="Дата" type="date" value={date} max={snapshot.today} onChange={(e) => setDate(e.target.value)} />
         <Button block onClick={submit} disabled={busy}>Сохранить</Button>
       </div>

@@ -105,7 +105,7 @@ export function Segmented<T extends string>({ options, value, onChange, small, l
   );
 }
 
-export function TextField({ label, hint, error, unit, className = '', ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string | null; unit?: string }) {
+export function TextField({ label, hint, error, unit, className = '', ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string | null; unit?: ReactNode }) {
   const id = useId();
   return (
     <div className="field">
