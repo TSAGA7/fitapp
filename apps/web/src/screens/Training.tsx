@@ -80,6 +80,7 @@ function Week() {
   const { run, ok, banner, busy } = useCommand();
   const version = s.activeVersion!;
   const [moving, setMoving] = useState<PlannedSession | null>(null);
+  const [preview, setPreview] = useState<PlannedSession | null>(null);
   const sessions = useMemo(
     () => s.plannedSessions.filter((p) => p.deletedAt === null && p.plannedDate >= addDays(s.today, -7) && p.status !== 'moved').sort((a, b) => (a.plannedDate < b.plannedDate ? -1 : 1)),
     [s.plannedSessions, s.today],
@@ -118,15 +119,16 @@ function Week() {
           return (
             <Card key={p.id} flat={p.status !== 'planned' || missed}>
               <div className="stack">
-                <div className="row between">
-                  <div>
-                    <div className="t-h3">{labelOf(p.workoutKey)}</div>
-                    <div className="t-small">{isToday ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(p.plannedDate)]}, ${formatDateShort(p.plannedDate)}`}{p.originalDate ? ` · перенесено с ${formatDateShort(p.originalDate)}` : ''}</div>
-                  </div>
+                <button type="button" className="session-head" aria-label={`${labelOf(p.workoutKey)}: что в тренировке`} onClick={() => setPreview(p)}>
+                  <span className="sh-text">
+                    <span className="t-h3">{labelOf(p.workoutKey)}</span>
+                    <span className="t-small">{isToday ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(p.plannedDate)]}, ${formatDateShort(p.plannedDate)}`}{p.originalDate ? ` · перенесено с ${formatDateShort(p.originalDate)}` : ''}</span>
+                  </span>
                   {p.status === 'done' && <Badge>Выполнено</Badge>}
                   {p.status === 'skipped' && <Badge tone="neutral">Пропущено</Badge>}
                   {missed && <Badge tone="warning">Пропущено?</Badge>}
-                </div>
+                  <Icon name="chevronRight" size={20} />
+                </button>
                 {p.status === 'planned' && (
                   <div className="row" style={{ flexWrap: 'wrap' }}>
                     {(isToday || missed || started) && <Button size="sm" icon="play" disabled={busy} onClick={() => void begin(p.id)}>{started ? 'Продолжить' : 'Начать'}</Button>}
@@ -141,8 +143,41 @@ function Week() {
           );
         })}
       </div>
+      <PreviewSheet session={preview} label={preview ? labelOf(preview.workoutKey) : ''} onClose={() => setPreview(null)} onStart={preview && preview.status === 'planned' ? () => { const id = preview.id; setPreview(null); void begin(id); } : undefined} />
       <MoveSheet session={moving} onClose={() => setMoving(null)} onMove={async (date, reason) => { if (moving && (await ok((d) => movePlannedSession(d, moving.id, date, reason)))) setMoving(null); }} />
     </>
+  );
+}
+
+/** What is in the workout: the exercises with sets and reps, before it is started. */
+function PreviewSheet({ session, label, onClose, onStart }: { session: PlannedSession | null; label: string; onClose: () => void; onStart?: () => void }) {
+  const { snapshot: s } = useData();
+  if (!session) return null;
+  const workout = s.activeVersion?.training.workouts.find((w) => w.key === session.workoutKey);
+  const ctx = safetyContext(s, new Date().toISOString());
+  return (
+    <Sheet open title={label} onClose={onClose}>
+      <div className="stack">
+        <p className="t-small">{WEEKDAY_SHORT[weekdayOf(session.plannedDate)]}, {formatDateShort(session.plannedDate)} · {workout?.exercises.length ?? 0} {plural(workout?.exercises.length ?? 0, ['упражнение', 'упражнения', 'упражнений'])}</p>
+        <div className="list">
+          {(workout?.exercises ?? []).map((pe, i) => {
+            const ex = s.exercises.find((e) => e.id === pe.exerciseId);
+            const a = ex ? assessExercise(ex, ctx) : null;
+            const timed = ex?.progressionType === 'time';
+            return (
+              <ListItem
+                key={pe.key}
+                icon={a?.status === 'caution' ? 'alert' : 'training'}
+                title={`${i + 1}. ${ex?.name ?? pe.exerciseId}`}
+                subtitle={`${pe.sets} × ${pe.repMin === pe.repMax ? pe.repMin : `${pe.repMin}–${pe.repMax}`}${timed ? ' с' : ''}${a?.status === 'caution' ? ' · осторожно' : ''}`}
+              />
+            );
+          })}
+          {!workout && <p className="note">Состав этой тренировки не найден в программе.</p>}
+        </div>
+        {onStart && <Button block icon="play" onClick={onStart}>Начать сегодня</Button>}
+      </div>
+    </Sheet>
   );
 }
 

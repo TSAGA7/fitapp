@@ -203,6 +203,20 @@ describe('app flow on the real storage', () => {
     expect(bar.snapshot.dataSource.kind).toBe('label');
   });
 
+  it('eating another amount changes that very item: no second copy of it appears in the meal', async () => {
+    const { deps } = await setup();
+    await generateWeekPlan(deps, '2026-10-05', 0);
+    let s = await loadSnapshot(deps);
+    const breakfast = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.slot === 'breakfast' && i.deletedAt === null);
+    const protein = breakfast.find((i) => ['dairy', 'eggs'].includes(s.foods.find((f) => f.id === i.foodId)!.category))!;
+    await logPlanned(deps, protein.id, { kind: 'eaten', grams: Math.max(10, protein.plannedAmountG - 60) });
+    s = await loadSnapshot(deps);
+    const after = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.slot === 'breakfast' && i.deletedAt === null);
+    const sameKind = after.filter((i) => ['dairy', 'eggs'].includes(s.foods.find((f) => f.id === i.foodId)!.category));
+    expect(sameKind.map((i) => i.id)).toEqual([protein.id]);
+    expect(s.foodLogs.filter((l) => l.slot === 'breakfast' && l.date === '2026-10-05' && l.deletedAt === null)).toHaveLength(1);
+  });
+
   it('food preferences are respected by the generator', async () => {
     const { deps } = await setup();
     for (const id of ['chicken_breast_raw', 'chicken_breast_cooked', 'turkey_breast_raw']) await setFoodPreference(deps, id, { excluded: true });

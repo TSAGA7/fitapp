@@ -133,6 +133,15 @@ export const FoodCategory = z.enum([
   'drinks',
   'supplements',
   'ready_meals',
+  'sausages',
+  'cheese',
+  'seafood',
+  'canned',
+  'sauces',
+  'snacks',
+  'semi_finished',
+  'soups',
+  'fast_food',
   'other',
 ]);
 export const FoodUnit = z.enum(['g', 'ml', 'piece']);

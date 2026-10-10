@@ -328,13 +328,14 @@ function ItemSheet({ item, onClose }: { item: PlannedItem | null; onClose: () =>
 // ------------------------------------------------------------------ adding food
 
 const CATEGORY_LABELS: Record<FoodCategory, string> = {
-  meat: 'Мясо', poultry: 'Птица', fish: 'Рыба', eggs: 'Яйца', dairy: 'Молочное', grains: 'Крупы и макароны', legumes: 'Бобовые', vegetables: 'Овощи', fruits: 'Фрукты', nuts_seeds: 'Орехи и семена', fats_oils: 'Масла и жиры', bread_bakery: 'Хлеб', sweets: 'Сладкое', drinks: 'Напитки', supplements: 'Добавки', ready_meals: 'Готовые блюда', other: 'Другое',
+  meat: 'Мясо', poultry: 'Птица', sausages: 'Колбасы и сосиски', fish: 'Рыба', seafood: 'Морепродукты', eggs: 'Яйца', dairy: 'Молочное', cheese: 'Сыры', grains: 'Крупы и макароны', legumes: 'Бобовые', vegetables: 'Овощи', fruits: 'Фрукты', nuts_seeds: 'Орехи и семена', fats_oils: 'Масла и жиры', bread_bakery: 'Хлеб и выпечка', canned: 'Консервы', sauces: 'Соусы и приправы', snacks: 'Снеки и чипсы', sweets: 'Сладкое', drinks: 'Напитки', supplements: 'Спортпит и добавки', semi_finished: 'Полуфабрикаты и пельмени', soups: 'Супы', ready_meals: 'Готовые блюда', fast_food: 'Фастфуд и рестораны', other: 'Другое',
 };
 
 function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean; slot: MealSlot; startScan: boolean; date: string; onClose: () => void }) {
   const { snapshot: s } = useData();
   const { ok, run, banner, busy } = useCommand();
   const [query, setQuery] = useState('');
+  const [cat, setCat] = useState<FoodCategory | 'all'>('all');
   const [picked, setPicked] = useState<string | null>(null);
   const [grams, setGrams] = useState('100');
   const [mode, setMode] = useState<'eaten' | 'plan'>('eaten');
@@ -385,16 +386,21 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
   const foods = useMemo(() => {
     const q = query.trim().toLowerCase();
     return s.foods
-      .filter((f) => f.deletedAt === null && !userFoodOf(s.userFoods, f.id)?.excluded && (q === '' || f.name.toLowerCase().includes(q)))
+      .filter((f) => f.deletedAt === null && !userFoodOf(s.userFoods, f.id)?.excluded && (cat === 'all' || f.category === cat) && (q === '' || f.name.toLowerCase().includes(q)))
       .sort((a, b) => (a.origin === b.origin ? a.name.localeCompare(b.name, 'ru') : a.origin === 'custom' ? -1 : 1))
-      .slice(0, 40);
-  }, [s.foods, s.userFoods, query]);
+      .slice(0, cat === 'all' ? 40 : 120);
+  }, [s.foods, s.userFoods, query, cat]);
+  const presentCategories = useMemo(() => {
+    const have = new Set(s.foods.filter((f) => f.deletedAt === null).map((f) => f.category));
+    return (Object.keys(CATEGORY_LABELS) as FoodCategory[]).filter((k) => have.has(k));
+  }, [s.foods]);
   const food = s.foods.find((f) => f.id === picked);
   const g = parseDecimal(grams);
   const preview = food && g > 0 ? macrosForAmount(food.per100, g) : null;
   const close = () => {
     setPicked(null);
     setQuery('');
+    setCat('all');
     setCreating(false);
     setScanning(false);
     setScanNote(null);
@@ -427,6 +433,10 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
               <Button variant="secondary" size="sm" block icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
             </div>
             <TextField label="Поиск продукта" className="search-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" />
+            <div className="cat-chips" role="group" aria-label="Категория">
+              <button type="button" className="chip" aria-pressed={cat === 'all'} onClick={() => setCat('all')}>Все</button>
+              {presentCategories.map((k) => <button key={k} type="button" className="chip" aria-pressed={cat === k} onClick={() => setCat(k)}>{CATEGORY_LABELS[k]}</button>)}
+            </div>
             <div className="list">
               {foods.map((f) => (
                 <ListItem key={f.id} title={f.name} subtitle={`${CATEGORY_LABELS[f.category]} · ${fmt(f.per100.kcal, 0)} ккал/100 г`} onClick={() => { setPicked(f.id); setGrams(f.gramsPerPiece ? String(f.gramsPerPiece) : '100'); }} />

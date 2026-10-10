@@ -76,7 +76,10 @@ async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typ
   const used = outside.reduce((a, l) => ({ kcal: a.kcal + l.macros.kcal, proteinG: a.proteinG + l.macros.proteinG, fatG: a.fatG + l.macros.fatG, carbG: a.carbG + l.macros.carbG, fiberG: a.fiberG + l.macros.fiberG }), { kcal: 0, proteinG: 0, fatG: 0, carbG: 0, fiberG: 0 });
   const left = (n: number, u: number) => Math.max(0, n - u);
   const targets = { ...c.targets, kcal: left(c.targets.kcal, used.kcal), proteinG: left(c.targets.proteinG, used.proteinG), fatG: left(c.targets.fatG, used.fatG), carbG: left(c.targets.carbG, used.carbG), fiberG: left(c.targets.fiberG, used.fiberG) };
-  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, slots, avoidFoodIds: avoid, mode: isVacationMode() ? 'vacation' : 'normal' });
+  // What already stands in a meal (eaten, skipped, locked) fills its role: the rest of the meal is not built around a second copy of it.
+  const coveredBySlot: Partial<Record<MealSlot, string[]>> = {};
+  for (const i of items.filter(isKept)) (coveredBySlot[i.slot] ??= []).push(i.foodId);
+  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, coveredBySlot, slots, avoidFoodIds: avoid, mode: isVacationMode() ? 'vacation' : 'normal' });
   const keepIds = new Set(items.filter(isKept).map((i) => i.id));
   const fixedLines = [...protectedLines, ...partialLines];
   const now = deps.clock.now();

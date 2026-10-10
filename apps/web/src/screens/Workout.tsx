@@ -34,6 +34,30 @@ export function Workout({ sessionId }: { sessionId: string }) {
   const [rest, setRest] = useState<RestState | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  // Exercise blocks: any number can be open at once. The first unfinished one is open at the start; a finished one folds and the next opens.
+  const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
+  const settledRef = useRef<Map<string, boolean> | null>(null);
+  useEffect(() => {
+    if (!view) return;
+    const finished = new Map(view.exercises.map((e) => [e.se.id, e.plan.length > 0 && settledSets(e) >= e.plan.length]));
+    const prev = settledRef.current;
+    settledRef.current = finished;
+    if (prev === null) {
+      const first = view.exercises.find((e) => !finished.get(e.se.id));
+      if (first) setOpenIds(new Set([first.se.id]));
+      return;
+    }
+    const justDone = view.exercises.filter((e) => finished.get(e.se.id) && prev.get(e.se.id) === false);
+    if (justDone.length === 0) return;
+    setOpenIds((cur) => {
+      const next = new Set(cur);
+      for (const e of justDone) next.delete(e.se.id);
+      const after = view.exercises.slice(view.exercises.indexOf(justDone[justDone.length - 1] as WorkoutExerciseView) + 1).find((e) => !finished.get(e.se.id)) ?? view.exercises.find((e) => !finished.get(e.se.id));
+      if (after) next.add(after.se.id);
+      return next;
+    });
+  }, [view]);
+  const toggle = (id: string) => setOpenIds((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const reload = useCallback(async () => {
     try {
@@ -75,7 +99,7 @@ export function Workout({ sessionId }: { sessionId: string }) {
   }
 
   return (
-    <main className="screen workout">
+    <main className={`screen workout ${rest !== null ? 'has-rest' : ''}`}>
       <header className="screen-head">
         <div className="back">
           <IconButton icon="chevronLeft" label="К тренировкам" tone="ghost" onClick={() => go('training')} />
@@ -85,10 +109,9 @@ export function Workout({ sessionId }: { sessionId: string }) {
       </header>
       <ProgressBar value={totalSets > 0 ? doneSets / totalSets : 0} label="Прогресс тренировки" />
       {banner}
-      {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
 
       {view.exercises.map((ev) => (
-        <ExerciseCard key={ev.se.id} ev={ev} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} />
+        <ExerciseCard key={ev.se.id} ev={ev} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} />
       ))}
 
       {!readOnly && (
@@ -98,6 +121,7 @@ export function Workout({ sessionId }: { sessionId: string }) {
         </div>
       )}
       {readOnly && <Button block variant="secondary" onClick={() => go('training')}>К тренировкам</Button>}
+      {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
       <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} />
     </main>
   );
@@ -105,9 +129,10 @@ export function Workout({ sessionId }: { sessionId: string }) {
 
 const clock = (sec: number): string => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 
-/** Rest countdown: cues at 7 s and 5 s, a random phrase on the last second; can be paused. */
+/** Rest countdown as a window over the exercises (it can be folded to a small pill): cues at 7 s and 5 s, a random phrase on the last second; can be paused. */
 function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: RestState) => void; onDone: () => void }) {
   const [now, setNow] = useState(Date.now());
+  const [mini, setMini] = useState(false);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(t);
@@ -120,25 +145,35 @@ function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: 
     else onChange({ ...rest, endsAt: Math.max(Date.now() + 1000, rest.endsAt + delta * 1000), total: Math.max(15, rest.total + delta) });
   };
   const toggle = () => (paused ? onChange({ ...rest, pausedLeft: null, endsAt: Date.now() + left * 1000 }) : onChange({ ...rest, pausedLeft: left }));
+  if (mini) {
+    return (
+      <button type="button" className="rest-float rest-mini" role="timer" aria-live="off" aria-label={`Перерыв, осталось ${clock(left)}. Развернуть`} onClick={() => setMini(false)}>
+        <Icon name="clock" size={18} />
+        <span className="rest-mini-time">{clock(left)}</span>
+        <span className="t-small">{paused ? 'пауза' : left === 0 ? 'пора!' : 'перерыв'}</span>
+      </button>
+    );
+  }
   return (
-    <Card className="rest-panel" role="timer" aria-live="off">
-      <div className="stack">
-        <div className="row between">
-          <span className="row"><Icon name="clock" size={18} /> <span className="t-caption">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</span></span>
-          <span className="row">
-            <Button size="sm" variant="text" onClick={() => adjust(-15)}>−15 с</Button>
-            <Button size="sm" variant="text" onClick={() => adjust(15)}>+15 с</Button>
-          </span>
-        </div>
+    <div className="rest-float" role="timer" aria-live="off">
+      <div className="rest-top">
+        <span className="row"><Icon name="clock" size={18} /> <span className="t-caption">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</span></span>
+        <Button size="sm" variant="text" onClick={() => setMini(true)}>Свернуть</Button>
+      </div>
+      <div className="rest-main">
         <div className="rest-time" aria-label={`Осталось ${clock(left)}`}>{clock(left)}</div>
-        <ProgressBar value={rest.total > 0 ? 1 - left / rest.total : 1} label="Прогресс перерыва" />
-        <div className="rest-cue t-h3" role="status" aria-live="polite">{cue ?? (left === 0 ? 'Пора!' : '\u00a0')}</div>
-        <div className="row">
-          <Button block variant="secondary" icon={paused ? 'play' : 'clock'} onClick={toggle}>{paused ? 'Продолжить' : 'Пауза'}</Button>
-          <Button block onClick={onDone}>Завершить</Button>
+        <div className="rest-adjust">
+          <Button size="sm" variant="secondary" onClick={() => adjust(-15)}>−15 с</Button>
+          <Button size="sm" variant="secondary" onClick={() => adjust(15)}>+15 с</Button>
         </div>
       </div>
-    </Card>
+      <ProgressBar value={rest.total > 0 ? 1 - left / rest.total : 1} label="Прогресс перерыва" />
+      <div className="rest-cue t-h3" role="status" aria-live="polite">{cue ?? (left === 0 ? 'Пора!' : '\u00a0')}</div>
+      <div className="row">
+        <Button block variant="secondary" icon={paused ? 'play' : 'clock'} onClick={toggle}>{paused ? 'Продолжить' : 'Пауза'}</Button>
+        <Button block onClick={onDone}>Завершить</Button>
+      </div>
+    </div>
   );
 }
 
@@ -164,9 +199,14 @@ interface CardProps {
   mutate: (fn: Parameters<ReturnType<typeof useCommand>['ok']>[0], rest?: number | null, reason?: string) => Promise<void>;
   run: ReturnType<typeof useCommand>['run'];
   reload: () => Promise<void>;
+  open: boolean;
+  onToggle: () => void;
 }
 
-function ExerciseCard({ ev, readOnly, busy, mutate, run }: CardProps) {
+/** Sets of the plan that are settled (done or skipped): the exercise is finished when all of them are. */
+export const settledSets = (ev: WorkoutExerciseView): number => ev.plan.filter((p) => ev.logs.some((l) => l.setType === 'working' && l.setNo === p.setNo)).length;
+
+function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardProps) {
   const { snapshot: s } = useData();
   const { se, exercise, plan, logs } = ev;
   const working = logs.filter((l) => l.setType === 'working');
@@ -228,17 +268,23 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run }: CardProps) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const unit = timed ? ' с' : '';
+  const settled = settledSets(ev);
+  const allSettled = plan.length > 0 && settled >= plan.length;
+  const headline = allSettled
+    ? 'Все подходы выполнены'
+    : `${se.replacedFromExerciseId ? 'Замена · ' : ''}Подход ${nextNo}: ${target ? (target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(target.targetWeightKg, 2)} кг`) : ''} × ${target ? (target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`) : ''}${unit}`;
 
   return (
-    <Card>
-      <div className="stack">
-        <div className="row between">
-          <div>
-            <div className="t-h3">{exercise.name}</div>
-            {se.replacedFromExerciseId && <div className="t-small">Замена в этой тренировке</div>}
-          </div>
-          {se.status === 'done' && <Badge>Готово</Badge>}
-        </div>
+    <Card className={`ex-acc ${open ? 'open' : ''}`}>
+      <button type="button" className="ex-head" aria-expanded={open} onClick={onToggle}>
+        <span className="ex-title">
+          <span className="t-h3">{exercise.name}</span>
+          <span className="t-small">{headline}</span>
+        </span>
+        {allSettled ? <Badge>Готово</Badge> : <Badge tone="neutral">{settled}/{plan.length}</Badge>}
+        <span className="ex-chev" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
+      </button>
+      <div className="stack ex-body" hidden={!open}>
         {ev.reasonText && !(ev.reasonCode === 'first_execution_choose_weight' && (exercise.loadUnit === 'seconds' || exercise.loadUnit === 'bodyweight')) && <p className="t-small"><Icon name="info" size={14} /> {ev.reasonText}</p>}
         {ev.reminders.map((n) => (
           <div key={n.id} className="note-reminder" role="note">
@@ -291,7 +337,7 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run }: CardProps) {
               <div className="grow"><TextField label={timed ? 'Секунды' : 'Повторения'} inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} /></div>
               <IconButton icon="plus" label="Больше повторений" onClick={() => setReps(String((Number.isFinite(r) ? r : 0) + 1))} />
             </div>
-            <div>
+            <div className="rir-block">
               <div className="t-caption">Сколько повторений ещё мог бы сделать (RIR)</div>
               <div className="chips" role="group" aria-label="RIR">
                 {RIR_OPTIONS.map((o) => <Chip key={o.value} pressed={rir === o.value} onClick={() => setRir(o.value)}>{o.label}</Chip>)}

@@ -13,6 +13,7 @@ const foods = rawSeedCatalog.foods.map((f) => ({
   preference: 'ok', availability: 'always', excluded: false, maxPerDayG: null, autoPlan: f.autoPlan,
 })) as PlanFood[];
 
+const cat100 = (id: string) => foods.find((f) => f.id === id)!.per100;
 const base = { sex: 'male' as const, ageYears: 29, heightCm: 181, weightKg: 82.5, jobActivity: 'sedentary' as const, trainingsPerWeek: 3 };
 
 describe('energy', () => {
@@ -97,6 +98,33 @@ describe('meal plan', () => {
     }
     const normal = generateDayPlan({ targets: t, foods, seed: 'v0' });
     expect(normal.lines.some((l) => /^(pizza_|beer_|wine_|champagne_)/.test(l.foodId))).toBe(false);
+  });
+  it('meals are dishes: one garnish per meal, the same garnish for lunch and dinner, no standalone oil, spinach or potato-as-vegetable', () => {
+    const cat = new Map(foods.map((f) => [f.id, f]));
+    const isGarnish = (id: string): boolean => {
+      const f = cat.get(id)!;
+      return (f.category === 'grains' && !/овсян|мюсли/i.test(f.name)) || /картоф|батат/i.test(f.name);
+    };
+    for (let i = 0; i < 40; i++) {
+      const plan = generateDayPlan({ targets, foods, seed: `dish-${i}` });
+      const ids = plan.lines.map((l) => l.foodId);
+      expect(ids.some((id) => cat.get(id)!.category === 'fats_oils'), `oil ${i}`).toBe(false);
+      expect(ids.includes('spinach'), `spinach ${i}`).toBe(false);
+      const main = (slot: string) => plan.lines.filter((l) => l.slot === slot && isGarnish(l.foodId)).map((l) => l.foodId);
+      expect(main('lunch').length, `lunch garnish ${i}`).toBe(1);
+      expect(main('dinner').length, `dinner garnish ${i}`).toBe(1);
+      expect(main('lunch')[0], `same garnish ${i}`).toBe(main('dinner')[0]);
+      expect(main('breakfast').length, `breakfast ${i}`).toBe(0);
+      const proteins = plan.lines.filter((l) => (l.slot === 'lunch' || l.slot === 'dinner') && ['poultry', 'fish', 'meat', 'seafood'].includes(cat.get(l.foodId)!.category)).map((l) => l.foodId);
+      expect(new Set(proteins).size, `proteins ${i}`).toBe(proteins.length);
+    }
+  });
+  it('a meal that already holds an eaten protein is not given a second one', () => {
+    const eaten = { slot: 'breakfast' as const, foodId: 'cottage_cheese_5', grams: 200, macros: macrosForAmount(cat100('cottage_cheese_5'), 200), locked: false };
+    const plan = generateDayPlan({ targets, foods, seed: 'x', keepLines: [eaten], coveredBySlot: { breakfast: ['cottage_cheese_5'] }, slots: ['breakfast', 'lunch', 'dinner', 'snack'] });
+    const bf = plan.lines.filter((l) => l.slot === 'breakfast');
+    const proteinish = bf.filter((l) => ['dairy', 'eggs'].includes(foods.find((f) => f.id === l.foodId)!.category));
+    expect(proteinish.map((l) => l.foodId)).toEqual(['cottage_cheese_5']);
   });
   it('another seed gives another set of foods', () => {
     const ids = (seed: string) => generateDayPlan({ targets, foods, seed }).lines.map((l) => l.foodId).join();
