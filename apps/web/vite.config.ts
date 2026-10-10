@@ -3,7 +3,8 @@ import { join, relative } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 
-/** Writes dist/sw.js: precaches every built file so the app opens and works with no network. */
+/** Writes dist/sw.js: precaches every built file so the app opens and works with no network.
+ * It only manages caches named fitapp-*: MY WORLD (dist/world) shares the origin and keeps its own cache. */
 function offlineWorker(): Plugin {
   let outDir = 'dist';
   return {
@@ -26,11 +27,13 @@ function offlineWorker(): Plugin {
       const sw = `const CACHE = 'fitapp-${version}';
 const FILES = ${JSON.stringify(['./', ...files])};
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => Promise.all(FILES.map((f) => fetch(new Request(f, { cache: 'reload' })).then((r) => { if (!r.ok) throw new Error(f); return c.put(f, r); })))).then(() => self.skipWaiting())); });
-self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('fitapp-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
+  // MY WORLD (./world/) has its own worker and cache.
+  if (url.pathname.startsWith(new URL('./world/', self.registration.scope).pathname)) return;
   e.respondWith(caches.match(e.request, { ignoreSearch: true, ignoreVary: true }).then((hit) => hit || fetch(e.request).catch(() => (e.request.mode === 'navigate' ? caches.match('./') : Response.error()))));
 });
 `;

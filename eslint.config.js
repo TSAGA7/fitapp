@@ -65,6 +65,15 @@ export default tseslint.config(
     },
   },
   {
+    // MY WORLD is a separate app: it must not depend on Fitapp packages, so either can change alone.
+    files: ['apps/myworld/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [
+        { group: ['@fitapp/*'], message: 'MY WORLD must not import Fitapp packages' },
+      ] }],
+    },
+  },
+  {
     // The UI reaches storage only through the composition root.
     files: ['apps/web/src/**/*.{ts,tsx}'],
     ignores: ['apps/web/src/composition/**'],
