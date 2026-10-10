@@ -26,6 +26,20 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      /* Self-heal: if the app has not started after 6 s (stale offline cache), drop the cache and reload once. Data in IndexedDB is not touched. */
+      setTimeout(function () {
+        try {
+          var root = document.getElementById('root');
+          if (root && root.childElementCount > 0) return;
+          if (sessionStorage.getItem('fitapp.healed')) return;
+          sessionStorage.setItem('fitapp.healed', '1');
+          var done = function () { location.reload(); };
+          var kill = function () { return window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : Promise.resolve(); };
+          (navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : Promise.resolve()).then(kill).then(done, done);
+        } catch (e) {}
+      }, 6000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
