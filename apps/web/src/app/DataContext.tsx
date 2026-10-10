@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { AppDeps } from '@fitapp/application';
 import type { AppRuntime } from '../composition';
+import { startAutoBackup } from './autoBackup';
 import { loadSnapshot, type Snapshot } from './snapshot';
 
 interface DataValue {
@@ -34,6 +35,8 @@ export function DataProvider({ runtime, children }: { runtime: AppRuntime; child
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => startAutoBackup(runtime.backup), [runtime]);
 
   const act = useCallback(
     async <T,>(command: (deps: AppDeps) => Promise<T>): Promise<T> => {

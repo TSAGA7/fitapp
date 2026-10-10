@@ -5,3 +5,4 @@ export * from './diff';
 export * from './pain';
 export * from './bodyweight';
 export * from './rest';
+export * from './activity';

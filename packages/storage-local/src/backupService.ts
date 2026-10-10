@@ -12,6 +12,7 @@ import {
   type BackupImportPlan,
   type BackupImportPreview,
   type BackupImportResult,
+  type AutoBackupInfo,
   type BackupService,
   type Clock,
   type ConflictPolicy,
@@ -21,9 +22,15 @@ import {
 } from '@fitapp/domain';
 import { META_KEYS } from './constants';
 import { ConfirmationRequiredError, InvalidBackupError, StalePreviewError } from './errors';
-import { appendImportLog, setMeta } from './meta';
+import { appendImportLog, getMeta, setMeta } from './meta';
 import type { AppDatabase } from './schema';
 import { computeStateToken } from './state';
+
+interface StoredAutoBackup {
+  date: string;
+  createdAt: string;
+  json: string;
+}
 
 type Rows = Record<StoreName, Array<Record<string, unknown>>>;
 
@@ -53,6 +60,36 @@ export class LocalBackupService implements BackupService {
 
   /** Everything the user owns (including deletion markers). The bundled catalog is not exported. */
   async exportJson(): Promise<string> {
+    const { json, createdAt } = await this.buildJson();
+    await setMeta(this.db, META_KEYS.lastBackupAt, createdAt);
+    return json;
+  }
+
+  async autoBackup(localDate: string): Promise<boolean> {
+    const current = await getMeta<StoredAutoBackup>(this.db, META_KEYS.autoBackupCurrent);
+    if (current && current.date === localDate) return false;
+    // Nothing to protect yet: never replace a copy with an empty app.
+    if ((await this.db.table('profile').count()) === 0) return false;
+    const { json, createdAt } = await this.buildJson();
+    if (current) await setMeta(this.db, META_KEYS.autoBackupPrevious, current);
+    await setMeta(this.db, META_KEYS.autoBackupCurrent, { date: localDate, createdAt, json } satisfies StoredAutoBackup);
+    return true;
+  }
+
+  async autoBackupInfo(): Promise<{ current: AutoBackupInfo | null; previous: AutoBackupInfo | null }> {
+    const info = (b: StoredAutoBackup | undefined): AutoBackupInfo | null => (b ? { date: b.date, createdAt: b.createdAt, bytes: b.json.length } : null);
+    return {
+      current: info(await getMeta<StoredAutoBackup>(this.db, META_KEYS.autoBackupCurrent)),
+      previous: info(await getMeta<StoredAutoBackup>(this.db, META_KEYS.autoBackupPrevious)),
+    };
+  }
+
+  async readAutoBackup(slot: 'current' | 'previous'): Promise<string | null> {
+    const b = await getMeta<StoredAutoBackup>(this.db, slot === 'current' ? META_KEYS.autoBackupCurrent : META_KEYS.autoBackupPrevious);
+    return b?.json ?? null;
+  }
+
+  private async buildJson(): Promise<{ json: string; createdAt: string }> {
     const stores: Partial<Record<StoreName, unknown[]>> = {};
     for (const name of STORE_NAMES) {
       let rows = (await this.db.table(name).toArray()) as Array<Record<string, unknown>>;
@@ -61,8 +98,7 @@ export class LocalBackupService implements BackupService {
     }
     const createdAt = this.clock.now();
     const file = buildBackup({ createdAt, deviceId: this.deviceId, stores });
-    await setMeta(this.db, META_KEYS.lastBackupAt, createdAt);
-    return JSON.stringify(file);
+    return { json: JSON.stringify(file), createdAt };
   }
 
   /** Reads and checks the file and compares it with the database. Writes nothing. */

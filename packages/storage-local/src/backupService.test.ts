@@ -249,3 +249,36 @@ describe('atomicity', () => {
     expect(await b.s.db.setLogs.count()).toBe(1);
   });
 });
+
+describe('automatic daily copy', () => {
+  it('writes nothing while the app is empty, once per date, keeps two generations and does not touch the manual-backup marker', async () => {
+    const { a } = await pair();
+    expect(await a.s.backup.autoBackup('2026-10-10')).toBe(false);
+    expect((await a.s.backup.autoBackupInfo()).current).toBeNull();
+    await populate(a.s);
+    expect(await a.s.backup.autoBackup('2026-10-10')).toBe(true);
+    expect(await a.s.backup.autoBackup('2026-10-10')).toBe(false);
+    expect(await getMeta(a.s.db, META_KEYS.lastBackupAt)).toBeUndefined();
+    let info = await a.s.backup.autoBackupInfo();
+    expect(info.current?.date).toBe('2026-10-10');
+    expect(info.previous).toBeNull();
+    await a.s.repos.metrics.putMany([builders(a.s).metric('weight', 80, '2026-10-11')]);
+    expect(await a.s.backup.autoBackup('2026-10-11')).toBe(true);
+    info = await a.s.backup.autoBackupInfo();
+    expect(info.current?.date).toBe('2026-10-11');
+    expect(info.previous?.date).toBe('2026-10-10');
+    const cur = JSON.parse((await a.s.backup.readAutoBackup('current')) as string);
+    const prev = JSON.parse((await a.s.backup.readAutoBackup('previous')) as string);
+    expect(cur.stores.bodyMetrics.length).toBe(prev.stores.bodyMetrics.length + 1);
+  });
+  it('a stored copy can be previewed and restored into an emptied app', async () => {
+    const { a, b } = await pair();
+    await populate(a.s);
+    await a.s.backup.autoBackup('2026-10-10');
+    const json = (await a.s.backup.readAutoBackup('current')) as string;
+    const preview = await b.s.backup.previewImport(json, 'overwrite_all');
+    expect(preview.validation.ok).toBe(true);
+    await b.s.backup.applyImport(preview, { confirmed: true });
+    expect((await b.s.repos.profile.get())?.id).toBe((await a.s.repos.profile.get())?.id);
+  });
+});

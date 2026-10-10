@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { BackupImportPreview, ConflictPolicy, ExcelImportPreview, ExerciseDecision } from '@fitapp/domain';
 import { useData } from '../app/DataContext';
 import { formatDay } from '../app/format';
@@ -15,7 +15,7 @@ const POLICIES: ReadonlyArray<{ value: ConflictPolicy; label: string }> = [
 ];
 
 /** Choose a file -> preview (nothing is changed) -> confirm. Works for a Fitapp .json copy and an .xlsx table. */
-export function ImportPanel({ onDone }: { onDone?: () => void }) {
+export function ImportPanel({ onDone, preload }: { onDone?: () => void; preload?: string }) {
   const { runtime, refresh } = useData();
   const [pending, setPending] = useState<Pending | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -32,6 +32,14 @@ export function ImportPanel({ onDone }: { onDone?: () => void }) {
       setBusy(false);
     }
   };
+
+  // A copy chosen elsewhere (the automatic one): shown as a preview, restoring replaces the records that differ.
+  useEffect(() => {
+    if (!preload) return;
+    void guard(async () => {
+      setPending({ kind: 'json', json: preload, policy: 'overwrite_all', preview: await runtime.backup.previewImport(preload, 'overwrite_all') });
+    });
+  }, [preload]);
 
   const choose = (file: File | undefined) =>
     guard(async () => {

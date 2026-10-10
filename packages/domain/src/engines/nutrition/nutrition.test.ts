@@ -119,6 +119,21 @@ describe('meal plan', () => {
       expect(new Set(proteins).size, `proteins ${i}`).toBe(proteins.length);
     }
   });
+  it('only everyday products are picked on their own: bananas and apples, cucumbers and tomatoes, no strawberries, broccoli or hazelnuts', () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 60; i++) for (const l of generateDayPlan({ targets, foods, seed: `usual-${i}` }).lines) seen.add(l.foodId);
+    for (const bad of ['strawberry', 'broccoli', 'hazelnuts', 'kiwi', 'grapes', 'cauliflower', 'bulgur_dry', 'bulgur_cooked', 'salmon_raw', 'trout_raw']) expect(seen.has(bad), bad).toBe(false);
+    const fruit = [...seen].filter((id) => foods.find((f) => f.id === id)?.category === 'fruits');
+    expect(fruit.every((id) => ['banana', 'apple'].includes(id)), fruit.join()).toBe(true);
+    const veg = [...seen].filter((id) => foods.find((f) => f.id === id)?.category === 'vegetables' && !/potato/.test(id));
+    expect(veg.every((id) => ['cucumber', 'tomato'].includes(id)), veg.join()).toBe(true);
+  });
+  it('a product the user loves counts as everyday', () => {
+    const loved = foods.map((f) => (f.id === 'strawberry' ? { ...f, preference: 'love' as const } : f));
+    const seen = new Set<string>();
+    for (let i = 0; i < 60; i++) for (const l of generateDayPlan({ targets, foods: loved, seed: `love-${i}` }).lines) seen.add(l.foodId);
+    expect(seen.has('strawberry')).toBe(true);
+  });
   it('a meal that already holds an eaten protein is not given a second one', () => {
     const eaten = { slot: 'breakfast' as const, foodId: 'cottage_cheese_5', grams: 200, macros: macrosForAmount(cat100('cottage_cheese_5'), 200), locked: false };
     const plan = generateDayPlan({ targets, foods, seed: 'x', keepLines: [eaten], coveredBySlot: { breakfast: ['cottage_cheese_5'] }, slots: ['breakfast', 'lunch', 'dinner', 'snack'] });

@@ -271,3 +271,22 @@ html, body { overflow-x: hidden; }
 .session-head { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; padding: 0; text-align: left; color: inherit; font: inherit; }
 .session-head .sh-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .session-head > svg, .session-head .icon { color: var(--muted); flex: none; }
+
+/* ---- workout activity bar and summary */
+.act-bar { position: sticky; top: calc(var(--safe-t) + 6px); z-index: 6; display: grid; grid-template-columns: 1fr 1fr 1.1fr 1.7fr; gap: 6px; padding: 8px 10px; border-radius: var(--r-lg); background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--glass-border); -webkit-backdrop-filter: blur(20px) saturate(1.3); backdrop-filter: blur(20px) saturate(1.3); box-shadow: 0 6px 20px rgba(15, 23, 42, .08); }
+.act-cell { display: grid; gap: 1px; justify-items: center; align-content: center; min-width: 0; padding: 2px 0; background: none; border: 0; color: inherit; font: inherit; }
+.act-v { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 20px; }
+.act-l { font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 3px; line-height: 14px; }
+.act-kcal { border-left: 1px solid var(--glass-line); }
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sum-tile { display: grid; gap: 2px; padding: 12px; border-radius: var(--r-md); background: rgba(255, 255, 255, .5); border: 1px solid var(--glass-border); text-align: left; color: inherit; font: inherit; }
+.sum-v { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 26px; }
+.sum-l { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+.sum-group { font-weight: 700; font-size: 14px; display: flex; gap: 6px; align-items: center; }
+.sum-group.up { color: #15803d; } .sum-group.down { color: #b45309; } .sum-group.same, .sum-group.first { color: var(--muted); }
+.sum-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--glass-line); }
+.sum-row:last-child { border-bottom: 0; }
+.sum-name { font-weight: 600; min-width: 0; }
+.sum-set { text-align: right; flex: none; max-width: 55%; }
+[data-theme='dark'] .sum-tile { background: rgba(255, 255, 255, .06); }
+[data-theme='dark'] .sum-group.up { color: #4ade80; } [data-theme='dark'] .sum-group.down { color: #fbbf24; }

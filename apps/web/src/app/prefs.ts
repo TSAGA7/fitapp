@@ -249,3 +249,37 @@ export function useManualTargets(): boolean {
     () => isManualTargets(),
   );
 }
+
+/** The live activity bar of a workout (time, tonnage, kcal range). The summary after the workout is shown either way. */
+const BAR_KEY = 'fitapp.activityBar';
+const barListeners = new Set<() => void>();
+let barCache: boolean | null = null;
+export function isActivityBarOn(): boolean {
+  if (typeof window === 'undefined') return true;
+  if (barCache !== null) return barCache;
+  try {
+    barCache = window.localStorage.getItem(BAR_KEY) !== '0';
+  } catch {
+    barCache = true;
+  }
+  return barCache;
+}
+export function setActivityBar(on: boolean): void {
+  barCache = on;
+  try {
+    if (on) window.localStorage.removeItem(BAR_KEY);
+    else window.localStorage.setItem(BAR_KEY, '0');
+  } catch {
+    /* storage unavailable: lives until the page is closed */
+  }
+  barListeners.forEach((l) => l());
+}
+export function useActivityBar(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      barListeners.add(cb);
+      return () => barListeners.delete(cb);
+    },
+    () => isActivityBarOn(),
+  );
+}

@@ -18,6 +18,7 @@ import {
   logPlanned,
   logSet,
   logUnplanned,
+  loadWorkoutSummary,
   movePlannedSession,
   rebuildTrainingPlan,
   regenerateDay,
@@ -292,6 +293,27 @@ describe('app flow on the real storage', () => {
     const ses = await deps.uow.run((r) => r.workouts.listSessionExercises(sid));
     expect(ses.find((e) => e.id === ex.se.id)?.status).toBe('done');
     expect(ses.find((e) => e.id === ex2.se.id)?.status).toBe('partial');
+
+    // the summary of the finished workout: nothing to compare with yet, but the totals are there
+    const sum1 = await loadWorkoutSummary(deps, sid, 82);
+    expect(sum1.activity.sets).toBeGreaterThanOrEqual(ex.plan.length + 1);
+    expect(sum1.activity.tonnageKg).toBeGreaterThan(40 * ex.pe!.repMax * ex.plan.length - 1);
+    expect(sum1.activity.kcalLow).toBeLessThan(sum1.activity.kcalHigh);
+    expect(sum1.exercises.find((x) => x.exerciseId === ex.exercise.id)?.verdict).toBe('first');
+    expect(sum1.exercises.every((x) => x.verdict === 'first')).toBe(true);
+    // the same workout next time with a heavier first exercise: progress against the previous time
+    const repeat = sessions.find((p) => p.id !== first.id && p.workoutKey === first.workoutKey);
+    if (repeat) {
+      clock.set('2026-10-06T09:00:00+03:00'); // a later day than the first workout
+      const sid2 = await startWorkout(deps, repeat.id);
+      const v2 = await loadWorkout(deps, sid2);
+      const e2 = v2.exercises.find((e) => e.exercise.id === ex.exercise.id)!;
+      await logSet(deps, { sessionExerciseId: e2.se.id, exerciseId: e2.exercise.id, variantKey: e2.se.variantKey, contextKey: e2.plan[0]!.contextKey, plannedSetId: e2.plan[0]!.id, setNo: 1, weightKg: 50, reps: e2.pe!.repMax, rir: 2 });
+      await finishWorkout(deps, sid2, null);
+      const sum2 = await loadWorkoutSummary(deps, sid2, 82);
+      expect(sum2.exercises.find((x) => x.exerciseId === ex.exercise.id)?.verdict).toBe('up');
+      expect(sum2.up).toBeGreaterThanOrEqual(1);
+    }
 
     // the other two workouts of the week are done as well (adherence is judged over the last 14 days)
     for (const other of [sessions[1]!, sessions[2]!]) {

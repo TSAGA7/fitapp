@@ -119,11 +119,48 @@ function snapGrams(f: PlanFood, grams: number, min: number, max: number): number
   return Math.min(hi, Math.max(lo, Math.round(grams / s) * s));
 }
 
+/**
+ * How usual a product is on an ordinary Russian table: 0 = everyday, 1 = fine now and then, 2 = rare.
+ * The generator only takes products of the best tier that is available, so strawberries, broccoli or hazelnuts never turn up
+ * on their own; a product the user marked "love" counts as everyday.
+ */
+export function commonness(f: Pick<PlanFood, 'category' | 'name' | 'preference'>): number {
+  if (f.preference === 'love') return 0;
+  const n = f.name.toLowerCase();
+  const rx = (re: RegExp): boolean => re.test(n);
+  switch (f.category) {
+    case 'fruits':
+      return rx(/банан|яблок/) ? 0 : rx(/груш|апельсин|мандарин/) ? 1 : 2;
+    case 'vegetables':
+      return rx(/огурец|огурц|помидор|томат|картоф/) ? 0 : rx(/капуст|морков|перец|кабач/) ? 1 : 2;
+    case 'grains':
+      return rx(/гречк|рис|макарон|овсян/) ? 0 : 1;
+    case 'poultry':
+    case 'meat':
+    case 'fish':
+    case 'seafood':
+      return rx(/курин|индейк|говядин|свинин|минтай|треск|горбуш|фарш/) ? 0 : 1;
+    case 'nuts_seeds':
+      return rx(/арахис|грецк|миндал/) ? 0 : 1;
+    case 'dairy':
+      return rx(/творог|кефир|йогурт/) ? 0 : 1;
+    default:
+      return 0;
+  }
+}
+
+/** Keeps only the products of the best (most everyday) tier present. */
+function bestTier<T extends Pick<PlanFood, 'category' | 'name' | 'preference'>>(list: readonly T[]): T[] {
+  if (list.length === 0) return [];
+  const best = Math.min(...list.map(commonness));
+  return list.filter((f) => commonness(f) === best);
+}
+
 /** Candidate foods for a role: allowed by the user's preferences, best preference first, rotated by the seed. */
 export function candidatesFor(foods: readonly PlanFood[], role: Pick<Role, 'categories' | 'match'>, rotation: string, avoidIds: ReadonlySet<string> = new Set()): PlanFood[] {
   const inRole = (f: PlanFood): boolean => (role.match ? role.match(f) : role.categories.includes(f.category) && f.autoPlan !== false);
   const ok = foods.filter((f) => inRole(f) && !f.excluded && f.preference !== 'avoid' && f.availability !== 'rare' && !avoidIds.has(f.id));
-  const sorted = [...ok].sort((a, b) => PREF_RANK[a.preference] - PREF_RANK[b.preference] || a.name.localeCompare(b.name, 'ru'));
+  const sorted = bestTier(ok).sort((a, b) => PREF_RANK[a.preference] - PREF_RANK[b.preference] || a.name.localeCompare(b.name, 'ru'));
   if (sorted.length <= 1) return sorted;
   const offset = hash(rotation) % sorted.length;
   return [...sorted.slice(offset), ...sorted.slice(0, offset)];
@@ -399,7 +436,7 @@ export function replaceFood(line: PlanLine, foods: readonly PlanFood[], seed: st
   const pool = foods.filter((f) => f.id !== current.id && f.category === current.category && !f.excluded && f.preference !== 'avoid');
   const options = pool.length > 0 ? pool : foods.filter((f) => f.id !== current.id && !f.excluded && f.preference !== 'avoid' && f.category !== 'sweets');
   if (options.length === 0) return undefined;
-  const sorted = [...options].sort((a, b) => PREF_RANK[a.preference] - PREF_RANK[b.preference] || a.name.localeCompare(b.name, 'ru'));
+  const sorted = bestTier(options).sort((a, b) => PREF_RANK[a.preference] - PREF_RANK[b.preference] || a.name.localeCompare(b.name, 'ru'));
   const pick = sorted[hash(`${seed}|${line.foodId}`) % sorted.length] as PlanFood;
   const proteinSource = current.per100.proteinG >= 15;
   const ratio = proteinSource && pick.per100.proteinG > 0 ? (line.macros.proteinG * 100) / pick.per100.proteinG : pick.per100.kcal > 0 ? (line.macros.kcal * 100) / pick.per100.kcal : line.grams;

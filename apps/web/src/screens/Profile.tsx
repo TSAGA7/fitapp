@@ -5,7 +5,7 @@ import { applyDietMode, saveGoal, updateProfile } from '../actions';
 import { useData } from '../app/DataContext';
 import { deleteMetric } from '../actions';
 import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, WEEKDAY_SHORT, cm } from '../app/format';
-import { getDisplayName, setDisplayName, setTheme, setVacationMode, useTheme, useVacationMode, type ThemeChoice } from '../app/prefs';
+import { getDisplayName, setActivityBar, setDisplayName, setTheme, setVacationMode, useActivityBar, useTheme, useVacationMode, type ThemeChoice } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
 import { ExerciseCatalogScreen } from './ExerciseCatalog';
@@ -145,6 +145,17 @@ function ThemePicker() {
   );
 }
 
+function ActivityBarPicker() {
+  const on = useActivityBar();
+  return (
+    <div className="field">
+      <span className="lbl">Панель активности на тренировке</span>
+      <Segmented<'on' | 'off'> label="Панель активности" options={[{ value: 'on', label: 'Показывать' }, { value: 'off', label: 'Скрыть' }]} value={on ? 'on' : 'off'} onChange={(v) => setActivityBar(v === 'on')} />
+      <span className="hint">Время, подходы, тоннаж и примерные калории по ходу тренировки. Итоги после тренировки показываются всегда.</span>
+    </div>
+  );
+}
+
 const COMMON_ZONES = ['Europe/Amsterdam', 'Europe/Moscow', 'Europe/Berlin', 'Europe/London', 'Europe/Kyiv', 'Europe/Minsk', 'Asia/Almaty', 'Asia/Tbilisi', 'Asia/Yerevan', 'Asia/Dubai', 'America/New_York', 'UTC'];
 
 function Personal() {
@@ -187,6 +198,7 @@ function Personal() {
           {(Object.keys(JOB_LABELS) as JobActivity[]).map((v) => <option key={v} value={v}>{JOB_LABELS[v]}</option>)}
         </SelectField>
         <ThemePicker />
+        <ActivityBarPicker />
         <ListItem icon="history" title="История изменений программы" subtitle="Служебный журнал версий нормы и тренировок" onClick={() => go('profile/versions')} />
         {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
       </div>
@@ -327,6 +339,32 @@ function Schedule() {
   );
 }
 
+function AutoBackupCard() {
+  const { runtime } = useData();
+  const [info, setInfo] = useState<Awaited<ReturnType<typeof runtime.backup.autoBackupInfo>> | null>(null);
+  const [restore, setRestore] = useState<string | null>(null);
+  useEffect(() => {
+    void runtime.backup.autoBackupInfo().then(setInfo);
+  }, [runtime]);
+  const when = (iso: string) => `${formatDay(iso.slice(0, 10))}, ${new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+  const open = async (slot: 'current' | 'previous') => setRestore(await runtime.backup.readAutoBackup(slot));
+  return (
+    <Card>
+      <h2 className="t-h3">Автокопия</h2>
+      <p className="note" style={{ margin: '4px 0 12px' }}>Раз в сутки приложение само перезаписывает копию данных внутри себя: в 00:00, если оно открыто, иначе при первом открытии нового дня. Хранятся две последние копии. Если удалить иконку с экрана «Домой» или очистить данные сайта, автокопии исчезнут вместе с данными, поэтому файл копии всё равно сохраняй.</p>
+      {info?.current ? (
+        <div className="stack">
+          <ListItem icon="history" title="Последняя копия" subtitle={when(info.current.createdAt)} onClick={() => void open('current')} />
+          {info.previous && <ListItem icon="history" title="Предыдущая копия" subtitle={when(info.previous.createdAt)} onClick={() => void open('previous')} />}
+          {restore && <ImportPanel preload={restore} onDone={() => setRestore(null)} />}
+        </div>
+      ) : (
+        <p className="note">Первая копия появится, когда приложение откроют после ввода данных.</p>
+      )}
+    </Card>
+  );
+}
+
 function DataScreen() {
   const { runtime } = useData();
   const [msg, setMsg] = useState<string | null>(null);
@@ -353,6 +391,7 @@ function DataScreen() {
           {pst.persisted ? 'Браузер обещал не удалять данные.' : pst.supported ? 'Браузер не гарантирует сохранность данных, копии особенно важны.' : 'Браузер не поддерживает защиту хранилища, копии особенно важны.'}
         </p>
       </Card>
+      <AutoBackupCard />
       <Card>
         <h2 className="t-h3">Импорт</h2>
         <p className="note" style={{ margin: '4px 0 12px' }}>Файл .json (копия Fitapp) или .xlsx (таблица тренировок и питания). Сначала предпросмотр: данные не меняются, пока ты не подтвердишь.</p>

@@ -287,3 +287,63 @@ describe('abs in every workout and likes', () => {
     expect(comeBack.length).toBeGreaterThan(0);
   });
 });
+
+import { compareProgress, estimateWorkout, sessionElapsedSec, summarizeWorkout } from './activity';
+
+describe('workout activity', () => {
+  const squat = { compound: true, timed: false, sets: [{ weightKg: 80, reps: 10 }, { weightKg: 80, reps: 10 }, { weightKg: 80, reps: 8 }] };
+  const curl = { compound: false, timed: false, sets: [{ weightKg: 15, reps: 12 }, { weightKg: 15, reps: 10 }] };
+  it('estimates active kcal as a range around a believable value and counts tonnage', () => {
+    const e = estimateWorkout({ bodyWeightKg: 82, exercises: [squat, curl], elapsedSec: 45 * 60 });
+    expect(e.tonnageKg).toBe(80 * 28 + 15 * 22);
+    expect(e.sets).toBe(5);
+    expect(e.kcalMid).toBeGreaterThan(100);
+    expect(e.kcalMid).toBeLessThan(300);
+    expect(e.kcalLow).toBeLessThan(e.kcalMid);
+    expect(e.kcalHigh).toBeGreaterThan(e.kcalMid);
+    expect(e.kcalHigh / e.kcalLow).toBeGreaterThan(1.5);
+    expect(e.workSec + e.restSec).toBe(e.elapsedSec);
+  });
+  it('more work and a heavier body give more kcal; a longer rest adds only a little', () => {
+    const base = estimateWorkout({ bodyWeightKg: 70, exercises: [squat], elapsedSec: 1800 }).kcalMid;
+    expect(estimateWorkout({ bodyWeightKg: 90, exercises: [squat], elapsedSec: 1800 }).kcalMid).toBeGreaterThan(base);
+    expect(estimateWorkout({ bodyWeightKg: 70, exercises: [squat, curl], elapsedSec: 1800 }).kcalMid).toBeGreaterThan(base);
+    expect(estimateWorkout({ bodyWeightKg: 70, exercises: [squat], elapsedSec: 3600 }).kcalMid - base).toBeLessThan(base);
+  });
+  it('treats timed work as seconds and never counts its tonnage', () => {
+    const e = estimateWorkout({ bodyWeightKg: 80, exercises: [{ compound: false, timed: true, sets: [{ weightKg: null, reps: 30 }, { weightKg: null, reps: 30 }] }], elapsedSec: 0 });
+    expect(e.workSec).toBe(60);
+    expect(e.tonnageKg).toBe(0);
+  });
+  it('a forgotten open app does not inflate the time', () => {
+    const start = Date.parse('2026-10-10T10:00:00Z');
+    const done = [start + 10 * 60_000, start + 40 * 60_000];
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: null, nowMs: start + 5 * 3600_000 })).toBe(45 * 60);
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: start + 3 * 3600_000, nowMs: start + 4 * 3600_000 })).toBe(42 * 60);
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [], endedAtMs: null, nowMs: start + 90_000 })).toBe(90);
+  });
+  it('compares with the previous time: up, down, same, first', () => {
+    expect(compareProgress({ weightKg: 62.5, reps: 8 }, { weightKg: 60, reps: 8 })?.verdict).toBe('up');
+    expect(compareProgress({ weightKg: 57.5, reps: 8 }, { weightKg: 60, reps: 8 })?.verdict).toBe('down');
+    expect(compareProgress({ weightKg: 60, reps: 8 }, { weightKg: 60, reps: 8 })?.verdict).toBe('same');
+    expect(compareProgress({ weightKg: 60, reps: 8 }, null)?.verdict).toBe('first');
+    expect(compareProgress({ weightKg: null, reps: 14 }, { weightKg: null, reps: 12 })?.verdict).toBe('up');
+    expect(compareProgress(null, null)).toBeNull();
+    // the same weight with more reps is progress too
+    expect(compareProgress({ weightKg: 60, reps: 10 }, { weightKg: 60, reps: 8 })?.verdict).toBe('up');
+  });
+  it('summarises a workout: verdict per exercise, counts, skips exercises without sets', () => {
+    const s = summarizeWorkout({
+      bodyWeightKg: 82,
+      elapsedSec: 3000,
+      exercises: [
+        { ...squat, exerciseId: 'a', name: 'Присед', previousBest: { weightKg: 75, reps: 10 } },
+        { ...curl, exerciseId: 'b', name: 'Бицепс', previousBest: { weightKg: 17.5, reps: 12 } },
+        { compound: false, timed: false, sets: [], exerciseId: 'c', name: 'Пропущено', previousBest: null },
+        { compound: true, timed: false, sets: [{ weightKg: 40, reps: 10 }], exerciseId: 'd', name: 'Новое', previousBest: null },
+      ],
+    });
+    expect(s.exercises.map((x) => [x.name, x.verdict])).toEqual([['Присед', 'up'], ['Бицепс', 'down'], ['Новое', 'first']]);
+    expect([s.up, s.down, s.same, s.first]).toEqual([1, 1, 0, 1]);
+  });
+});

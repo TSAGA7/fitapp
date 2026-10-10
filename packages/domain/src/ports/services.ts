@@ -22,8 +22,23 @@ export interface Confirmation {
   confirmed: boolean;
 }
 
+/** One automatic copy kept inside the app's own storage. */
+export interface AutoBackupInfo {
+  /** Local date the copy belongs to (the first day it was written for). */
+  date: string;
+  createdAt: string;
+  bytes: number;
+}
+
 export interface BackupService {
   exportJson(): Promise<string>;
+  /**
+   * Daily automatic copy: once per local date it rotates the slots (today's copy becomes "previous") and writes a fresh one.
+   * Nothing is written while the app holds no data yet. Returns true when a copy was written.
+   */
+  autoBackup(localDate: string): Promise<boolean>;
+  autoBackupInfo(): Promise<{ current: AutoBackupInfo | null; previous: AutoBackupInfo | null }>;
+  readAutoBackup(slot: 'current' | 'previous'): Promise<string | null>;
   previewImport(json: string, policy?: ConflictPolicy): Promise<BackupImportPreview>;
   applyImport(preview: BackupImportPreview, confirmation: Confirmation): Promise<BackupImportResult>;
 }

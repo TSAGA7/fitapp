@@ -9,6 +9,8 @@ import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, Icon, IconButton, ListItem, ProgressBar, Sheet, TextField } from '../ui';
 import { TvaGuideBody } from './TvaGuide';
 import { parseDecimal } from './shared';
+import { ActivityBar, WorkoutSummaryCard } from './WorkoutActivity';
+import { useActivityBar } from '../app/prefs';
 
 const VACUUM_KEYS = new Set(['vacuum_standing', 'vacuum_quadruped', 'vacuum_lying', 'breathing_90_90']);
 
@@ -34,6 +36,7 @@ export function Workout({ sessionId }: { sessionId: string }) {
   const [rest, setRest] = useState<RestState | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const barOn = useActivityBar();
   // Exercise blocks: any number can be open at once. The first unfinished one is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const settledRef = useRef<Map<string, boolean> | null>(null);
@@ -87,13 +90,9 @@ export function Workout({ sessionId }: { sessionId: string }) {
   if (celebrate) {
     return (
       <main className="screen workout">
-        <Card>
-          <div className="stack">
-            <div className="rest-boss t-h2" role="status">{REST_FINISH_MESSAGE}</div>
-            <p className="t-body" style={{ textAlign: 'center' }}>Тренировка записана: {doneSets} из {totalSets} подходов.</p>
-            <Button block onClick={() => go('training')}>К тренировкам</Button>
-          </div>
-        </Card>
+        <WorkoutSummaryCard sessionId={sessionId} title={REST_FINISH_MESSAGE} />
+        <p className="t-body" style={{ textAlign: 'center' }}>Записано: {doneSets} из {totalSets} подходов.</p>
+        <Button block onClick={() => go('training')}>К тренировкам</Button>
       </main>
     );
   }
@@ -108,6 +107,8 @@ export function Workout({ sessionId }: { sessionId: string }) {
         {readOnly ? <Badge tone="neutral">{view.session.status === 'completed' ? 'Завершена' : 'Прервана'}</Badge> : <Badge>{doneSets}/{totalSets}</Badge>}
       </header>
       <ProgressBar value={totalSets > 0 ? doneSets / totalSets : 0} label="Прогресс тренировки" />
+      {barOn && !readOnly && <ActivityBar view={view} doneSets={doneSets} totalSets={totalSets} />}
+      {readOnly && view.session.status === 'completed' && <WorkoutSummaryCard sessionId={sessionId} />}
       {banner}
 
       {view.exercises.map((ev) => (

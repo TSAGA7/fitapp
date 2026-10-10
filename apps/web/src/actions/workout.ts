@@ -1,6 +1,11 @@
 import type { AppDeps } from '@fitapp/application';
 import {
   adviseOnPain,
+  bestSet,
+  sessionElapsedSec,
+  summarizeWorkout,
+  type SummaryExerciseInput,
+  type WorkoutSummary,
   buildDeloadPrescription,
   createBase,
   inAdaptation,
@@ -652,5 +657,36 @@ export async function startBodyweightWorkout(deps: AppDeps): Promise<string> {
       await createSets(r, deps, ps.id, pe.key, exercise, pe.variantKey, p, false);
     }
     return sessionId;
+  });
+}
+
+// ---------------------------------------------------------------- the summary
+
+const isTimed = (e: Exercise): boolean => e.loadUnit === 'seconds' || e.progressionType === 'time';
+
+/**
+ * Summary of a workout (live or finished): active kcal range, tonnage, time and, per exercise, progress against the previous time.
+ * The same numbers are shown after "Завершить" whether or not the live activity bar is switched on.
+ */
+export async function loadWorkoutSummary(deps: AppDeps, sessionId: string, bodyWeightKg: number): Promise<WorkoutSummary & { startedAt: string }> {
+  return deps.uow.run(async (r) => {
+    const session = await r.workouts.getSession(sessionId);
+    if (!session) throw new Error('Тренировка не найдена');
+    const inputs: SummaryExerciseInput[] = [];
+    const completed: number[] = [];
+    for (const se of (await r.workouts.listSessionExercises(sessionId)).sort((a, b) => a.position - b.position)) {
+      const exercise = await r.exercises.get(se.exerciseId);
+      if (!exercise) continue;
+      const logs = (await r.workouts.listSetLogs(se.id)).filter((l) => l.status === 'done' && l.setType === 'working' && (l.actualReps ?? 0) > 0);
+      for (const l of logs) if (l.completedAt) completed.push(Date.parse(l.completedAt));
+      const earlier = (await r.workouts.listSetLogsByExercise(exercise.id)).filter((l) => l.status === 'done' && l.setType === 'working' && l.sessionExerciseId !== se.id && (l.completedAt ?? '') < session.startedAt && (l.actualReps ?? 0) > 0);
+      const last = new Map<string, string>();
+      for (const l of earlier) last.set(l.sessionExerciseId, [last.get(l.sessionExerciseId) ?? '', l.completedAt ?? ''].sort().pop() as string);
+      const latestGroup = [...last.entries()].sort((a, b) => (a[1] < b[1] ? 1 : -1))[0]?.[0];
+      const previousBest = latestGroup ? bestSet(earlier.filter((l) => l.sessionExerciseId === latestGroup).map((l) => ({ weightKg: l.actualWeightKg, reps: l.actualReps ?? 0 }))) : null;
+      inputs.push({ exerciseId: exercise.id, name: exercise.name, compound: exercise.isCompound, timed: isTimed(exercise), sets: logs.map((l) => ({ weightKg: l.actualWeightKg, reps: l.actualReps ?? 0 })), previousBest });
+    }
+    const elapsedSec = sessionElapsedSec({ startedAtMs: Date.parse(session.startedAt), completedAtMs: completed, endedAtMs: session.endedAt ? Date.parse(session.endedAt) : null, nowMs: Date.now() });
+    return { ...summarizeWorkout({ bodyWeightKg, exercises: inputs, elapsedSec }), startedAt: session.startedAt };
   });
 }

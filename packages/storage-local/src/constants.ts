@@ -9,4 +9,6 @@ export const META_KEYS = {
   seedCatalogVersion: 'seedCatalogVersion',
   lastBackupAt: 'lastBackupAt',
   importLog: 'importLog',
+  autoBackupCurrent: 'autoBackupCurrent',
+  autoBackupPrevious: 'autoBackupPrevious',
 } as const;
