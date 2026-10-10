@@ -214,6 +214,8 @@ html, body { overflow-x: hidden; }
 
 .vac-note { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 28px 12px; }
 .vac-note .vac-emoji { font-size: 56px; line-height: 1; }
+.screen.vac-screen { min-height: 100dvh; grid-template-rows: auto 1fr; box-sizing: border-box; }
+.vac-center { display: flex; flex-direction: column; justify-content: center; padding-bottom: calc(var(--nav-h) * 0.6); }
 
 .add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .add-row .btn { padding-left: 10px; padding-right: 10px; line-height: 1.2; min-height: 52px; }

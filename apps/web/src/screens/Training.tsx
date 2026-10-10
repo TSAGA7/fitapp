@@ -31,11 +31,13 @@ export function Training() {
 
   if (vacation) {
     return (
-      <main className="screen">
+      <main className="screen vac-screen">
         <ScreenHeader title="Тренировки" />
-        <Card flat>
-          <div className="vac-note"><span className="vac-emoji" aria-hidden="true">🍻</span><p className="t-h3">Разве эта вкладка похожа на барное меню? Иди отдыхай!</p></div>
-        </Card>
+        <div className="vac-center">
+          <Card flat>
+            <div className="vac-note"><span className="vac-emoji" aria-hidden="true">🍻</span><p className="t-h3">Разве эта вкладка похожа на барное меню? Иди отдыхай!</p></div>
+          </Card>
+        </div>
       </main>
     );
   }
