@@ -28,11 +28,12 @@ import {
 } from '../actions';
 import { useData } from '../app/DataContext';
 import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, SLOT_ORDER, userFoodOf } from '../app/derive';
-import { fmt, formatDateShort, formatDay, WEEKDAY_SHORT } from '../app/format';
+import { fmt, formatDateShort, formatDay, GOAL_LABELS, WEEKDAY_SHORT } from '../app/format';
+import { goalNutritionText } from './GoalExplain';
 import { useCommand } from '../app/useCommand';
 import { setManualTargets, useManualTargets, useVacationMode } from '../app/prefs';
 import type { FoodLog } from '@fitapp/domain';
-import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, TextField, type ChartSeries } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, Switch, TextField, type ChartSeries } from '../ui';
 import { isBarcode, lookupBarcode } from '../app/openFoodFacts';
 import { BarcodeScanner } from './BarcodeScan';
 import { parseDecimal, ScreenHeader } from './shared';
@@ -125,7 +126,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         </Card>
       )}
 
-      <Card>
+      <Card onClick={() => setNormOpen(true)}>
         <div className="row" style={{ gap: 18 }}>
           <ProgressRing value={targets.kcal > 0 ? eaten.kcal / targets.kcal : 0} size={140} stroke={11}>
             <div className="ring-num">{fmt(Math.abs(remaining), 0)}</div>
@@ -138,15 +139,14 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
           </div>
         </div>
         <div className="row between" style={{ marginTop: 12 }}>
-          <span className="t-small">Съедено {fmt(eaten.kcal, 0)} из нормы {fmt(targets.kcal, 0)} ккал</span>
+          <span className="t-small">Съедено {fmt(eaten.kcal, 0)} из нормы {fmt(targets.kcal, 0)} ккал{manual ? ' · вручную' : ''}</span>
           {items.length > 0 && <span className="t-small">Рацион {fmt(planned.kcal, 0)} ккал</span>}
         </div>
+        <div className="row" style={{ marginTop: 8 }}><span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>Норма и почему такая · изменить</span><Icon name="chevronRight" size={14} /></div>
         {items.length > 0 && Math.abs(planned.kcal - targets.kcal) > targets.kcal * 0.03 && (
           <p className="t-small" style={{ marginTop: 6 }}>Норма — сколько нужно на день по твоей цели. Рацион — то, что составлено из продуктов: сейчас он {planned.kcal < targets.kcal ? 'меньше' : 'больше'} нормы на {fmt(Math.abs(targets.kcal - planned.kcal), 0)} ккал. Нажми «Переделать» у приёма пищи или пересобери день, чтобы подогнать.</p>
         )}
       </Card>
-
-      <ListItem icon="edit" title={manual ? 'Норма задана вручную' : 'Норма от тренера'} subtitle={manual ? 'Нажми, чтобы изменить цифры' : 'Ввести свои ккал и БЖУ, рацион подстроится'} onClick={() => setNormOpen(true)} />
 
       {items.length === 0 && !isPast && (
         <Card flat>
@@ -214,11 +214,6 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
       {!isPast && <Button variant="secondary" block icon="scan" onClick={() => setSlotForAdd({ slot: 'snack', scan: true })}>Сканировать штрих-код</Button>}
       {!isPast && items.length > 0 && (
         <Button variant="secondary" block icon="history" disabled={busy} onClick={() => void run((d) => regenerateDay(d, date, variation()))}>Переделать день</Button>
-      )}
-      {manual ? (
-        <Button variant="text" onClick={() => { setManualTargets(false); void run(async (d) => { await recalculateTargets(d); await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000); }); }} disabled={busy}>Вернуть автоматический расчёт нормы</Button>
-      ) : (
-        <Button variant="text" onClick={() => void run((d) => recalculateTargets(d))} disabled={busy}>Пересчитать норму по текущему весу</Button>
       )}
       <NormSheet open={normOpen} onClose={() => setNormOpen(false)} current={targets} manual={manual} />
 
@@ -752,16 +747,21 @@ function MonthView() {
 type NormMode = 'macros' | 'kcal';
 
 /**
- * The norm typed by hand, for example dictated by a coach. Coaches name it in one of two ways, so there are two modes:
- * grams of protein / fat / carbs (calories are worked out), or calories plus protein and fat (carbs fill the rest).
+ * The day's norm: why it is what it is for the chosen goal, and a "Вручную" switch to type your own (for example what a coach dictated).
+ * Coaches name the norm in one of two ways, so there are two input modes: grams of protein / fat / carbs (calories are worked out),
+ * or calories plus protein and fat (carbs fill the rest).
  */
 function NormSheet({ open, onClose, current, manual }: { open: boolean; onClose: () => void; current: { kcal: number; proteinG: number; fatG: number; carbG: number }; manual: boolean }) {
+  const { snapshot: s } = useData();
   const { ok, banner, busy } = useCommand();
   const init = () => ({ kcal: String(Math.round(current.kcal)), p: String(Math.round(current.proteinG)), f: String(Math.round(current.fatG)), c: String(Math.round(current.carbG)) });
+  const [on, setOn] = useState(manual);
   const [mode, setMode] = useState<NormMode>('macros');
   const [v, setV] = useState(init);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { if (open) { setV(init()); setErr(null); setMode('macros'); } }, [open]);
+  useEffect(() => { if (open) { setV(init()); setErr(null); setMode('macros'); setOn(manual); } }, [open]);
+  const goal = s.primaryGoal?.type ?? null;
+  const why = goal ? goalNutritionText(goal) : null;
   const p = parseDecimal(v.p);
   const f = parseDecimal(v.f);
   const kcalIn = parseDecimal(v.kcal);
@@ -772,38 +772,65 @@ function NormSheet({ open, onClose, current, manual }: { open: boolean; onClose:
   const carbs = mode === 'kcal' ? (okNum(kcalIn) && okNum(p) && okNum(f) ? Math.round((kcalIn - p * 4 - f * 9) / 4) : NaN) : cIn;
   const share = (g: number, k: number) => (Number.isFinite(g) && Number.isFinite(kcal) && kcal > 0 ? Math.round((g * k * 100) / kcal) : null);
   const sh = { p: share(p, 4), f: share(f, 9), c: share(carbs, 4) };
+  const rebuild = (d: Parameters<Parameters<typeof ok>[0]>[0]) => applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000);
   const save = async () => {
+    if (!on) {
+      // back to the automatic norm (or just a fresh calculation by the latest weight)
+      const done = await ok(async (d) => { await recalculateTargets(d); await rebuild(d); });
+      if (done) { setManualTargets(false); onClose(); }
+      return;
+    }
     if (![p, f].every(okNum) || !okNum(carbs) || !Number.isFinite(kcal)) return setErr(mode === 'kcal' && Number.isFinite(carbs) && carbs < 0 ? 'Белок и жиры уже превышают калории: углеводов не остаётся. Проверь числа' : 'Заполни все поля числами');
     if (kcal < 800 || kcal > 8000) return setErr('Калории должны быть от 800 до 8000');
     setErr(null);
     const done = await ok(async (d) => {
       await setManualNutrition(d, { kcal, proteinG: p, fatG: f, carbG: carbs });
-      await applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000);
+      await rebuild(d);
     });
     if (done) { setManualTargets(true); onClose(); }
   };
   return (
-    <Sheet open={open} title="Норма от тренера" onClose={onClose}>
+    <Sheet open={open} title="Норма на день" onClose={onClose}>
       <div className="stack-lg">
-        <p className="note">Введи цифры, которые продиктовал тренер. Приложение пересоберёт рацион так, чтобы каждый день попадал в эти числа, и не будет менять норму само, пока ты не вернёшь автоматический расчёт.</p>
-        <div className="field">
-          <span className="lbl">Как тебе назвали норму (Б, Ж, У: белки, жиры, углеводы)</span>
-          <Segmented<NormMode> label="Способ ввода" options={[{ value: 'macros', label: 'Б, Ж, У' }, { value: 'kcal', label: 'Ккал, Б, Ж' }]} value={mode} onChange={setMode} />
-        </div>
-        {mode === 'kcal' && <TextField label="Калории" unit="ккал" inputMode="numeric" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} />}
-        <div className="grid-3">
-          <TextField label="Белки" unit="г" inputMode="decimal" value={v.p} onChange={(e) => setV({ ...v, p: e.target.value })} />
-          <TextField label="Жиры" unit="г" inputMode="decimal" value={v.f} onChange={(e) => setV({ ...v, f: e.target.value })} />
-          {mode === 'macros' ? <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} /> : <TextField label="Углеводы (по остатку)" unit="г" value={Number.isFinite(carbs) && carbs >= 0 ? String(carbs) : '—'} readOnly />}
-        </div>
         <Card flat>
-          <div className="t-h3">{Number.isFinite(kcal) ? `${fmt(kcal, 0)} ккал в день` : 'Заполни поля'}</div>
-          {sh.p !== null && sh.f !== null && sh.c !== null && <p className="t-small">Доля калорий: белки {sh.p}%, жиры {sh.f}%, углеводы {sh.c}%.</p>}
+          <div className="stack">
+            <div className="t-h3">{fmt(current.kcal, 0)} ккал · Б {fmt(current.proteinG, 0)} · Ж {fmt(current.fatG, 0)} · У {fmt(current.carbG, 0)}</div>
+            <div className="t-caption">{manual ? 'Сейчас задана вручную' : 'Рассчитана автоматически'}</div>
+          </div>
         </Card>
+        <div className="stack">
+          <div className="t-h3">Почему такая норма{goal ? ` (цель: ${GOAL_LABELS[goal].title.toLowerCase()})` : ''}</div>
+          {why ? (
+            <>
+              <p className="t-small"><b>Калории.</b> Расход за день по формуле Миффлина — Сан-Жеора, умноженный на активность. {why.calories}</p>
+              <p className="t-small"><b>Белок.</b> {why.protein}</p>
+            </>
+          ) : <p className="t-small">Задай цель в профиле, и здесь появится объяснение.</p>}
+          <p className="t-small"><b>Жиры и углеводы.</b> Жиры: не меньше 0,8 г на кг и не меньше 25% калорий, они нужны для гормонов. Углеводы занимают всё остальное: это топливо для тренировок.</p>
+        </div>
+        <Switch checked={on} onChange={setOn} label="Вручную" hint="Ввести свои ккал и БЖУ, например от тренера. Рацион подстроится." />
+        {on && (
+          <>
+            <div className="field">
+              <span className="lbl">Как тебе назвали норму (Б, Ж, У: белки, жиры, углеводы)</span>
+              <Segmented<NormMode> label="Способ ввода" options={[{ value: 'macros', label: 'Б, Ж, У' }, { value: 'kcal', label: 'Ккал, Б, Ж' }]} value={mode} onChange={setMode} />
+            </div>
+            {mode === 'kcal' && <TextField label="Калории" unit="ккал" inputMode="numeric" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} />}
+            <div className="grid-3">
+              <TextField label="Белки" unit="г" inputMode="decimal" value={v.p} onChange={(e) => setV({ ...v, p: e.target.value })} />
+              <TextField label="Жиры" unit="г" inputMode="decimal" value={v.f} onChange={(e) => setV({ ...v, f: e.target.value })} />
+              {mode === 'macros' ? <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} /> : <TextField label="Углеводы (по остатку)" unit="г" value={Number.isFinite(carbs) && carbs >= 0 ? String(carbs) : '—'} readOnly />}
+            </div>
+            <Card flat>
+              <div className="t-h3">{Number.isFinite(kcal) ? `${fmt(kcal, 0)} ккал в день` : 'Заполни поля'}</div>
+              {sh.p !== null && sh.f !== null && sh.c !== null && <p className="t-small">Доля калорий: белки {sh.p}%, жиры {sh.f}%, углеводы {sh.c}%.</p>}
+            </Card>
+          </>
+        )}
+        {!on && manual && <p className="t-small">После сохранения вернётся автоматический расчёт по цели и текущему весу.</p>}
         {err && <div className="errbox" role="alert">{err}</div>}
         {banner}
-        <Button block disabled={busy} onClick={() => void save()}>Сохранить и пересобрать рацион</Button>
-        {manual && <p className="t-small">Сейчас норма задана вручную.</p>}
+        <Button block disabled={busy} onClick={() => void save()}>{on ? 'Сохранить и пересобрать рацион' : manual ? 'Вернуть автоматический расчёт' : 'Пересчитать по текущему весу'}</Button>
       </div>
     </Sheet>
   );

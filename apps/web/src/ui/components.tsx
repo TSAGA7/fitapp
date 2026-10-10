@@ -79,6 +79,19 @@ export function ProgressRing({ value, size = 120, stroke = 12, children }: { val
   );
 }
 
+/** An on/off switch with a label (role="switch"). */
+export function Switch({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} className={`switch-row${checked ? ' on' : ''}`} onClick={() => onChange(!checked)}>
+      <span className="grow">
+        <span className="li-title" style={{ display: 'block' }}>{label}</span>
+        {hint && <span className="t-small">{hint}</span>}
+      </span>
+      <span className="switch-track" aria-hidden="true"><span className="switch-knob" /></span>
+    </button>
+  );
+}
+
 export function Segmented<T extends string>({ options, value, onChange, small, label }: { options: ReadonlyArray<{ value: T; label: string }>; value: T; onChange: (v: T) => void; small?: boolean; label?: string }) {
   return (
     <div className={`segmented ${small ? 'small' : ''}`} role="tablist" aria-label={label}>

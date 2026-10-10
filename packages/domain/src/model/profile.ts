@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { entityBase, LocalDateSchema } from './common';
+import { CycleSettings } from './cycle';
 import { Experience, JobActivity, Sex, UnitSystem } from './enums';
 import { WEEKDAYS, WeekdaySchema, type Weekday } from './weekday';
 
@@ -38,5 +39,7 @@ export const Profile = z.object({
   jobActivity: JobActivity,
   /** The number of sessions per week is the count of true days (see trainingDays). */
   trainingSchedule: TrainingSchedule,
+  /** Menstrual cycle tracking (women who turned it on). Optional: old records and backups simply do not have it. */
+  cycle: CycleSettings.optional(),
 });
 export type Profile = z.infer<typeof Profile>;

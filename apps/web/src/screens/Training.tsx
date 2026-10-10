@@ -1,3 +1,4 @@
+import { CycleTrainingHint } from './Cycle';
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, assessExercise, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
 import { createProgram, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
@@ -123,6 +124,7 @@ function Week() {
           </div>
         </Card>
       )}
+      <CycleTrainingHint busy={busy} onLight={nextPlanned && !open ? () => void begin(nextPlanned.id, true) : undefined} />
       {advice && !open && <AdviceCard advice={advice} busy={busy} onDeload={nextPlanned ? () => void begin(nextPlanned.id, true) : undefined} />}
       {sessions.length === 0 && <p className="note">Ближайших тренировок нет. Проверь дни тренировок в профиле.</p>}
       <div className="stack">

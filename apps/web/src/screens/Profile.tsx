@@ -9,6 +9,7 @@ import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_L
 import { getDisplayName, setActivityBar, setDisplayName, setTheme, setVacationMode, useActivityBar, useTheme, useVacationMode, type ThemeChoice } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
+import { CycleScreen, CycleTile } from './Cycle';
 import { ExerciseCatalogScreen } from './ExerciseCatalog';
 import { GoalExplainSheet } from './GoalExplain';
 import { saveBackupFile } from '../app/backupFile';
@@ -32,6 +33,8 @@ export function Profile({ route }: { route: string[] }) {
       return <Schedule />;
     case 'data':
       return <DataScreen />;
+    case 'cycle':
+      return <CycleScreen />;
     case 'autocopy':
       // Not linked from anywhere: the daily in-app copy works quietly in the background, this is only the way to reach it in an emergency.
       return <AutoCopyScreen />;
@@ -101,6 +104,7 @@ function ProfileHome() {
         </div>
       </Card>
       <VacationButton />
+      <CycleTile />
       <BackupReminder />
       <div className="grid-3">
         {TILES.map((t) => (
@@ -123,8 +127,10 @@ function VacationButton() {
   const [beer, setBeer] = useState(false);
   const toggle = async () => {
     if (!on) {
+      // The animation starts first, at once; the heavy work (switching the mode, rebuilding the menu) follows a moment later so it never delays the first frame.
       setBeer(true);
-      window.setTimeout(() => setBeer(false), 4900);
+      window.setTimeout(() => setBeer(false), 5000);
+      await new Promise((r) => window.setTimeout(r, 160));
     }
     setVacationMode(!on);
     await run((d) => applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000));
@@ -144,18 +150,40 @@ function VacationButton() {
   );
 }
 
-/** Full-screen "beer being poured" animation shown when vacation mode is switched on: it fills from the very bottom, foam appears near the end. */
+/**
+ * Full-screen "beer being poured" animation shown when vacation mode is switched on: it fills from the very bottom, foam builds up near the end,
+ * then the beer turns into bubbles that pop one by one, like the gas bubbles inside the beer, and the screen is clear again.
+ */
 function BeerFill() {
+  const [pop, setPop] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setPop(true), 3300);
+    return () => window.clearTimeout(t);
+  }, []);
   const bubbles = Array.from({ length: 120 }, (_, i) => {
     const size = 3 + ((i * 7) % 10);
-    return { left: (i * 53 + (i % 5) * 9) % 100, size, dur: 1.6 + ((i * 13) % 17) / 10, delay: ((i * 29) % 30) / 10, sway: ((i % 2 ? 1 : -1) * (6 + (i % 7) * 3)) };
+    return { left: (i * 53 + (i % 5) * 9) % 100, size, dur: 1.4 + ((i * 13) % 17) / 10, delay: ((i * 29) % 20) / 10, sway: ((i % 2 ? 1 : -1) * (6 + (i % 7) * 3)) };
   });
   const foam = Array.from({ length: 26 }, (_, i) => {
     const size = 34 + ((i * 17) % 30);
     return { left: (i * 100) / 25 - 4 + ((i * 7) % 5), size, bottom: 30 + ((i * 11) % 34), delay: 2.2 + ((i * 3) % 10) / 10 };
   });
+  // Bubbles that cover the screen and burst at random moments (a fixed grid with a little jitter keeps it deterministic).
+  const w = typeof window === 'undefined' ? 390 : window.innerWidth;
+  const h = typeof window === 'undefined' ? 844 : window.innerHeight + 140;
+  const cell = 84;
+  const cols = Math.ceil(w / cell) + 1;
+  const rows = Math.ceil(h / cell) + 1;
+  const pops = pop
+    ? Array.from({ length: cols * rows }, (_, i) => {
+        const c = i % cols;
+        const r = Math.floor(i / cols);
+        const size = 110 + ((i * 37) % 50);
+        return { x: c * cell - cell / 2 + ((i * 17) % 30) - size / 2 + cell / 2, y: r * cell - cell / 2 + ((i * 23) % 30) - size / 2 + cell / 2, size, delay: ((i * 61) % 100) / 100 * 0.85 };
+      })
+    : [];
   return createPortal(
-    <div className="beer-fill" aria-hidden="true">
+    <div className={`beer-fill${pop ? ' pop' : ''}`} aria-hidden="true">
       <div className="beer-liquid">
         <div className="beer-body">
           {bubbles.map((b, i) => (
@@ -169,6 +197,9 @@ function BeerFill() {
           ))}
         </div>
       </div>
+      {pops.map((b, i) => (
+        <span key={i} className="beer-pop" style={{ left: b.x, top: b.y, width: b.size, height: b.size, animationDelay: `${b.delay}s` }} />
+      ))}
     </div>,
     document.body,
   );

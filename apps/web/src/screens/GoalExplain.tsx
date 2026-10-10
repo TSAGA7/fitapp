@@ -59,6 +59,9 @@ const TEXTS: Record<GoalType, GoalText> = {
   },
 };
 
+/** Why the day's norm looks the way it does, for the chosen goal: used on the nutrition screen next to the norm. */
+export const goalNutritionText = (goal: GoalType): { calories: string; protein: string } => ({ calories: TEXTS[goal].calories, protein: TEXTS[goal].protein });
+
 const COMMON = [
   'Калории: базовый обмен по формуле Миффлина — Сан-Жеора умножается на коэффициент активности (сидячая работа 1,2, плюс 0,025 за каждую тренировку в неделю). Это расход за день. Цель сдвигает его вверх или вниз.',
   'Белок задаётся первым — на килограмм твоего веса, по цели.',

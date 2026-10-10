@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { entityBase, LocalDateSchema, Macros } from './common';
+import { Feeling, Symptom } from './cycle';
 import { FoodBasis, FoodLogEntryType, MealPlanStatus, MealSlot } from './enums';
 import { FoodDataSource, Per100 } from './food';
 
@@ -77,5 +78,8 @@ export const DailyLog = z.object({
   date: LocalDateSchema,
   waterMl: z.number().min(0).nullable(),
   note: z.string().max(1000).nullable(),
+  /** How the body felt that day and what bothered (cycle tracking). Optional for old records. */
+  feeling: Feeling.nullable().optional(),
+  symptoms: z.array(Symptom).max(6).optional(),
 });
 export type DailyLog = z.infer<typeof DailyLog>;

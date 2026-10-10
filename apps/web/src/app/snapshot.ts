@@ -9,6 +9,8 @@ import {
   startOfWeek,
   type BodyMetric,
   type Equipment,
+  type Feeling,
+  type Symptom,
   type Exercise,
   type ExerciseStrength,
   type Food,
@@ -72,6 +74,9 @@ export interface Snapshot {
   workouts: WorkoutSummary[];
   foodDays: FoodDay[];
   waterMl: number;
+  /** How the body feels today (cycle tracking), if the user said. */
+  feeling: Feeling | null;
+  symptoms: Symptom[];
   exercises: Exercise[];
   equipment: Equipment[];
   userEquipment: UserEquipment[];
@@ -169,6 +174,8 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       workouts,
       foodDays,
       waterMl: water?.waterMl ?? 0,
+      feeling: water?.feeling ?? null,
+      symptoms: water?.symptoms ?? [],
       exercises,
       equipment: await r.equipment.listAll(),
       userEquipment: await r.userEquipment.listAll(),

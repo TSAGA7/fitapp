@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { diffDays, isTrainingDay, recommendedWaterMl } from '@fitapp/domain';
 import { addWater, ensureSessions, setWater } from '../actions';
-import { eatenOf, itemsOnDate, logsOnDate, plannedOf } from '../app/derive';
+import { eatenOf, logsOnDate } from '../app/derive';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
 import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signed } from '../app/format';
@@ -10,6 +10,7 @@ import { go } from '../app/router';
 import { Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sparkline } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
 import { BodyweightCard } from './BodyweightMode';
+import { FeelingCard } from './Cycle';
 import { GoalExplainSheet } from './GoalExplain';
 import { AddMeasurementSheet, AddWeightSheet, parseDecimal } from './shared';
 
@@ -42,7 +43,6 @@ export function Today() {
       ? { cls: 'train', emoji: '💪🏼', text: 'Сегодня пашем в зале' }
       : { cls: 'rest', emoji: '😎', text: 'Выходной. Сегодня кайфуй, но не сильно!' };
   const eatenToday = eatenOf(logsOnDate(s, s.today));
-  const plannedToday = plannedOf(itemsOnDate(s, s.today));
 
   const delta =
     w.monthChangeKg !== null
@@ -58,7 +58,6 @@ export function Today() {
   const goalProgress = target !== null && start !== null && w.currentKg !== null && start !== target ? (start - w.currentKg) / (start - target) : null;
 
   const lastWorkout = s.workouts[0];
-  const food = s.foodDays[0];
   const lastMeasure = Object.values(s.series).flatMap((list) => list ?? []).map((p) => p.date).sort().pop();
   const measureAge = lastMeasure ? diffDays(lastMeasure, s.today) : null;
   const spark = s.weightPoints.slice(-30).map((p) => p.kg);
@@ -126,7 +125,8 @@ export function Today() {
           <span>{status.text}</span>
         </button>
       )}
-      {targets && (plannedToday.kcal > 0 || eatenToday.kcal > 0) && (
+      <FeelingCard />
+      {targets ? (
         <Card onClick={() => go('nutrition')}>
           <div className="row between">
             <div>
@@ -136,8 +136,14 @@ export function Today() {
             <Icon name="chevronRight" size={18} />
           </div>
           <div style={{ marginTop: 10 }}><ProgressBar value={targets.kcal > 0 ? eatenToday.kcal / targets.kcal : 0} label="Калории сегодня" /></div>
-          <div className="t-small" style={{ marginTop: 6 }}>Белок {fmt(eatenToday.proteinG, 0)} из {fmt(targets.proteinG, 0)} г</div>
+          <div className="grid-3" style={{ marginTop: 12 }}>
+            <div><span className="dot" style={{ background: '#16a34a' }} /> <span className="t-small">Белки</span><div style={{ fontWeight: 700 }}>{fmt(eatenToday.proteinG, 0)} из {fmt(targets.proteinG, 0)} г</div></div>
+            <div><span className="dot" style={{ background: '#f59e0b' }} /> <span className="t-small">Жиры</span><div style={{ fontWeight: 700 }}>{fmt(eatenToday.fatG, 0)} из {fmt(targets.fatG, 0)} г</div></div>
+            <div><span className="dot" style={{ background: '#a78bfa' }} /> <span className="t-small">Углеводы</span><div style={{ fontWeight: 700 }}>{fmt(eatenToday.carbG, 0)} из {fmt(targets.carbG, 0)} г</div></div>
+          </div>
         </Card>
+      ) : (
+        <ListItem icon="nutrition" title="Питание" subtitle="Рацион и цели по КБЖУ появятся здесь" onClick={() => go('nutrition')} />
       )}
       {vacation ? null : lastWorkout ? (
         <ListItem icon="training" lime title="Последняя тренировка" subtitle={`${formatDay(lastWorkout.date)} · ${lastWorkout.exercises} ${plural(lastWorkout.exercises, ['упражнение', 'упражнения', 'упражнений'])} · ${lastWorkout.sets} ${plural(lastWorkout.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go('training')} />
@@ -145,25 +151,6 @@ export function Today() {
         <Card flat>
           <EmptyState icon="training" title="Программа тренировок появится здесь" text="Как только ты проведёшь первую тренировку, она появится в этом блоке." />
         </Card>
-      )}
-
-      {food ? (
-        <Card onClick={() => go('nutrition')}>
-          <div className="row between">
-            <div>
-              <div className="t-caption">Питание · {formatDay(food.date)}</div>
-              <div className="t-h2">{fmt(food.kcal, 0)} ккал</div>
-            </div>
-            <Icon name="chevronRight" size={18} />
-          </div>
-          <div className="grid-3" style={{ marginTop: 12 }}>
-            <div><span className="dot" style={{ background: '#16a34a' }} /> <span className="t-small">Белки</span><div style={{ fontWeight: 700 }}>{fmt(food.proteinG, 0)} г</div></div>
-            <div><span className="dot" style={{ background: '#f59e0b' }} /> <span className="t-small">Жиры</span><div style={{ fontWeight: 700 }}>{fmt(food.fatG, 0)} г</div></div>
-            <div><span className="dot" style={{ background: '#a78bfa' }} /> <span className="t-small">Углеводы</span><div style={{ fontWeight: 700 }}>{fmt(food.carbG, 0)} г</div></div>
-          </div>
-        </Card>
-      ) : (
-        <ListItem icon="nutrition" title="Питание" subtitle="Рацион и цели по КБЖУ появятся здесь" onClick={() => go('nutrition')} />
       )}
 
       {spark.length >= 2 && w.currentKg !== null && (

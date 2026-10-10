@@ -82,6 +82,26 @@ describe('export', () => {
   });
 });
 
+describe('cycle data travels with the backup', () => {
+  it('the cycle settings (profile) and the day feeling (daily log) are exported and restored', async () => {
+    const { a, b } = await pair();
+    const { profile } = await populate(a.s);
+    const cycle = { enabled: true, mode: 'dates' as const, lastPeriodStart: '2026-10-01', cycleLengthDays: 29, periodLengthDays: 5, manualSince: null, history: ['2026-09-02'] };
+    await a.s.repos.profile.save({ ...profile, cycle });
+    await a.s.repos.dailyLogs.put({ ...builders(a.s).dailyLog('2026-10-05'), feeling: 'bad', symptoms: ['cramps', 'fatigue'] });
+    const json = await a.s.backup.exportJson();
+    const file = JSON.parse(json);
+    expect(file.stores.profile[0].cycle).toEqual(cycle);
+    expect(file.stores.dailyLogs[0]).toMatchObject({ feeling: 'bad', symptoms: ['cramps', 'fatigue'] });
+    const preview = await b.s.backup.previewImport(json);
+    expect(preview.validation.ok).toBe(true);
+    expect(preview.validation.invalid).toEqual([]);
+    await b.s.backup.applyImport(preview, { confirmed: true });
+    expect((await b.s.repos.profile.get())?.cycle).toEqual(cycle);
+    expect((await b.s.repos.dailyLogs.getByDate('2026-10-05'))?.feeling).toBe('bad');
+  });
+});
+
 describe('round trip', () => {
   it('restores everything into an empty app and the data is identical', async () => {
     const { a, b } = await pair();
