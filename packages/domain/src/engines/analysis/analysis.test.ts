@@ -3,7 +3,7 @@ import type { BodyMetric } from '../../model';
 import { ageYears } from '../../util/age';
 import { addDays } from '../../util/localDate';
 import { summarizeSeries, toMetricSeries } from './measurements';
-import { strengthByExercise } from './strength';
+import { e1rmKg, muscleVolume, strengthByExercise, volumeLevel } from './strength';
 import { analyzeWeight, movingAverage, toWeightPoints, windowMean } from './weight';
 
 const metric = (id: string, type: BodyMetric['type'], value: number, measuredOn: string, createdAt = '2026-10-01T08:00:00+00:00', deletedAt: string | null = null): BodyMetric => ({
@@ -116,15 +116,57 @@ describe('strength', () => {
     ]);
     expect(r).toHaveLength(1);
     expect(r[0]?.sessions).toEqual([
-      { date: '2026-07-03', topWeightKg: 40, repsAtTop: 10, sets: 2, totalReps: 18, volumeKg: 720 },
-      { date: '2026-07-23', topWeightKg: 45, repsAtTop: 8, sets: 2, totalReps: 18, volumeKg: 760 },
+      { date: '2026-07-03', e1rmKg: 53.3, topWeightKg: 40, repsAtTop: 10, sets: 2, totalReps: 18, volumeKg: 720 },
+      { date: '2026-07-23', e1rmKg: 57, topWeightKg: 45, repsAtTop: 8, sets: 2, totalReps: 18, volumeKg: 760 },
     ]);
+    expect(r[0]?.records).toEqual({ e1rm: { kg: 57, date: '2026-07-23' }, weight: { kg: 45, reps: 8, date: '2026-07-23' }, volume: { kg: 760, date: '2026-07-23' }, newOnLast: true });
+    expect(r[0]).toMatchObject({ firstE1rmKg: 53.3, lastE1rmKg: 57, e1rmDeltaPct: 6.9 });
     expect(r[0]).toMatchObject({ firstTopWeightKg: 40, lastTopWeightKg: 45, deltaKg: 5, deltaPct: 12.5 });
   });
   it('ignores sets without a weight or reps, and sorts by the latest training', () => {
     const r = strengthByExercise([row('a', '2026-07-01', 30, 10), row('b', '2026-07-10', 20, 10), row('c', '2026-07-12', null, 10), row('d', '2026-07-12', 20, 0)]);
     expect(r.map((x) => x.exerciseId)).toEqual(['b', 'a']);
     expect(r[1]?.deltaPct).toBeNull();
+  });
+});
+
+describe('estimated max and records', () => {
+  const row = (exerciseId: string, date: string, weightKg: number, reps: number) => ({ exerciseId, date, weightKg, reps, setType: 'working' as const });
+  it('does not call a worse last workout a record and keeps the old best', () => {
+    const r = strengthByExercise([row('x', '2026-07-01', 60, 8), row('x', '2026-07-10', 50, 8)])[0]!;
+    expect(r.records.newOnLast).toBe(false);
+    expect(r.records.e1rm.date).toBe('2026-07-01');
+    expect(r.e1rmDeltaPct).toBeLessThan(0);
+  });
+  it('a single workout is never a "new record"', () => {
+    expect(strengthByExercise([row('x', '2026-07-01', 60, 8)])[0]!.records.newOnLast).toBe(false);
+  });
+  it('trusts only sets up to 12 reps for the estimate', () => {
+    const r = strengthByExercise([row('x', '2026-07-01', 40, 8), row('x', '2026-07-01', 20, 25)])[0]!;
+    expect(r.sessions[0]!.e1rmKg).toBe(e1rmKg(40, 8));
+  });
+});
+
+describe('volume by muscle', () => {
+  const muscles = (id: string) => (id === 'squat' ? { primary: ['quads', 'glutes'], secondary: ['hamstrings'] } : id === 'curl' ? { primary: ['biceps'], secondary: [] } : undefined);
+  const rows = [
+    ...Array.from({ length: 4 }, () => ({ exerciseId: 'squat', date: '2026-10-08', setType: 'working' as const })),
+    { exerciseId: 'squat', date: '2026-10-08', setType: 'warmup' as const },
+    ...Array.from({ length: 3 }, () => ({ exerciseId: 'squat', date: '2026-10-01', setType: 'working' as const })),
+    { exerciseId: 'curl', date: '2026-10-09', setType: 'working' as const },
+    { exerciseId: 'unknown', date: '2026-10-09', setType: 'working' as const },
+    { exerciseId: 'squat', date: '2026-09-20', setType: 'working' as const },
+  ];
+  it('counts a primary muscle set as 1 and a secondary as 0.5, this week against the one before, without warm-ups', () => {
+    const v = muscleVolume(rows, muscles, '2026-10-10');
+    const get = (m: string) => v.find((x) => x.muscle === m)!;
+    expect(get('quads')).toMatchObject({ sets: 4, prevSets: 3 });
+    expect(get('hamstrings')).toMatchObject({ sets: 2, prevSets: 1.5 });
+    expect(get('biceps')).toMatchObject({ sets: 1, level: 'low' });
+    expect(v[0]!.sets).toBeGreaterThanOrEqual(v[v.length - 1]!.sets);
+  });
+  it('rates the weekly sets', () => {
+    expect([volumeLevel(2), volumeLevel(7), volumeLevel(12), volumeLevel(25)]).toEqual(['low', 'some', 'good', 'high']);
   });
 });
 

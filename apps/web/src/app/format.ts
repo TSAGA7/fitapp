@@ -83,3 +83,23 @@ export function deltaTone(type: MetricType, delta: number | null, goal?: GoalTyp
 }
 
 export const initials = (name: string | null | undefined): string => (name?.trim() ? (name.trim()[0] as string).toUpperCase() : 'F');
+
+export const MUSCLE_LABELS: Record<string, string> = {
+  chest: 'Грудь',
+  lats: 'Широчайшие',
+  upper_back: 'Верх спины',
+  lower_back: 'Поясница',
+  front_delts: 'Передние дельты',
+  side_delts: 'Средние дельты',
+  rear_delts: 'Задние дельты',
+  biceps: 'Бицепс',
+  triceps: 'Трицепс',
+  forearms: 'Предплечья',
+  quads: 'Квадрицепс',
+  hamstrings: 'Задняя поверхность бедра',
+  glutes: 'Ягодицы',
+  adductors: 'Приводящие',
+  calves: 'Икры',
+  abs: 'Пресс',
+  obliques: 'Косые мышцы',
+};

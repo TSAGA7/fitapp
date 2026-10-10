@@ -120,10 +120,10 @@ export function Today() {
         </div>
       )}
       {!vacation && s.activeVersion && (
-        <button type="button" className={`day-status ${status.cls}`} onClick={() => go('training')}>
+        <div className={`day-status ${status.cls}`} role="status">
           <span className="ds-emoji" aria-hidden="true">{status.emoji}</span>
           <span>{status.text}</span>
-        </button>
+        </div>
       )}
       <FeelingCard />
       {targets ? (

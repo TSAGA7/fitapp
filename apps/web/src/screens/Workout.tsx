@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
+import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
 import { abandonWorkout, addSetToExercise, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
@@ -112,8 +112,8 @@ export function Workout({ sessionId }: { sessionId: string }) {
       {readOnly && view.session.status === 'completed' && <WorkoutSummaryCard sessionId={sessionId} />}
       {banner}
 
-      {view.exercises.map((ev) => (
-        <ExerciseCard key={ev.se.id} ev={ev} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} />
+      {view.exercises.map((ev, idx) => (
+        <ExerciseCard key={ev.se.id} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} />
       ))}
 
       {!readOnly && (
@@ -227,8 +227,18 @@ function FinishSheet({ open, onClose, doneSets, totalSets, onFinish }: { open: b
 
 // ------------------------------------------------------------------ exercise card
 
+/** Where the exercise stands for warming up: the first loaded one of the workout, another one, or one whose main muscle is already warm. */
+function warmPositionOf(list: readonly WorkoutExerciseView[], idx: number): WarmupPosition {
+  const loaded = (e: WorkoutExerciseView) => e.exercise.loadUnit.startsWith('kg') && (e.plan[0]?.targetWeightKg ?? 0) > 0;
+  const earlier = list.slice(0, idx).filter(loaded);
+  if (earlier.length === 0) return 'first';
+  const mine = new Set(list[idx]!.exercise.primaryMuscles);
+  return earlier.some((e) => e.exercise.primaryMuscles.some((m) => mine.has(m))) ? 'repeat' : 'later';
+}
+
 interface CardProps {
   ev: WorkoutExerciseView;
+  warmPosition: WarmupPosition;
   readOnly: boolean;
   busy: boolean;
   mutate: (fn: Parameters<ReturnType<typeof useCommand>['ok']>[0], rest?: number | null, reason?: string) => Promise<void>;
@@ -238,10 +248,44 @@ interface CardProps {
   onToggle: () => void;
 }
 
+/** A short ramp of lighter sets before the first working set. Logged as warm-ups: they never count as work or move the progression. */
+function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutExerciseView; position: WarmupPosition; busy: boolean; mutate: CardProps['mutate']; contextKey: string }) {
+  const { se, exercise, plan, logs } = ev;
+  if (!exercise.loadUnit.startsWith('kg')) return null;
+  const workingKg = plan[0]?.targetWeightKg ?? 0;
+  const sets = warmupSets({ workingKg, compound: exercise.isCompound, position, grid: { stepKg: ev.stepKg > 0 ? ev.stepKg : 2.5, minKg: ev.minKg, maxKg: ev.maxKg } });
+  if (sets.length === 0) return null;
+  const done = (no: number) => logs.find((l) => l.setType === 'warmup' && l.setNo === no && l.status === 'done');
+  return (
+    <div className="warmup" role="group" aria-label="Разминка">
+      <div className="t-caption">Разминка перед рабочими подходами</div>
+      {sets.map((w, i) => {
+        const no = i + 1;
+        const d = done(no);
+        return (
+          <div key={no} className="set-row">
+            <span className="t-caption">Разминка {no}</span>
+            <span className="t-small">{fmt(w.weightKg, 2)} кг × {w.reps}</span>
+            {d ? (
+              <span className="row">
+                <Badge>Готово</Badge>
+                <IconButton icon="close" label="Отменить разминочный подход" tone="ghost" onClick={() => void mutate((x) => undoSet(x, se.id, no, 'warmup'))} />
+              </span>
+            ) : (
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => void mutate((x) => logSet(x, { sessionExerciseId: se.id, exerciseId: exercise.id, variantKey: se.variantKey, contextKey, plannedSetId: null, setNo: no, setType: 'warmup', weightKg: w.weightKg, reps: w.reps, rir: null, restSec: null }))}>Сделал</Button>
+            )}
+          </div>
+        );
+      })}
+      <p className="t-small">Лёгкие подходы без отказа и без записи запаса: на прогрессию и тоннаж они не влияют.</p>
+    </div>
+  );
+}
+
 /** Sets of the plan that are settled (done or skipped): the exercise is finished when all of them are. */
 export const settledSets = (ev: WorkoutExerciseView): number => ev.plan.filter((p) => ev.logs.some((l) => l.setType === 'working' && l.setNo === p.setNo)).length;
 
-function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardProps) {
+function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onToggle }: CardProps) {
   const { snapshot: s } = useData();
   const { se, exercise, plan, logs } = ev;
   const working = logs.filter((l) => l.setType === 'working');
@@ -340,6 +384,10 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardP
             </div>
             {exercise.variants.find((v) => v.key === se.variantKey)?.note && <p className="t-small">{exercise.variants.find((v) => v.key === se.variantKey)?.note}</p>}
           </div>
+        )}
+
+        {!readOnly && working.length === 0 && (
+          <WarmupBlock ev={ev} position={warmPosition} busy={busy} mutate={mutate} contextKey={contextKey} />
         )}
 
         <div className="list">

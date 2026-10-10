@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { addDays, movingAverage, summarizeSeries, type MetricType, type WeightPoint } from '@fitapp/domain';
+import { addDays, movingAverage, summarizeSeries, type MetricType, type VolumeLevel, type WeightPoint } from '@fitapp/domain';
 import { deleteMetric } from '../actions';
 import { useData } from '../app/DataContext';
-import { BODY_MEASUREMENTS, cm, deltaTone, fmt, formatDateLong, formatDateShort, formatDay, kg, METRIC_LABELS, plural, signed } from '../app/format';
+import { BODY_MEASUREMENTS, cm, deltaTone, fmt, formatDateLong, formatDateShort, formatDay, kg, METRIC_LABELS, MUSCLE_LABELS, plural, signed } from '../app/format';
 import { go } from '../app/router';
 import { Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, MetricCard, Segmented, type ChartSeries } from '../ui';
 import { AddMeasurementSheet, AddWeightSheet, ScreenHeader } from './shared';
@@ -168,6 +168,32 @@ function MeasurementDetail({ type }: { type: MetricType }) {
   );
 }
 
+const LEVEL_TEXT: Record<VolumeLevel, string> = { low: 'мало', some: 'немного', good: 'в норме', high: 'много' };
+
+function VolumeCard() {
+  const { snapshot: s } = useData();
+  const rows = s.muscleVolume;
+  if (rows.length === 0) return null;
+  const max = Math.max(24, ...rows.map((r) => r.sets));
+  return (
+    <Card>
+      <div className="stack">
+        <div className="t-h3">Объём по мышцам за 7 дней</div>
+        <p className="t-small">Рабочие подходы: основная мышца считается за 1, вспомогательная за 0,5. Для роста обычно хватает 10–20 подходов на мышцу в неделю.</p>
+        {rows.map((r) => (
+          <div key={r.muscle} className="vol-row">
+            <span className="vol-name">{MUSCLE_LABELS[r.muscle] ?? r.muscle}</span>
+            <span className="vol-bar" aria-hidden="true"><span className={`vol-fill ${r.level}`} style={{ width: `${Math.min(100, (r.sets / max) * 100)}%` }} /><span className="vol-band" style={{ left: `${(10 / max) * 100}%`, width: `${(10 / max) * 100}%` }} /></span>
+            <span className="vol-num">{fmt(r.sets, r.sets % 1 ? 1 : 0)}</span>
+            <span className={`vol-lvl ${r.level}`}>{LEVEL_TEXT[r.level]}</span>
+          </div>
+        ))}
+        <p className="t-small">Серая полоса: рабочий диапазон 10–20. Неделей раньше: {rows.filter((r) => r.prevSets > 0).slice(0, 4).map((r) => `${(MUSCLE_LABELS[r.muscle] ?? r.muscle).toLowerCase()} ${fmt(r.prevSets, r.prevSets % 1 ? 1 : 0)}`).join(', ') || 'нет данных'}.</p>
+      </div>
+    </Card>
+  );
+}
+
 function StrengthTab() {
   const { snapshot: s } = useData();
   if (s.strength.length === 0) {
@@ -177,18 +203,36 @@ function StrengthTab() {
       </Card>
     );
   }
+  const fresh = s.strength.filter((e) => e.records.newOnLast);
   return (
-    <div className="list">
-      {s.strength.map((e) => (
-        <ListItem
-          key={e.exerciseId}
-          icon="training"
-          title={s.exerciseNames[e.exerciseId] ?? e.exerciseId}
-          subtitle={`${e.sessions.length} ${plural(e.sessions.length, ['тренировка', 'тренировки', 'тренировок'])} · последний вес ${kg(e.lastTopWeightKg)}`}
-          trailing={e.sessions.length >= 2 ? <span className={e.deltaKg > 0 ? 'tone-good' : e.deltaKg < 0 ? 'tone-bad' : 'tone-flat'}>{signed(e.deltaKg)}{NBSP}кг</span> : undefined}
-          onClick={() => go(`progress/strength/${encodeURIComponent(e.exerciseId)}`)}
-        />
-      ))}
+    <div className="stack">
+      {fresh.length > 0 && (
+        <Card>
+          <div className="stack">
+            <div className="t-h3">🏆 Новые рекорды</div>
+            {fresh.map((e) => (
+              <div key={e.exerciseId} className="hist">
+                <span className="grow">{s.exerciseNames[e.exerciseId] ?? e.exerciseId}</span>
+                <strong>e1RM {fmt(e.records.e1rm.kg)}{NBSP}кг</strong>
+              </div>
+            ))}
+            <p className="t-small">e1RM — расчётный максимум на одно повторение. Это оценка по подходам, а не проверенный максимум.</p>
+          </div>
+        </Card>
+      )}
+      <VolumeCard />
+      <div className="list">
+        {s.strength.map((e) => (
+          <ListItem
+            key={e.exerciseId}
+            icon="training"
+            title={s.exerciseNames[e.exerciseId] ?? e.exerciseId}
+            subtitle={`e1RM ${fmt(e.lastE1rmKg)} кг · ${e.sessions.length} ${plural(e.sessions.length, ['тренировка', 'тренировки', 'тренировок'])} · лучший вес ${kg(e.records.weight.kg)}`}
+            trailing={e.e1rmDeltaPct !== null ? <span className={e.e1rmDeltaPct > 0 ? 'tone-good' : e.e1rmDeltaPct < 0 ? 'tone-bad' : 'tone-flat'}>{signed(e.e1rmDeltaPct)}{NBSP}%</span> : undefined}
+            onClick={() => go(`progress/strength/${encodeURIComponent(e.exerciseId)}`)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -208,6 +252,25 @@ function StrengthDetail({ exerciseId }: { exerciseId: string }) {
   return (
     <main className="screen">
       <ScreenHeader title={name} back="progress/strength" />
+      <Card>
+        <div className="t-caption">Расчётный максимум (e1RM)</div>
+        <div className="t-num">{fmt(e.lastE1rmKg)}<span className="t-h3 muted"> кг</span></div>
+        {e.e1rmDeltaPct !== null && <div className={`t-caption ${e.e1rmDeltaPct > 0 ? 'tone-good' : e.e1rmDeltaPct < 0 ? 'tone-bad' : 'tone-flat'}`}>{signed(e.e1rmDeltaPct)}{NBSP}% с {formatDateLong(e.sessions[0]!.date)}</div>}
+        {e.sessions.length >= 2 && (
+          <div style={{ marginTop: 10 }}>
+            <LineChart ariaLabel={`Расчётный максимум: ${name}`} series={[{ id: 'e', label: 'e1RM', color: '#a78bfa', area: true, dots: true, points: e.sessions.map((x) => ({ date: x.date, value: x.e1rmKg })) }]} formatY={(v) => fmt(v, 0)} formatX={formatDateShort} formatTip={(p) => `${fmt(p.value)} кг · ${formatDateShort(p.date)}`} />
+          </div>
+        )}
+        <p className="t-small" style={{ marginTop: 8 }}>Оценка по формуле Эпли: вес × (1 + повторения / 30). Надёжна до 12 повторений.</p>
+      </Card>
+      <Card flat>
+        <div className="stack">
+          <div className="t-h3">🏆 Рекорды</div>
+          <div className="hist"><span className="grow">Расчётный максимум</span><strong>{fmt(e.records.e1rm.kg)}{NBSP}кг</strong><span className="muted">{formatDateShort(e.records.e1rm.date)}</span></div>
+          <div className="hist"><span className="grow">Самый тяжёлый подход</span><strong>{fmt(e.records.weight.kg)}{NBSP}×{NBSP}{e.records.weight.reps}</strong><span className="muted">{formatDateShort(e.records.weight.date)}</span></div>
+          <div className="hist"><span className="grow">Максимум тоннажа за тренировку</span><strong>{fmt(e.records.volume.kg, 0)}{NBSP}кг</strong><span className="muted">{formatDateShort(e.records.volume.date)}</span></div>
+        </div>
+      </Card>
       <Card>
         <div className="t-caption">Лучший вес за тренировку</div>
         <div className="t-num">{fmt(e.lastTopWeightKg)}<span className="t-h3 muted"> кг</span></div>

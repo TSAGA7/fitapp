@@ -118,6 +118,7 @@ export function builders(s: LocalStorage) {
     }),
     userExercise: () => ({ ...base(), exerciseId: 'leg_press', preference: 'like' as const }),
     cardioSession: () => ({ ...base(), date: '2026-10-09', machine: 'treadmill' as const, durationMin: 30, speedKmh: 5.5, inclinePct: 6, level: null, distanceKm: 2.8, avgHeartRate: 128, effort: 5, note: null }),
+    mealTemplate: () => ({ ...base(), name: 'Мой завтрак', slot: 'breakfast' as const, items: [{ foodId: 'egg', grams: 120 }], useCount: 0, lastUsedOn: null }),
     exerciseNote: () => ({ ...base(), exerciseId: 'leg_press', text: 'Тяжело, следи за плечом', sessionId: 's1', shownInSessionId: null }),
     userFood: () => ({ ...base(), foodId: 'egg', preference: 'like' as const, availability: 'always' as const, maxPerDayG: null, excluded: false }),
     targets: (validFrom = '2026-10-01', validTo: string | null = null) => ({ ...base(), validFrom, validTo, targets, versionId: null }),

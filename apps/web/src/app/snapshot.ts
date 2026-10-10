@@ -3,6 +3,8 @@ import {
   addDays,
   analyzeWeight,
   strengthByExercise,
+  muscleVolume,
+  type MuscleVolume,
   toLocalDate,
   toMetricSeries,
   toWeightPoints,
@@ -18,6 +20,7 @@ import {
   type Goal,
   type Injury,
   type MealPlan,
+  type MealTemplate,
   type NutritionTargetsRecord,
   type PainEvent,
   type PlanChange,
@@ -70,6 +73,8 @@ export interface Snapshot {
   weight: WeightTrend;
   series: Partial<Record<MetricType, MetricPoint[]>>;
   strength: ExerciseStrength[];
+  /** Sets per muscle over the last 7 days and the 7 before. */
+  muscleVolume: MuscleVolume[];
   exerciseNames: Record<string, string>;
   workouts: WorkoutSummary[];
   foodDays: FoodDay[];
@@ -86,6 +91,7 @@ export interface Snapshot {
   userFoods: UserFood[];
   userExercises: UserExercise[];
   cardioSessions: CardioSession[];
+  mealTemplates: MealTemplate[];
   exerciseNotes: ExerciseNote[];
   foodLogs: FoodLog[];
   program: Program | undefined;
@@ -114,6 +120,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
     const metrics = await r.metrics.listAll();
     const exercises = await r.exercises.listAll();
     const exerciseNames = Object.fromEntries(exercises.map((e) => [e.id, e.name]));
+    const muscleMap = new Map(exercises.map((e) => [e.id, e]));
 
     const sessions = (await r.workouts.listSessions()).sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)).slice(0, 400);
     const rows: StrengthRow[] = [];
@@ -170,6 +177,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       weight: analyzeWeight(weightPoints),
       series: toMetricSeries(metrics),
       strength: strengthByExercise(rows),
+      muscleVolume: muscleVolume(rows, (id) => { const e = muscleMap.get(id); return e ? { primary: e.primaryMuscles, secondary: e.secondaryMuscles } : undefined; }, today),
       exerciseNames,
       workouts,
       foodDays,
@@ -184,6 +192,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       foods: await r.foods.listAll(),
       userFoods: await r.userFoods.listAll(),
       userExercises: await r.userExercises.listAll(),
+      mealTemplates: (await r.mealTemplates.listAll()).filter((t) => t.deletedAt === null).sort((a, b) => b.useCount - a.useCount || a.name.localeCompare(b.name)),
       cardioSessions: (await r.cardioSessions.listAll()).filter((c) => c.deletedAt === null).sort((a, b) => (a.date === b.date ? (a.createdAt < b.createdAt ? 1 : -1) : a.date < b.date ? 1 : -1)),
       exerciseNotes: await r.exerciseNotes.listAll(),
       foodLogs: logs,

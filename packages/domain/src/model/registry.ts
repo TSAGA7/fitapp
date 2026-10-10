@@ -1,5 +1,6 @@
 import type { ZodTypeAny } from 'zod';
 import { BodyMetric } from './metrics';
+import { MealTemplate } from './mealTemplate';
 import { DailyLog, FoodLog, MealPlan, PlannedItem } from './nutritionLog';
 import { Equipment, UserEquipment } from './equipment';
 import { CardioSession } from './cardio';
@@ -42,6 +43,7 @@ export const ENTITY_SCHEMAS = {
   plannedItems: PlannedItem,
   foodLogs: FoodLog,
   dailyLogs: DailyLog,
+  mealTemplates: MealTemplate,
   programs: Program,
   programVersions: ProgramVersion,
   planChanges: PlanChange,
@@ -59,4 +61,4 @@ export type StoreName = keyof typeof ENTITY_SCHEMAS;
 export const STORE_NAMES = Object.keys(ENTITY_SCHEMAS) as StoreName[];
 
 /** Bump together with a Dexie migration. */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;

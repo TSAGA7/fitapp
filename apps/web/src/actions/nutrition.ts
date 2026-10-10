@@ -426,3 +426,64 @@ export async function setFoodPreference(deps: AppDeps, foodId: string, patch: Pa
     else await r.userFoods.put({ ...baseOf(deps), foodId, preference: 'ok', availability: 'always', maxPerDayG: null, excluded: false, ...patch });
   });
 }
+
+// ---------------------------------------------------------------- my usual meals
+
+export interface MealTemplateInput {
+  name: string;
+  slot: MealSlot | null;
+  items: Array<{ foodId: string; grams: number }>;
+}
+
+/** Saves a meal the user eats again and again under a name. */
+export async function saveMealTemplate(deps: AppDeps, input: MealTemplateInput): Promise<string> {
+  const name = input.name.trim();
+  if (name === '') throw new Error('Дай приёму название');
+  const items = input.items.filter((i) => i.grams > 0).map((i) => ({ foodId: i.foodId, grams: Math.round(i.grams * 10) / 10 }));
+  if (items.length === 0) throw new Error('В приёме нет продуктов');
+  return deps.uow.run(async (r) => {
+    const same = (await r.mealTemplates.listAll()).find((t) => t.deletedAt === null && t.name.toLowerCase() === name.toLowerCase());
+    if (same) {
+      await r.mealTemplates.put({ ...same, name, slot: input.slot, items });
+      return same.id;
+    }
+    const t = { ...baseOf(deps), name, slot: input.slot, items, useCount: 0, lastUsedOn: null };
+    await r.mealTemplates.put(t);
+    return t.id;
+  });
+}
+
+export async function deleteMealTemplate(deps: AppDeps, id: string): Promise<void> {
+  await deps.uow.run((r) => r.mealTemplates.softDelete(id));
+}
+
+/** Adds every food of a saved meal to a meal of the day as eaten, and remembers that it was used. */
+export async function logMealTemplate(deps: AppDeps, input: { id: string; date: string; slot: MealSlot }): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const t = await r.mealTemplates.get(input.id);
+    if (!t || t.deletedAt !== null) throw new Error('Такого приёма больше нет');
+    for (const item of t.items) {
+      const food = await foodById(r, item.foodId).catch(() => null);
+      if (!food) continue; // a food that was deleted since is skipped, the rest still go in
+      await r.foodLogs.put(makeLog(deps, food, { date: input.date, slot: input.slot, grams: item.grams, entryType: 'unplanned', plannedItemId: null }));
+    }
+    await r.mealTemplates.put({ ...t, useCount: t.useCount + 1, lastUsedOn: input.date });
+    await rebalanceDay(r, deps, input.date);
+  });
+}
+
+/** Repeats what was eaten at the same meal on another day ("same as yesterday"). */
+export async function repeatMealFrom(deps: AppDeps, input: { from: string; to: string; slot: MealSlot }): Promise<number> {
+  return deps.uow.run(async (r) => {
+    const logs = (await r.foodLogs.listByDateRange({ from: input.from, to: input.from })).filter((l) => l.slot === input.slot && l.deletedAt === null && l.entryType !== 'skipped_planned' && l.actualAmountG > 0);
+    let n = 0;
+    for (const l of logs) {
+      const food = await foodById(r, l.snapshot.foodId).catch(() => null);
+      if (!food) continue;
+      await r.foodLogs.put(makeLog(deps, food, { date: input.to, slot: input.slot, grams: l.actualAmountG, entryType: 'unplanned', plannedItemId: null }));
+      n++;
+    }
+    if (n > 0) await rebalanceDay(r, deps, input.to);
+    return n;
+  });
+}

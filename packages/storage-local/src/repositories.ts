@@ -270,6 +270,7 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
     mealPlans: new MealPlanRepo(db.mealPlans as never, db.plannedItems as never),
     foodLogs: new FoodLogRepo(db.foodLogs as never, 'foodLogs', now),
     dailyLogs: new DailyLogRepo(db.dailyLogs as never, 'dailyLogs', now),
+    mealTemplates: core('mealTemplates') as never,
     programs: programRepo,
     proposals: new ProposalRepo(db.proposals as never, 'proposals', now),
     plannedSessions: new PlannedSessionRepo(db.plannedSessions as never, db.plannedSets as never),

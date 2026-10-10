@@ -22,7 +22,7 @@ const ok = (schema: { safeParse: (v: unknown) => { success: boolean } }, v: unkn
 
 describe('registry', () => {
   it('registers every store with a schema', () => {
-    expect(STORE_NAMES.length).toBe(29);
+    expect(STORE_NAMES.length).toBe(30);
     for (const name of STORE_NAMES) expect(ENTITY_SCHEMAS[name]).toBeDefined();
   });
 });

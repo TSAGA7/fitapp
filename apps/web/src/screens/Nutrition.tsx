@@ -4,6 +4,10 @@ import {
   acceptTargetAdjustment,
   addPlannedItem,
   clearMealLogs,
+  deleteMealTemplate,
+  logMealTemplate,
+  repeatMealFrom,
+  saveMealTemplate,
   createCustomFood,
   deleteCustomFood,
   dishPer100,
@@ -28,7 +32,7 @@ import {
 } from '../actions';
 import { useData } from '../app/DataContext';
 import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, SLOT_ORDER, userFoodOf } from '../app/derive';
-import { fmt, formatDateShort, formatDay, GOAL_LABELS, WEEKDAY_SHORT } from '../app/format';
+import { fmt, formatDateShort, formatDay, GOAL_LABELS, plural, WEEKDAY_SHORT } from '../app/format';
 import { goalNutritionText } from './GoalExplain';
 import { useCommand } from '../app/useCommand';
 import { setManualTargets, useManualTargets, useVacationMode } from '../app/prefs';
@@ -91,6 +95,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const vacation = useVacationMode();
   const manual = useManualTargets();
   const [normOpen, setNormOpen] = useState(false);
+  const [saveMeal, setSaveMeal] = useState<MealSlot | null>(null);
   const [slotForAdd, setSlotForAdd] = useState<{ slot: MealSlot; scan: boolean } | null>(null);
   const [itemSheet, setItemSheet] = useState<PlannedItem | null>(null);
   const [logSheet, setLogSheet] = useState<FoodLog | null>(null);
@@ -205,6 +210,8 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
               {slotItems.length > 0 && !allDone && <Button size="sm" variant="secondary" icon="check" disabled={busy} onClick={() => void run((d) => logMealAsPlanned(d, date, slot))}>Съел всё</Button>}
               {slotLogs.length > 0 && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => clearMealLogs(d, date, slot))}>Сбросить отметки</Button>}
               {!isPast && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => regenerateMeal(d, date, slot, variation()))}>Переделать</Button>}
+              {slotLogs.length === 0 && logsOnDate(s, addDays(date, -1)).some((l) => l.slot === slot && l.actualAmountG > 0 && l.entryType !== 'skipped_planned') && <Button size="sm" variant="text" icon="history" disabled={busy} onClick={() => void run((d) => repeatMealFrom(d, { from: addDays(date, -1), to: date, slot }))}>Как вчера</Button>}
+              {(slotLogs.length > 0 || slotItems.length > 0) && <Button size="sm" variant="text" icon="plus" onClick={() => setSaveMeal(slot)}>Сохранить как мой приём</Button>}
             </div>
             {slotLogs.length > 0 && <p className="t-small">«Переделать» не трогает то, что ты уже съел. Нажми на строку, чтобы изменить граммы или убрать отметку.</p>}
           </section>
@@ -215,6 +222,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
       {!isPast && items.length > 0 && (
         <Button variant="secondary" block icon="history" disabled={busy} onClick={() => void run((d) => regenerateDay(d, date, variation()))}>Переделать день</Button>
       )}
+      <SaveMealSheet slot={saveMeal} date={date} onClose={() => setSaveMeal(null)} />
       <NormSheet open={normOpen} onClose={() => setNormOpen(false)} current={targets} manual={manual} />
 
       <AddFoodSheet open={slotForAdd !== null} slot={slotForAdd?.slot ?? 'snack'} startScan={slotForAdd?.scan ?? false} date={date} onClose={() => setSlotForAdd(null)} />
@@ -490,6 +498,22 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
               <Button variant="secondary" size="sm" block icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
             </div>
             <Button variant="secondary" size="sm" block icon="plus" onClick={() => setDishing('new')}>Создать блюдо из ингредиентов</Button>
+            {s.mealTemplates.length > 0 && query.trim() === '' && (
+              <div className="stack">
+                <div className="t-caption">Мои приёмы: добавятся целиком в «{SLOT_LABEL[slotSel]}»</div>
+                <div className="list">
+                  {s.mealTemplates.map((t) => {
+                    const kcal = t.items.reduce((a, i) => { const f = s.foods.find((x) => x.id === i.foodId); return a + (f ? (f.per100.kcal * i.grams) / 100 : 0); }, 0);
+                    return (
+                      <div key={t.id} className="row" style={{ alignItems: 'stretch' }}>
+                        <div className="grow"><ListItem icon="check" lime title={t.name} subtitle={`${t.items.length} ${plural(t.items.length, ['продукт', 'продукта', 'продуктов'])} · ${fmt(kcal, 0)} ккал`} onClick={async () => { if (await ok((d) => logMealTemplate(d, { id: t.id, date, slot: slotSel }))) close(); }} /></div>
+                        <IconButton icon="trash" label={`Удалить приём «${t.name}»`} tone="ghost" onClick={() => void ok((d) => deleteMealTemplate(d, t.id))} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <TextField label="Поиск продукта" className="search-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" />
             <div className="cat-chips" role="group" aria-label="Категория">
               <button type="button" className="chip" aria-pressed={cat === 'all'} onClick={() => setCat('all')}>Все</button>
@@ -744,6 +768,32 @@ function MonthView() {
   );
 }
 
+/** Names the meal and saves what is in it (what was eaten, otherwise what was planned) to add again in one tap. */
+function SaveMealSheet({ slot, date, onClose }: { slot: MealSlot | null; date: string; onClose: () => void }) {
+  const { snapshot: s } = useData();
+  const { ok, banner, busy } = useCommand();
+  const [name, setName] = useState('');
+  useEffect(() => { if (slot) setName(''); }, [slot]);
+  if (!slot) return null;
+  const logs = logsOnDate(s, date).filter((l) => l.slot === slot && l.actualAmountG > 0 && l.entryType !== 'skipped_planned');
+  const items = logs.length > 0 ? logs.map((l) => ({ foodId: l.snapshot.foodId, grams: l.actualAmountG })) : itemsOnDate(s, date).filter((i) => i.slot === slot).map((i) => ({ foodId: i.foodId, grams: i.plannedAmountG }));
+  const nameOf = (id: string) => s.foods.find((f) => f.id === id)?.name ?? id;
+  return (
+    <Sheet open title="Сохранить как мой приём" onClose={onClose}>
+      <div className="stack">
+        {banner}
+        <TextField label="Название" value={name} onChange={(e) => setName(e.target.value)} placeholder="Например, мой обычный завтрак" />
+        <div className="list">{items.map((i, idx) => <div key={`${i.foodId}-${idx}`} className="hist"><span className="grow">{nameOf(i.foodId)}</span><span className="muted">{fmt(i.grams, 0)} г</span></div>)}</div>
+        <p className="t-small">Потом он будет в списке «Мои приёмы» при добавлении еды: один тап, и все продукты записаны.</p>
+        <div className="row">
+          <Button variant="text" onClick={onClose}>Отмена</Button>
+          <Button disabled={busy || name.trim() === ''} onClick={async () => { if (await ok((d) => saveMealTemplate(d, { name, slot, items }))) onClose(); }}>Сохранить</Button>
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+
 type NormMode = 'macros' | 'kcal';
 
 /**
@@ -808,7 +858,7 @@ function NormSheet({ open, onClose, current, manual }: { open: boolean; onClose:
           ) : <p className="t-small">Задай цель в профиле, и здесь появится объяснение.</p>}
           <p className="t-small"><b>Жиры и углеводы.</b> Жиры: не меньше 0,8 г на кг и не меньше 25% калорий, они нужны для гормонов. Углеводы занимают всё остальное: это топливо для тренировок.</p>
         </div>
-        <Switch checked={on} onChange={setOn} label="Вручную" hint="Ввести свои ккал и БЖУ, например от тренера. Рацион подстроится." />
+        <Switch checked={on} onChange={setOn} label="Вручную" hint="Ввести свои ккал и БЖУ, например, от тренера. Рацион подстроится." />
         {on && (
           <>
             <div className="field">

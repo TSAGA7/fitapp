@@ -352,3 +352,33 @@ describe('workout activity', () => {
     expect([s.up, s.down, s.same, s.first]).toEqual([1, 1, 0, 1]);
   });
 });
+
+import { warmupSets } from './warmup';
+
+describe('warm-up sets', () => {
+  const grid = { stepKg: 2.5, minKg: 0, maxKg: null };
+  it('a heavy first compound lift gets a three-step ramp', () => {
+    expect(warmupSets({ workingKg: 100, compound: true, position: 'first', grid })).toEqual([{ weightKg: 40, reps: 8 }, { weightKg: 60, reps: 5 }, { weightKg: 80, reps: 3 }]);
+  });
+  it('a lighter lift gets a shorter ramp, an isolation lift one set, a bodyweight or tiny load none', () => {
+    expect(warmupSets({ workingKg: 25, compound: true, position: 'first', grid })).toEqual([{ weightKg: 12.5, reps: 8 }, { weightKg: 20, reps: 4 }]);
+    expect(warmupSets({ workingKg: 20, compound: false, position: 'later', grid })).toEqual([{ weightKg: 12.5, reps: 8 }]);
+    expect(warmupSets({ workingKg: 12, compound: false, position: 'later', grid })).toEqual([]);
+    expect(warmupSets({ workingKg: 0, compound: true, position: 'first', grid })).toEqual([]);
+  });
+  it('a later compound lift needs less, and a lift whose muscle is already warm needs nothing', () => {
+    expect(warmupSets({ workingKg: 60, compound: true, position: 'later', grid })).toEqual([{ weightKg: 35, reps: 5 }, { weightKg: 47.5, reps: 3 }]);
+    expect(warmupSets({ workingKg: 60, compound: true, position: 'repeat', grid })).toEqual([]);
+  });
+  it('weights stay on the equipment grid, rise strictly and stay below the working weight', () => {
+    const stack = { stepKg: 5, minKg: 10, maxKg: 100 };
+    for (const w of [15, 22.5, 35, 55, 80, 100]) {
+      const r = warmupSets({ workingKg: w, compound: true, position: 'first', grid: stack });
+      r.forEach((x, i) => {
+        expect((x.weightKg - 10) % 5).toBe(0);
+        expect(x.weightKg).toBeLessThan(w);
+        if (i > 0) expect(x.weightKg).toBeGreaterThan(r[i - 1]!.weightKg);
+      });
+    }
+  });
+});
