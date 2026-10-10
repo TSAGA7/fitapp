@@ -1,4 +1,5 @@
 import type { FocusArea, GoalType, MetricType, Weekday } from '@fitapp/domain';
+import { getWeightUnit } from './prefs';
 
 const NBSP = '\u00a0';
 const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
@@ -24,7 +25,16 @@ export function fmt(n: number, digits = 1): string {
   return frac ? `${grouped},${frac}` : grouped;
 }
 export const signed = (n: number, digits = 1): string => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n), digits);
-export const kg = (n: number, digits = 1): string => `${fmt(n, digits)}${NBSP}кг`;
+const LB_PER_KG = 2.2046226218;
+/** Weights are stored in kg. These convert to and from what the person chose to see. */
+export const wUnit = (): string => (getWeightUnit() === 'lb' ? 'lb' : 'кг');
+export const toUnit = (kgValue: number): number => (getWeightUnit() === 'lb' ? kgValue * LB_PER_KG : kgValue);
+export const fromUnit = (value: number): number => (getWeightUnit() === 'lb' ? value / LB_PER_KG : value);
+/** A number in the chosen unit, no label. */
+export const wnum = (n: number, digits = 1): string => fmt(toUnit(n), getWeightUnit() === 'lb' ? Math.min(digits, 1) : digits);
+export const kg = (n: number, digits = 1): string => `${wnum(n, digits)}${NBSP}${wUnit()}`;
+/** A signed change in the chosen unit with the label. */
+export const signedKg = (n: number, digits = 1): string => `${signed(toUnit(n), getWeightUnit() === 'lb' ? Math.min(digits, 1) : digits)}${NBSP}${wUnit()}`;
 export const cm = (n: number): string => `${fmt(n, 1)}${NBSP}см`;
 export const plural = (n: number, forms: readonly [string, string, string]): string => {
   const a = Math.abs(n) % 100;

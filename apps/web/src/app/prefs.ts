@@ -87,6 +87,73 @@ export function useHomeEquipment(): string[] {
   try { return JSON.parse(raw) as string[]; } catch { return []; }
 }
 
+// ---- weight unit: everything is stored in kg; only the display and the typed numbers use pounds
+export type WeightUnit = 'kg' | 'lb';
+const UNIT_KEY = 'fitapp.weightUnit';
+const unitListeners = new Set<() => void>();
+let unitCache: WeightUnit | null = null;
+function readUnit(): WeightUnit {
+  try {
+    return window.localStorage.getItem(UNIT_KEY) === 'lb' ? 'lb' : 'kg';
+  } catch {
+    return unitCache ?? 'kg';
+  }
+}
+export function getWeightUnit(): WeightUnit {
+  return unitCache ?? readUnit();
+}
+export function setWeightUnit(u: WeightUnit): void {
+  unitCache = u;
+  try {
+    window.localStorage.setItem(UNIT_KEY, u);
+  } catch {
+    /* storage unavailable: lives until the page is closed */
+  }
+  unitListeners.forEach((l) => l());
+}
+export function useWeightUnit(): WeightUnit {
+  return useSyncExternalStore(
+    (cb) => {
+      unitListeners.add(cb);
+      return () => unitListeners.delete(cb);
+    },
+    getWeightUnit,
+  );
+}
+
+// ---- rest timer: the countdown between sets can be switched off
+const TIMER_KEY = 'fitapp.restTimer';
+const timerListeners = new Set<() => void>();
+let timerCache: boolean | null = null;
+function readTimer(): boolean {
+  try {
+    return window.localStorage.getItem(TIMER_KEY) !== 'off';
+  } catch {
+    return timerCache ?? true;
+  }
+}
+export function getRestTimer(): boolean {
+  return timerCache ?? readTimer();
+}
+export function setRestTimer(on: boolean): void {
+  timerCache = on;
+  try {
+    window.localStorage.setItem(TIMER_KEY, on ? 'on' : 'off');
+  } catch {
+    /* storage unavailable: lives until the page is closed */
+  }
+  timerListeners.forEach((l) => l());
+}
+export function useRestTimer(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      timerListeners.add(cb);
+      return () => timerListeners.delete(cb);
+    },
+    getRestTimer,
+  );
+}
+
 // ---- theme: follows the system by default, or is forced light / dark
 export type ThemeChoice = 'system' | 'light' | 'dark';
 const THEME_KEY = 'fitapp.theme';

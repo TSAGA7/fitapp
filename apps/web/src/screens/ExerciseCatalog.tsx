@@ -32,6 +32,16 @@ const GROUPS: Record<Exclude<Filter, 'all' | 'like' | 'dislike' | 'bodyweight' |
   arms: ['biceps', 'triceps', 'forearms'],
 };
 
+const norm = (t: string): string => t.toLowerCase().replace(/ё/g, 'е');
+const tokens = (q: string): string[] => norm(q).split(/[^a-zа-я0-9]+/).filter(Boolean);
+/** Every word of the query must start some word of the name, by its stem: «жим ногами» finds «Жим платформы ногами». */
+const matchesQuery = (name: string, q: readonly string[]): boolean => {
+  if (q.length === 0) return true;
+  const words = norm(name).split(/[^a-zа-я0-9]+/).filter(Boolean);
+  const stem = (w: string): string => (w.length > 5 ? w.slice(0, w.length - 2) : w.length > 3 ? w.slice(0, w.length - 1) : w);
+  return q.every((t) => words.some((w) => w.startsWith(stem(t)) || stem(w).startsWith(stem(t))));
+};
+
 export function ExerciseCatalogScreen() {
   const { snapshot: s } = useData();
   const { ok, banner } = useCommand();
@@ -41,10 +51,10 @@ export function ExerciseCatalogScreen() {
   const pref = useMemo(() => new Map(s.userExercises.filter((u) => u.deletedAt === null).map((u) => [u.exerciseId, u.preference])), [s.userExercises]);
 
   const items = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = tokens(query);
     return s.exercises
       .filter((e) => e.deletedAt === null)
-      .filter((e) => (q ? e.name.toLowerCase().includes(q) : true))
+      .filter((e) => matchesQuery(e.name, q))
       .filter((e: Exercise) => {
         if (filter === 'all') return true;
         if (filter === 'like' || filter === 'dislike') return pref.get(e.id) === filter;
@@ -80,9 +90,9 @@ export function ExerciseCatalogScreen() {
               {removedByPain.has(e.id) && <div className="li-sub" style={{ color: 'var(--danger)' }}>{pref.get(e.id) === 'like' ? 'Возвращено лайком: выполняй осторожно' : 'Убрано из программы из‑за болевой точки. «Нравится» вернёт его'}</div>}
             </div>
             <div className="chips">
+              <Chip pressed={pref.get(e.id) === 'like'} onClick={() => set(e, 'like')} aria-label="Нравится">❤️</Chip>
+              <Chip pressed={pref.get(e.id) === 'dislike'} onClick={() => set(e, 'dislike')} aria-label="Не нравится">👎🏼</Chip>
               <Chip pressed={false} onClick={() => setInfo(e)}>Техника</Chip>
-              <Chip pressed={pref.get(e.id) === 'like'} onClick={() => set(e, 'like')}>Нравится</Chip>
-              <Chip pressed={pref.get(e.id) === 'dislike'} onClick={() => set(e, 'dislike')}>Не нравится</Chip>
             </div>
           </div>
         ))}

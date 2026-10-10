@@ -1,6 +1,5 @@
 import type { Exercise } from '@fitapp/domain';
 import { Icon, Sheet } from '../ui';
-import { MachineScheme, schemeKeyFor } from './MachineScheme';
 
 /** "How to do it": technique, nuances, typical mistakes and what to watch. Used by the workout, the program preview and the catalog. */
 export function ExerciseInfoSheet({ exercise, onClose }: { exercise: Exercise | null; onClose: () => void }) {
@@ -10,7 +9,6 @@ export function ExerciseInfoSheet({ exercise, onClose }: { exercise: Exercise | 
   return (
     <Sheet open title={exercise.name} onClose={onClose}>
       <div className="stack exinfo">
-        {schemeKeyFor(exercise.equipmentRequirements) && <MachineScheme schemeKey={schemeKeyFor(exercise.equipmentRequirements) as string} />}
         {!t && <p className="note">Описание техники для этого упражнения не добавлено. Короткие подсказки: {exercise.cues.join('; ') || 'нет'}.</p>}
         {t && (
           <>

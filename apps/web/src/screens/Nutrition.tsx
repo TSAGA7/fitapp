@@ -866,7 +866,7 @@ function NormSheet({ open, onClose, current, manual }: { open: boolean; onClose:
               <p className="t-small">{mode === 'macros' ? 'Введи граммы белков, жиров и углеводов, калории посчитаются сами.' : 'Введи калории, граммы белков и жиров: углеводы займут оставшиеся калории.'}</p>
             </div>
             {mode === 'kcal' && <TextField label="Калории" unit="ккал" inputMode="numeric" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} />}
-            <div className="grid-3">
+            <div className="grid-3 align-end">
               <TextField label="Белки" unit="г" inputMode="decimal" value={v.p} onChange={(e) => setV({ ...v, p: e.target.value })} />
               <TextField label="Жиры" unit="г" inputMode="decimal" value={v.f} onChange={(e) => setV({ ...v, f: e.target.value })} />
               {mode === 'macros' ? <TextField label="Углеводы" unit="г" inputMode="decimal" value={v.c} onChange={(e) => setV({ ...v, c: e.target.value })} /> : <TextField label="Углеводы (остаток калорий)" unit="г" value={Number.isFinite(carbs) && carbs >= 0 ? String(carbs) : '—'} readOnly />}

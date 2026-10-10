@@ -319,13 +319,14 @@ describe('workout activity', () => {
     const start = Date.parse('2026-10-10T10:00:00Z');
     const min = 60_000;
     const done = [start + 10 * min, start + 14 * min, start + 17 * min];
-    // lead-in capped at 3 min, gaps as they were, then 5 minutes of rest allowed while live
-    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: null, nowMs: start + 5 * 3600_000 })).toBe((3 + 4 + 3 + 5) * 60);
-    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: start + 3 * 3600_000, nowMs: start + 4 * 3600_000 })).toBe((3 + 4 + 3 + 2) * 60);
+    // the clock starts at the opening; a lead-in over 8 min counts as 8, gaps as they were, then up to 8 minutes while live
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: null, nowMs: start + 5 * 3600_000 })).toBe((8 + 4 + 3 + 8) * 60);
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: done, endedAtMs: start + 3 * 3600_000, nowMs: start + 4 * 3600_000 })).toBe((8 + 4 + 3 + 2) * 60);
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [], endedAtMs: null, nowMs: start + 1000 })).toBe(1);
     // a break of an hour between two sets counts as 8 minutes
     expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [start + min, start + 61 * min], endedAtMs: start + 62 * min, nowMs: start + 62 * min })).toBe((1 + 8 + 1) * 60);
     expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [], endedAtMs: null, nowMs: start + 90_000 })).toBe(90);
-    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [], endedAtMs: null, nowMs: start + 3 * 3600_000 })).toBe(180);
+    expect(sessionElapsedSec({ startedAtMs: start, completedAtMs: [], endedAtMs: null, nowMs: start + 3 * 3600_000 })).toBe(480);
   });
   it('compares with the previous time: up, down, same, first', () => {
     expect(compareProgress({ weightKg: 62.5, reps: 8 }, { weightKg: 60, reps: 8 })?.verdict).toBe('up');

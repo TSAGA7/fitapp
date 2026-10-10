@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { useWeightUnit } from './app/prefs';
 import { getAppRuntime, type AppRuntime } from './composition';
 import { DataProvider, useData } from './app/DataContext';
 import { useRoute } from './app/router';
@@ -27,12 +28,18 @@ export function App({ runtime }: { runtime?: Promise<AppRuntime> }) {
         {!rt && !error && <div className="screen" aria-busy="true"><p className="note">Открываю базу данных…</p></div>}
         {rt && (
           <DataProvider runtime={rt}>
-            <Gate />
+            <UnitRoot><Gate /></UnitRoot>
           </DataProvider>
         )}
       </div>
     </div>
   );
+}
+
+/** Changing the weight unit re-draws everything with the new unit. */
+function UnitRoot({ children }: { children: ReactNode }) {
+  const unit = useWeightUnit();
+  return <Fragment key={unit}>{children}</Fragment>;
 }
 
 const BDAY_KEY = 'fitapp.birthdayShown';

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
 import { Icon, type IconName } from './Icon';
 
@@ -40,9 +41,9 @@ export function Badge({ tone = 'default', children }: { tone?: 'default' | 'warn
   return <span className={`badge ${tone === 'default' ? '' : tone}`}>{children}</span>;
 }
 
-export function Chip({ pressed, onClick, children, disabled }: { pressed: boolean; onClick: () => void; children: ReactNode; disabled?: boolean }) {
+export function Chip({ pressed, onClick, children, disabled, 'aria-label': ariaLabel }: { pressed: boolean; onClick: () => void; children: ReactNode; disabled?: boolean; 'aria-label'?: string }) {
   return (
-    <button type="button" className="chip" aria-pressed={pressed} onClick={onClick} disabled={disabled}>
+    <button type="button" className="chip" aria-pressed={pressed} aria-label={ariaLabel} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );
@@ -229,17 +230,18 @@ export function Sheet({ open, title, onClose, children }: { open: boolean; title
     };
   }, [open]);
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="sheet-backdrop" style={kb > 0 ? { bottom: kb } : undefined} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
         <div className="grab" />
-        <div className="row between" style={{ marginBottom: 14 }}>
+        <div className="row between sheet-head" style={{ marginBottom: 14 }}>
           <h2 className="t-h2">{title}</h2>
           <IconButton icon="close" label="Закрыть" tone="ghost" onClick={onClose} />
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

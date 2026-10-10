@@ -364,4 +364,8 @@ html, body { overflow-x: hidden; }
 
 .info-dot { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; border: 1px solid var(--muted, #8a9a93); background: transparent; color: inherit; font: italic 700 12px/1 Georgia, serif; vertical-align: middle; cursor: pointer; padding: 0; }
 
-.machine-scheme svg { width: 100%; max-height: 240px; color: var(--text); background: var(--surface); border-radius: 16px; padding: 8px; }
+
+.sheet-head > h2 { min-width: 0; }
+.sheet-head > button { flex: none; width: 44px; height: 44px; aspect-ratio: 1; border-radius: 50%; }
+.grid-3.align-end { align-items: end; }
+.last-level { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border, rgba(127,127,127,.2)); display: grid; gap: 2px; }

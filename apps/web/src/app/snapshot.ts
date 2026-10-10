@@ -52,6 +52,8 @@ export interface WorkoutSummary {
   note: string | null;
   /** Only a finished workout counts as "worked out today". */
   completed: boolean;
+  /** Sum of weight x reps of the done working sets, kg. */
+  tonnageKg: number;
 }
 export interface FoodDay {
   date: LocalDate;
@@ -129,15 +131,17 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       const date = toLocalDate(s.startedAt, timezone);
       const ses = await r.workouts.listSessionExercises(s.id);
       let setCount = 0;
+      let tonnage = 0;
       for (const se of ses) {
         for (const set of await r.workouts.listSetLogs(se.id)) {
           if (set.status !== 'done' || set.actualReps === null) continue;
           setCount++;
+          if (set.setType !== 'warmup') tonnage += (set.actualWeightKg ?? 0) * set.actualReps;
           rows.push({ exerciseId: se.exerciseId, date, weightKg: set.actualWeightKg, reps: set.actualReps, setType: set.setType });
         }
       }
-      if (workouts.length < 60) {
-        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed' });
+      if (workouts.length < 120) {
+        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed', tonnageKg: Math.round(tonnage) });
       }
     }
 

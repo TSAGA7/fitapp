@@ -178,3 +178,49 @@ describe('ageYears', () => {
     expect(() => ageYears('1997-02-31', '2026-10-06')).toThrow(RangeError);
   });
 });
+
+import { compareMonths, planStreakWeeks, trainingLevel } from './consistency';
+describe('consistency', () => {
+  it('level follows the 3-a-week thresholds and scales with the plan', () => {
+    const lv = (count: number, perWeek: number) => trainingLevel({ count, perWeek }).id;
+    expect([0, 1, 3, 4, 8, 9, 12].map((c) => lv(c, 3))).toEqual(['none', 'lazy', 'lazy', 'hookah', 'hookah', 'boss', 'boss']);
+    // 2 a week: 8 is the maximum, 7 is not "hookah"
+    expect([0, 1, 2, 3, 5, 6, 7, 8].map((c) => lv(c, 2))).toEqual(['none', 'lazy', 'lazy', 'hookah', 'hookah', 'boss', 'boss', 'boss']);
+    expect([0, 1, 2, 3, 4].map((c) => lv(c, 1))).toEqual(['none', 'lazy', 'hookah', 'boss', 'boss']);
+  });
+  it('compares this month so far with the same days of the previous month', () => {
+    const w = [
+      { date: '2026-09-02', sets: 10, tonnageKg: 1000 }, { date: '2026-09-20', sets: 10, tonnageKg: 2000 },
+      { date: '2026-10-01', sets: 12, tonnageKg: 1500 }, { date: '2026-10-08', sets: 8, tonnageKg: 500 },
+    ];
+    const c = compareMonths(w, '2026-10-10');
+    expect(c.current).toEqual({ workouts: 2, sets: 20, tonnageKg: 2000 });
+    expect(c.previousSamePeriod).toEqual({ workouts: 1, sets: 10, tonnageKg: 1000 });
+    expect(c.previousFull.tonnageKg).toBe(3000);
+    expect(compareMonths(w, '2026-01-05').previousStart).toBe('2025-12-01');
+  });
+  it('counts weeks in a row that met the plan', () => {
+    const d = (date: string) => ({ date, sets: 1, tonnageKg: 1 });
+    const w = ['2026-09-21', '2026-09-23', '2026-09-25', '2026-09-28', '2026-09-30', '2026-10-02'].map(d);
+    expect(planStreakWeeks(w, '2026-10-06', 3)).toBe(2);
+    expect(planStreakWeeks(w, '2026-10-06', 4)).toBe(0);
+  });
+});
+
+import { recommendTargetWeight } from './targetWeight';
+describe('target weight advice', () => {
+  const base = { sex: 'male' as const, heightCm: 181, weightKg: 82.5 };
+  it('fat loss with a waist above half the height removes about a kg per cm', () => {
+    const a = recommendTargetWeight({ ...base, goal: 'fat_loss', waistCm: 95 });
+    expect(a.kg).toBeCloseTo(82.5 - (95 - 90.5), 0);
+    expect(a.kg).toBeGreaterThan(20 * 1.81 * 1.81);
+  });
+  it('fat loss without a waist aims at BMI 23 only when the BMI is above 24', () => {
+    expect(recommendTargetWeight({ ...base, weightKg: 75, goal: 'fat_loss', waistCm: null }).kg).toBe(75);
+    expect(recommendTargetWeight({ ...base, weightKg: 95, goal: 'fat_loss', waistCm: null }).kg).toBeCloseTo(23 * 1.81 * 1.81, 0);
+  });
+  it('muscle gain adds a few percent, other goals keep the weight', () => {
+    expect(recommendTargetWeight({ ...base, goal: 'muscle_gain', waistCm: null }).kg).toBeGreaterThan(82.5);
+    expect(recommendTargetWeight({ ...base, goal: 'recomposition', waistCm: 85 }).kg).toBe(82.5);
+  });
+});

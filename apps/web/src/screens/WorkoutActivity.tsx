@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { estimateWorkout, sessionElapsedSec, KCAL_SPREAD, NET_MET, SEC_PER_REP, type ActivityEstimate, type ActivityExercise, type BestSet, type ProgressVerdict, type WorkoutSummary } from '@fitapp/domain';
 import { loadWorkoutSummary, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
-import { fmt } from '../app/format';
+import { fmt, toUnit, wUnit } from '../app/format';
 import { Button, Card, Icon, Sheet } from '../ui';
 
 const clock = (sec: number): string => {
@@ -47,7 +47,7 @@ export function KcalInfoSheet({ open, onClose, bodyKg }: { open: boolean; onClos
           <li>удержание и кардио: +{NET_MET.timed} MET;</li>
           <li>пауза между подходами: +{NET_MET.rest} MET.</li>
         </ul>
-        <p className="t-small">Килограммы на штанге почти не меняют расход, поэтому тоннаж показан отдельно, как мера прогресса. Время считается от первого подхода: сколько страница была открыта до него, не важно. Перерыв между подходами дольше 8 минут не учитывается, после последнего подхода засчитывается не больше 5 минут отдыха. Цифра растёт по ходу тренировки: сразу после каждого подхода и пока ты отдыхаешь.</p>
+        <p className="t-small">Килограммы на штанге почти не меняют расход, поэтому тоннаж показан отдельно, как мера прогресса. Время идёт с момента, когда ты открыл тренировку. Пауза дольше 8 минут (до первого подхода, между подходами или после последнего) засчитывается как 8, чтобы забытая открытая страница не накручивала время. Цифра растёт по ходу тренировки: сразу после каждого подхода и пока ты отдыхаешь.</p>
         <div className="note">Эти калории <b>не уменьшают</b> и не увеличивают твою норму питания и рацион. Они показаны только для наглядности: ты работаешь, а цифры это видят.</div>
         <Button block onClick={onClose}>Понятно</Button>
       </div>
@@ -61,7 +61,7 @@ export function ActivityBar({ view, doneSets, totalSets }: { view: WorkoutView; 
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState(false);
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 5_000);
+    const t = setInterval(() => setNow(Date.now()), 1_000);
     return () => clearInterval(t);
   }, []);
   const a = useMemo(() => {
@@ -74,7 +74,7 @@ export function ActivityBar({ view, doneSets, totalSets }: { view: WorkoutView; 
       <div className="act-bar" role="group" aria-label="Активность на тренировке">
         <div className="act-cell"><span className="act-v">{clock(a.elapsedSec)}</span><span className="act-l">время</span></div>
         <div className="act-cell"><span className="act-v">{doneSets}/{totalSets}</span><span className="act-l">подходы</span></div>
-        <div className="act-cell"><span className="act-v">{a.tonnageKg > 0 ? thousands(a.tonnageKg) : '0'}</span><span className="act-l">тоннаж, кг</span></div>
+        <div className="act-cell"><span className="act-v">{a.tonnageKg > 0 ? thousands(Math.round(toUnit(a.tonnageKg))) : '0'}</span><span className="act-l">тоннаж, {wUnit()}</span></div>
         <button type="button" className="act-cell act-kcal" aria-label="Как считаются калории" onClick={() => setInfo(true)}>
           <span className="act-v">{a.sets > 0 ? kcalRange(a) : '—'}</span>
           <span className="act-l">ккал <Icon name="info" size={12} /></span>
@@ -92,7 +92,7 @@ const VERDICT: Record<ProgressVerdict, { label: string; mark: string; tone: stri
   first: { label: 'Первый раз', mark: '★', tone: 'first' },
 };
 
-const setText = (b: BestSet, timed: boolean): string => (timed ? `${b.reps} с` : b.weightKg !== null && b.weightKg > 0 ? `${fmt(b.weightKg, 2)} × ${b.reps}` : `${b.reps} повт.`);
+const setText = (b: BestSet, timed: boolean): string => (timed ? `${b.reps} с` : b.weightKg !== null && b.weightKg > 0 ? `${fmt(toUnit(b.weightKg), 2)} × ${b.reps}` : `${b.reps} повт.`);
 
 /** After "Завершить" (and when an old workout is opened): totals and, per exercise, progress or regress against the previous time. */
 export function WorkoutSummaryCard({ sessionId, title }: { sessionId: string; title?: string }) {
@@ -123,7 +123,7 @@ export function WorkoutSummaryCard({ sessionId, title }: { sessionId: string; ti
           <div className="sum-grid">
             <div className="sum-tile"><span className="sum-v">{minutes(a.elapsedSec)}</span><span className="sum-l">время</span></div>
             <div className="sum-tile"><span className="sum-v">{a.sets}</span><span className="sum-l">подходов</span></div>
-            <div className="sum-tile"><span className="sum-v">{thousands(a.tonnageKg)}</span><span className="sum-l">тоннаж, кг</span></div>
+            <div className="sum-tile"><span className="sum-v">{thousands(Math.round(toUnit(a.tonnageKg)))}</span><span className="sum-l">тоннаж, {wUnit()}</span></div>
             <button type="button" className="sum-tile sum-kcal" onClick={() => setInfo(true)} aria-label="Как считаются калории">
               <span className="sum-v">{a.sets > 0 ? kcalRange(a) : '—'}</span>
               <span className="sum-l">ккал, примерно <Icon name="info" size={12} /></span>

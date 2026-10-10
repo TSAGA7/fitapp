@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCommand } from '../app/useCommand';
-import { ageYears, diffDays, isLocalDate, toLocalDate, type Experience, type FocusArea, type GoalType, type JobActivity, type Sex, type TrainingSchedule, type Weekday, WEEKDAYS } from '@fitapp/domain';
+import { ageYears, diffDays, isLocalDate, recommendTargetWeight, toLocalDate, type Experience, type FocusArea, type GoalType, type JobActivity, type Sex, type TrainingSchedule, type Weekday, WEEKDAYS } from '@fitapp/domain';
 import { applyDietMode, saveGoal, updateProfile } from '../actions';
 import { useData } from '../app/DataContext';
 import { deleteMetric } from '../actions';
-import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, WEEKDAY_SHORT, cm } from '../app/format';
-import { getDisplayName, setActivityBar, setDisplayName, setTheme, setVacationMode, useActivityBar, useTheme, useVacationMode, type ThemeChoice } from '../app/prefs';
+import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, fromUnit, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, toUnit, wUnit, wnum, WEEKDAY_SHORT, cm } from '../app/format';
+import { getDisplayName, setActivityBar, setDisplayName, setRestTimer, setTheme, setVacationMode, setWeightUnit, useActivityBar, useRestTimer, useTheme, useVacationMode, useWeightUnit, type ThemeChoice } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
 import { CycleScreen, CycleTile } from './Cycle';
@@ -23,6 +23,8 @@ export function Profile({ route }: { route: string[] }) {
   // Every profile screen opens from the very top, not at the scroll position of the previous one.
   useEffect(() => { window.scrollTo(0, 0); }, [route.join('/')]);
   switch (route[1]) {
+    case 'settings':
+      return <SettingsScreen />;
     case 'personal':
       return <Personal />;
     case 'goals':
@@ -76,7 +78,9 @@ function ProfileHome() {
   const name = getDisplayName();
   const age = ageYears(p.birthDate, s.today);
   const goal = s.primaryGoal;
-  const target = goal?.targetWeightKg ?? null;
+  const own = goal?.targetWeightKg ?? null;
+  const recommended = goal && own === null && s.weight.currentKg !== null ? recommendTargetWeight({ sex: p.sex, heightCm: p.heightCm, weightKg: s.weight.currentKg, goal: goal.type, waistCm: [...s.metrics].filter((m) => m.type === 'waist' && m.deletedAt === null).sort((a, b) => (a.measuredOn < b.measuredOn ? 1 : -1))[0]?.value ?? null }).kg : null;
+  const target = own ?? recommended;
   return (
     <main className="screen">
       <ScreenHeader title="Профиль" />
@@ -85,9 +89,9 @@ function ProfileHome() {
           <span className="avatar-lg" aria-hidden="true">{initials(name)}</span>
           <div className="grow">
             <div className="t-h2">{name || 'Мой профиль'}</div>
-            <div className="t-caption">{age} {plural(age, ['год', 'года', 'лет'])} · {fmt(p.heightCm, 0)} см{s.weight.currentKg !== null ? ` · ${fmt(s.weight.currentKg)} кг` : ''}</div>
+            <div className="t-caption">{age} {plural(age, ['год', 'года', 'лет'])} · {fmt(p.heightCm, 0)} см{s.weight.currentKg !== null ? ` · ${kg(s.weight.currentKg)}` : ''}</div>
           </div>
-          <IconButton icon="gear" label="Личные данные" onClick={() => go('profile/personal')} />
+          <IconButton icon="gear" label="Настройки" onClick={() => go('profile/settings')} />
         </div>
       </Card>
       <Card onClick={() => go('profile/goals')}>
@@ -97,7 +101,7 @@ function ProfileHome() {
             <div className="t-small">Мои цели</div>
             <div className="li-title">{goal ? GOAL_LABELS[goal.type].title : 'Задай цель'}</div>
             <div className="li-sub">
-              {target !== null && s.weight.currentKg !== null ? `Цель ${kg(target)} · осталось ${kg(Math.abs(s.weight.currentKg - target))}` : goal ? GOAL_LABELS[goal.type].text : 'Выбери, к чему идём'}
+              {target !== null && s.weight.currentKg !== null ? `${own === null ? 'Ориентир' : 'Цель'} ${kg(target)} · ${Math.abs(s.weight.currentKg - target) < 0.05 ? 'держим вес' : `осталось ${kg(Math.abs(s.weight.currentKg - target))}`}` : goal ? GOAL_LABELS[goal.type].text : 'Выбери, к чему идём'}
             </div>
           </div>
           <Icon name="chevronRight" size={18} />
@@ -272,6 +276,56 @@ function ActivityBarPicker() {
 
 const COMMON_ZONES = ['Europe/Amsterdam', 'Europe/Moscow', 'Europe/Berlin', 'Europe/London', 'Europe/Kyiv', 'Europe/Minsk', 'Asia/Almaty', 'Asia/Tbilisi', 'Asia/Yerevan', 'Asia/Dubai', 'America/New_York', 'UTC'];
 
+function RestTimerPicker() {
+  const on = useRestTimer();
+  return (
+    <div className="field">
+      <span className="lbl">Таймер отдыха</span>
+      <Segmented<'on' | 'off'> label="Таймер отдыха" options={[{ value: 'on', label: 'Включён' }, { value: 'off', label: 'Выключен' }]} value={on ? 'on' : 'off'} onChange={(v) => setRestTimer(v === 'on')} />
+      <span className="hint">Отсчёт отдыха между подходами после «Записать». Если выключен, подходы просто записываются без паузы.</span>
+    </div>
+  );
+}
+
+function UnitPicker() {
+  const unit = useWeightUnit();
+  return (
+    <div className="field">
+      <span className="lbl">Единицы веса</span>
+      <Segmented<'kg' | 'lb'> label="Единицы веса" options={[{ value: 'kg', label: 'Килограммы (кг)' }, { value: 'lb', label: 'Фунты (lb)' }]} value={unit} onChange={setWeightUnit} />
+      <span className="hint">Данные хранятся в килограммах, меняется только то, как веса показываются и вводятся.</span>
+    </div>
+  );
+}
+
+function ZonePicker() {
+  const { snapshot: s, act } = useData();
+  const p = s.profile!;
+  const zones = [...new Set([p.timezone, ...COMMON_ZONES])];
+  return (
+    <SelectField label="Часовой пояс" value={p.timezone} onChange={(e) => void act((d) => updateProfile(d, { sex: p.sex, birthDate: p.birthDate, heightCm: p.heightCm, timezone: e.target.value, experience: p.experience, jobActivity: p.jobActivity }))}>
+      {zones.map((z) => <option key={z} value={z}>{z}</option>)}
+    </SelectField>
+  );
+}
+
+/** The gear: only the app's settings, in this order. Everything applies at once. */
+function SettingsScreen() {
+  return (
+    <main className="screen no-nav">
+      <ScreenHeader title="Настройки" back="profile" />
+      <div className="stack-lg">
+        <ThemePicker />
+        <ActivityBarPicker />
+        <RestTimerPicker />
+        <UnitPicker />
+        <ZonePicker />
+        <ListItem icon="history" title="История изменений программы" subtitle="Служебный журнал версий нормы и тренировок" onClick={() => go('profile/versions')} />
+      </div>
+    </main>
+  );
+}
+
 function Personal() {
   const { snapshot: s, act } = useData();
   const p = s.profile!;
@@ -279,18 +333,16 @@ function Personal() {
   const [sex, setSex] = useState<Sex>(p.sex);
   const [birth, setBirth] = useState(p.birthDate);
   const [height, setHeight] = useState(String(p.heightCm));
-  const [tz, setTz] = useState(p.timezone);
   const [exp, setExp] = useState<Experience>(p.experience);
   const [job, setJob] = useState<JobActivity>(p.jobActivity);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const zones = [...new Set([p.timezone, ...COMMON_ZONES])];
   const save = async () => {
     const h = parseDecimal(height);
     if (!isLocalDate(birth)) return setMsg({ ok: false, text: 'Проверь дату рождения' });
     if (!Number.isFinite(h) || h < 120 || h > 230) return setMsg({ ok: false, text: 'Рост должен быть от 120 до 230 см' });
     try {
       setDisplayName(name);
-      await act((d) => updateProfile(d, { sex, birthDate: birth, heightCm: h, timezone: tz, experience: exp, jobActivity: job }));
+      await act((d) => updateProfile(d, { sex, birthDate: birth, heightCm: h, timezone: p.timezone, experience: exp, jobActivity: job }));
       setMsg({ ok: true, text: 'Сохранено' });
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
@@ -304,16 +356,10 @@ function Personal() {
         <div className="field"><span className="lbl">Пол</span><Segmented label="Пол" options={(Object.keys(SEX_LABELS) as Sex[]).map((v) => ({ value: v, label: SEX_LABELS[v] }))} value={sex} onChange={setSex} /></div>
         <DateField label="Дата рождения" value={birth} onChange={setBirth} max={s.today} />
         <TextField label="Рост" unit="см" inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} />
-        <SelectField label="Часовой пояс" value={tz} onChange={(e) => setTz(e.target.value)}>
-          {zones.map((z) => <option key={z} value={z}>{z}</option>)}
-        </SelectField>
         <div className="field"><span className="lbl">Опыт тренировок</span><Segmented label="Опыт" options={(Object.keys(EXPERIENCE_LABELS) as Experience[]).map((v) => ({ value: v, label: EXPERIENCE_LABELS[v] }))} value={exp} onChange={setExp} /></div>
         <SelectField label="Активность в течение дня" value={job} onChange={(e) => setJob(e.target.value as JobActivity)}>
           {(Object.keys(JOB_LABELS) as JobActivity[]).map((v) => <option key={v} value={v}>{JOB_LABELS[v]}</option>)}
         </SelectField>
-        <ThemePicker />
-        <ActivityBarPicker />
-        <ListItem icon="history" title="История изменений программы" subtitle="Служебный журнал версий нормы и тренировок" onClick={() => go('profile/versions')} />
         {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
       </div>
       <div className="save-bar"><Button block onClick={save}>Сохранить</Button></div>
@@ -325,17 +371,19 @@ function Goals() {
   const { snapshot: s, act } = useData();
   const g = s.primaryGoal;
   const [type, setType] = useState<GoalType>(g?.type ?? 'fat_loss');
-  const [tw, setTw] = useState(g?.targetWeightKg ? String(g.targetWeightKg) : '');
+  const [tw, setTw] = useState(g?.targetWeightKg ? fmt(toUnit(g.targetWeightKg), 1) : '');
   const [twaist, setTwaist] = useState(g?.targetWaistCm ? String(g.targetWaistCm) : '');
   const [focus, setFocus] = useState<FocusArea[]>(g ? [...g.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area) : []);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [explainOpen, setExplainOpen] = useState(false);
   const [offer, setOffer] = useState(false);
+  const waistNow = [...s.metrics].filter((m) => m.type === 'waist' && m.deletedAt === null).sort((a, b) => (a.measuredOn < b.measuredOn ? 1 : -1))[0]?.value ?? null;
+  const rec = s.profile && s.weight.currentKg !== null ? recommendTargetWeight({ sex: s.profile.sex, heightCm: s.profile.heightCm, weightKg: s.weight.currentKg, goal: type, waistCm: waistNow }) : null;
   const toggle = (a: FocusArea) => setFocus((f) => (f.includes(a) ? f.filter((x) => x !== a) : f.length < 3 ? [...f, a] : f));
   const save = async () => {
-    const w = tw.trim() ? parseDecimal(tw) : null;
+    const w = tw.trim() ? Math.round(fromUnit(parseDecimal(tw)) * 100) / 100 : null;
     const waist = twaist.trim() ? parseDecimal(twaist) : null;
-    if (w !== null && (!Number.isFinite(w) || w < 30 || w > 300)) return setMsg({ ok: false, text: 'Целевой вес: от 30 до 300 кг' });
+    if (w !== null && (!Number.isFinite(w) || w < 30 || w > 300)) return setMsg({ ok: false, text: `Целевой вес: от ${wnum(30, 0)} до ${wnum(300, 0)} ${wUnit()}` });
     if (waist !== null && (!Number.isFinite(waist) || waist < 40 || waist > 200)) return setMsg({ ok: false, text: 'Целевая талия: от 40 до 200 см' });
     try {
       const changed = !g || g.type !== type || [...g.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area).join() !== focus.join();
@@ -353,9 +401,21 @@ function Goals() {
       <GoalExplainSheet open={explainOpen} goal={type} onClose={() => setExplainOpen(false)} />
       <GoalPicker type={type} onType={setType} />
       <div className="grid-2">
-        <TextField label="Целевой вес" unit="кг" inputMode="decimal" value={tw} onChange={(e) => setTw(e.target.value)} />
+        <TextField label="Целевой вес" unit={wUnit()} inputMode="decimal" value={tw} onChange={(e) => setTw(e.target.value)} placeholder={rec ? fmt(toUnit(rec.kg), 1) : undefined} />
         <TextField label="Целевая талия" unit="см" inputMode="decimal" value={twaist} onChange={(e) => setTwaist(e.target.value)} />
       </div>
+      {rec && (
+        <Card flat>
+          <div className="stack tight">
+            <div className="t-small">Ориентир приложения: <b>{kg(rec.kg)}</b> (диапазон {wnum(rec.minKg, 1)}–{wnum(rec.maxKg, 1)} {wUnit()})</div>
+            <p className="t-small">{rec.basis}. Это не норма и не обещание: расчёт по росту, весу, цели и талии. Если у тебя другая цифра (например, от тренера), впиши свою.</p>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <Button size="sm" variant="secondary" onClick={() => setTw(fmt(toUnit(rec.kg), 1))}>Взять ориентир</Button>
+              {tw.trim() !== '' && <Button size="sm" variant="text" onClick={() => setTw('')}>Без цели по весу</Button>}
+            </div>
+          </div>
+        </Card>
+      )}
       <FocusPicker focus={focus} onToggle={toggle} />
       {g && g.type !== type && <div className="warn">Предыдущая цель сохранится в истории, начнётся новая.</div>}
       {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}

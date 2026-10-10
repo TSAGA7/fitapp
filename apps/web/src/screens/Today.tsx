@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { diffDays, isTrainingDay, recommendedWaterMl } from '@fitapp/domain';
+import { addDays, diffDays, isTrainingDay, recommendedWaterMl, trainingDays, trainingLevel } from '@fitapp/domain';
 import { addWater, ensureSessions, setWater } from '../actions';
 import { eatenOf, logsOnDate } from '../app/derive';
 import { useCommand } from '../app/useCommand';
 import { useData } from '../app/DataContext';
-import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signed } from '../app/format';
+import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signedKg, wnum, wUnit } from '../app/format';
 import { getDisplayName, setBeerMl, setDrink, useBeerMl, useDrink, useVacationMode, type Drink } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, Sparkline } from '../ui';
@@ -46,9 +46,9 @@ export function Today() {
 
   const delta =
     w.monthChangeKg !== null
-      ? `${signed(w.monthChangeKg)}${NBSP}кг за 30 дней`
+      ? `${signedKg(w.monthChangeKg)} за 30 дней`
       : w.sinceStartKg !== null
-        ? `${signed(w.sinceStartKg)}${NBSP}кг за ${w.sinceStartDays}${NBSP}дн.`
+        ? `${signedKg(w.sinceStartKg)} за ${w.sinceStartDays}${NBSP}дн.`
         : w.count > 0
           ? 'Динамика появится после недели записей'
           : null;
@@ -58,6 +58,8 @@ export function Today() {
   const goalProgress = target !== null && start !== null && w.currentKg !== null && start !== target ? (start - w.currentKg) / (start - target) : null;
 
   const lastWorkout = s.workouts[0];
+  const perWeek = s.profile ? trainingDays(s.profile.trainingSchedule).length : 3;
+  const level = trainingLevel({ count: s.workouts.filter((x) => x.completed && x.sets > 0 && x.date > addDays(s.today, -28)).length, perWeek });
   const lastMeasure = Object.values(s.series).flatMap((list) => list ?? []).map((p) => p.date).sort().pop();
   const measureAge = lastMeasure ? diffDays(lastMeasure, s.today) : null;
   const spark = s.weightPoints.slice(-30).map((p) => p.kg);
@@ -77,7 +79,7 @@ export function Today() {
           <div className="greet">Текущий вес</div>
           {w.currentKg !== null ? (
             <>
-              <div className="big">{fmt(w.currentKg)}<small>кг</small></div>
+              <div className="big">{wnum(w.currentKg)}<small>{wUnit()}</small></div>
               {delta && <div className="delta">{delta}</div>}
             </>
           ) : (
@@ -106,7 +108,7 @@ export function Today() {
           </div>
           <div>
             <div className="s-l"><span className="dot" style={{ background: '#a78bfa' }} />Темп в неделю</div>
-            <div className="s-v">{w.rateKgPerWeek !== null && w.rateReliable ? `${signed(w.rateKgPerWeek)}${NBSP}кг` : '—'}</div>
+            <div className="s-v">{w.rateKgPerWeek !== null && w.rateReliable ? signedKg(w.rateKgPerWeek) : '—'}</div>
           </div>
         </div>
       </section>
@@ -146,7 +148,20 @@ export function Today() {
         <ListItem icon="nutrition" title="Питание" subtitle="Рацион и цели по КБЖУ появятся здесь" onClick={() => go('nutrition')} />
       )}
       {vacation ? null : lastWorkout ? (
-        <ListItem icon="training" lime title="Последняя тренировка" subtitle={`${formatDay(lastWorkout.date)} · ${lastWorkout.exercises} ${plural(lastWorkout.exercises, ['упражнение', 'упражнения', 'упражнений'])} · ${lastWorkout.sets} ${plural(lastWorkout.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go('training')} />
+        <Card onClick={() => go('training')}>
+          <div className="row">
+            <span className="li-icon lime"><Icon name="training" /></span>
+            <div className="grow">
+              <div className="li-title">Последняя тренировка</div>
+              <div className="li-sub">{`${formatDay(lastWorkout.date)} · ${lastWorkout.exercises} ${plural(lastWorkout.exercises, ['упражнение', 'упражнения', 'упражнений'])} · ${lastWorkout.sets} ${plural(lastWorkout.sets, ['подход', 'подхода', 'подходов'])}`}</div>
+            </div>
+            <Icon name="chevronRight" size={18} />
+          </div>
+          <div className="last-level">
+            <div className="t-small">За 4 недели: <b>{level.count}</b> из {level.planned}</div>
+            <div className="t-small">Уровень: <b>{level.label}</b></div>
+          </div>
+        </Card>
       ) : (
         <Card flat>
           <EmptyState icon="training" title="Программа тренировок появится здесь" text="Как только ты проведёшь первую тренировку, она появится в этом блоке." />

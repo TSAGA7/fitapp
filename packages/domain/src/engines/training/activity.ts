@@ -43,24 +43,21 @@ const MAX_ELAPSED_SEC = 4 * 3600;
 
 const roundTo = (n: number, step: number): number => Math.round(n / step) * step;
 
-/** The pause between two sets that still counts as "in the workout"; a longer gap is a break the athlete took (a call, a coffee). */
+/** A pause that still counts as "in the workout" (before the first set, between sets, after the last one while live); a longer gap is a break the athlete took (a call, a coffee). */
 const MAX_GAP_SEC = 8 * 60;
-/** Lead-in before the first set (warming up, setting the weight) that counts, however long the workout page stood open before it. */
-const MAX_LEAD_SEC = 3 * 60;
 
 /**
- * Seconds the workout really took. Time is counted from the first set: the page may have been opened hours before the
- * first working set, and a break longer than 8 minutes between sets is not counted. After the last set a short rest is
- * allowed (5 min while live, 2 min after finishing), so a forgotten open app does not inflate the time.
+ * Seconds the workout really took. The clock starts at 0:00 when the workout is opened and runs second by second; a gap of more than
+ * 8 minutes between two moments (start, sets, now) counts as 8 minutes, so a forgotten open app does not inflate the time.
+ * After finishing, only 2 minutes of rest after the last set are kept.
  */
 export function sessionElapsedSec(input: { startedAtMs: number; completedAtMs: readonly number[]; endedAtMs: number | null; nowMs: number }): number {
   const live = input.endedAtMs === null;
   const end = input.endedAtMs ?? input.nowMs;
-  const done = [...input.completedAtMs].sort((a, b) => a - b);
-  if (done.length === 0) return Math.min(MAX_LEAD_SEC, Math.max(0, Math.round((end - input.startedAtMs) / 1000)));
-  let sec = Math.min(MAX_LEAD_SEC, Math.max(0, (done[0]! - input.startedAtMs) / 1000));
-  for (let i = 1; i < done.length; i++) sec += Math.min(MAX_GAP_SEC, (done[i]! - done[i - 1]!) / 1000);
-  sec += Math.min((live ? 5 : 2) * 60, Math.max(0, (end - done[done.length - 1]!) / 1000));
+  const marks = [input.startedAtMs, ...[...input.completedAtMs].sort((a, b) => a - b).filter((t) => t >= input.startedAtMs)];
+  let sec = 0;
+  for (let i = 1; i < marks.length; i++) sec += Math.min(MAX_GAP_SEC, (marks[i]! - marks[i - 1]!) / 1000);
+  sec += Math.min(live ? MAX_GAP_SEC : 2 * 60, Math.max(0, (end - marks[marks.length - 1]!) / 1000));
   return Math.min(MAX_ELAPSED_SEC, Math.max(0, Math.round(sec)));
 }
 
