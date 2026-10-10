@@ -24,10 +24,6 @@
 
 /* Onboarding */
 .onb { min-height: 100dvh; display: grid; align-content: start; gap: 20px; padding: calc(20px + var(--safe-t)) 20px 32px; }
-.onb-welcome { min-height: 100dvh; background: linear-gradient(170deg, #0d6e52 0%, #065f46 55%, #033a2c 100%); color: #fff; display: grid; align-content: space-between; padding: calc(56px + var(--safe-t)) 28px calc(36px + var(--safe-b)); }
-.onb-welcome .logo { display: grid; justify-items: center; gap: 10px; text-align: center; margin-top: 40px; }
-.onb-welcome .logo .mark { width: 72px; height: 72px; border-radius: 24px; background: rgba(163, 230, 53, .16); color: var(--accent); display: grid; place-items: center; }
-.onb-welcome .logo h1 { font-size: 40px; line-height: 44px; letter-spacing: -0.02em; }
 .option { display: flex; gap: 14px; align-items: flex-start; text-align: left; width: 100%; padding: 14px 16px; border-radius: var(--r-lg); border: 1.5px solid var(--border); background: var(--surface); }
 .option[aria-pressed='true'] { border-color: var(--primary); background: var(--primary-50); }
 .option .o-title { font-weight: 600; }
@@ -52,3 +48,12 @@
 .set-row { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; padding: 10px 12px; border-radius: var(--r-md, 14px); background: #F7F8FA; }
 .set-row[aria-current='step'] { background: #ECFCCB; outline: 2px solid #A3E635; }
 .set-row > :nth-child(3) { grid-column: 1 / -1; }
+
+.onb-welcome { position: relative; min-height: 100dvh; overflow: hidden; background: radial-gradient(120% 60% at 85% 0%, #16794f 0%, transparent 60%), linear-gradient(180deg, #0a5a3f 0%, #0a4a38 38%, #12483a 58%, #2f5a48 78%, #7d8b6a 100%); color: #fff; display: grid; grid-template-rows: auto auto 1fr auto; justify-items: center; padding: calc(90px + var(--safe-t)) 24px calc(32px + var(--safe-b)); }
+.onb-welcome .logo { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.onb-welcome .logo .mark { color: var(--accent); display: grid; place-items: center; filter: drop-shadow(0 4px 14px rgba(163, 230, 53, .35)); }
+.onb-welcome .logo h1 { font-size: 52px; line-height: 56px; letter-spacing: -0.02em; font-weight: 700; text-shadow: 0 2px 18px rgba(0, 0, 0, .25); }
+.onb-welcome .logo .tag { opacity: .88; font-size: 17px; }
+.onb-welcome .quote { margin-top: 56px; width: 100%; max-width: 340px; padding: 26px 24px; border-radius: 26px; text-align: center; background: rgba(255, 255, 255, .13); border: 1px solid rgba(255, 255, 255, .18); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); font-size: 18px; line-height: 28px; position: relative; z-index: 1; }
+.onb-welcome .peaks { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 46%; z-index: 0; pointer-events: none; }
+.onb-welcome .stack.start { width: 100%; max-width: 420px; position: relative; z-index: 1; align-self: end; }

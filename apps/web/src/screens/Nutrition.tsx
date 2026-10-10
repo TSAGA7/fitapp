@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDays, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek, suggestTargetAdjustment, sumMacros, weekdayOf, type FoodCategory, type MealSlot, type PlannedItem } from '@fitapp/domain';
+import { addDays, counterpart, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek, suggestTargetAdjustment, sumMacros, weekdayOf, type Food, type FoodCategory, type MealSlot, type PlannedItem } from '@fitapp/domain';
 import {
   acceptTargetAdjustment,
   addPlannedItem,
   clearMealLogs,
   createCustomFood,
+  deleteCustomFood,
+  dishPer100,
+  saveDish,
+  updateCustomFood,
   createProgram,
   generateWeekPlan,
   logMealAsPlanned,
@@ -28,7 +32,7 @@ import { fmt, formatDateShort, formatDay, WEEKDAY_SHORT } from '../app/format';
 import { useCommand } from '../app/useCommand';
 import { setManualTargets, useManualTargets, useVacationMode } from '../app/prefs';
 import type { FoodLog } from '@fitapp/domain';
-import { Badge, Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, TextField, type ChartSeries } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, TextField, type ChartSeries } from '../ui';
 import { isBarcode, lookupBarcode } from '../app/openFoodFacts';
 import { BarcodeScanner } from './BarcodeScan';
 import { parseDecimal, ScreenHeader } from './shared';
@@ -235,11 +239,47 @@ function MacroLine({ label, m, muted }: { label: string; m: { proteinG: number; 
   );
 }
 
+/** Small / medium / large for foods people do not weigh (banana, apple, cucumber...): one tap fills in the grams. */
+function PortionChips({ portions, grams, onPick }: { portions: { small: number; medium: number; large: number } | undefined; grams: number; onPick: (g: number) => void }) {
+  if (!portions) return null;
+  const sizes: ReadonlyArray<[string, number]> = [['Маленький', portions.small], ['Средний', portions.medium], ['Большой', portions.large]];
+  return (
+    <div className="stack tight">
+      <div className="t-caption">Не взвешивал? Выбери размер</div>
+      <div className="chips" role="group" aria-label="Размер порции">
+        {sizes.map(([label, g]) => (
+          <Chip key={label} pressed={Math.round(grams) === g} onClick={() => onPick(g)}>{label} · {g} г</Chip>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const OTHER_FORM: Record<string, string> = { raw: 'сырого', cooked: 'готового', as_sold: 'как на упаковке' };
+
+/** Raw <-> cooked converter: how much the same amount weighs in the other form (dry buckwheat <-> boiled), with a switch to enter it that way. */
+function ConvertHint({ food, grams, onSwitch }: { food: Food; grams: number; onSwitch?: (other: Food, grams: number) => void }) {
+  const { snapshot: s } = useData();
+  const pair = counterpart(food, s.foods.filter((f) => f.deletedAt === null));
+  if (!pair || !(grams > 0)) return null;
+  const dry = pair.food.basis === 'raw' && (pair.food.category === 'grains' || pair.food.category === 'legumes');
+  const label = dry ? 'сухого' : (OTHER_FORM[pair.food.basis] ?? '');
+  const other = Math.round(pair.toOtherGrams(grams));
+  return (
+    <div className="note convert-hint">
+      <span>{fmt(grams, 0)} г {food.basis === 'cooked' ? 'готового' : dry ? 'сухого' : 'сырого'} продукта ≈ <b>{other} г</b> {label}. Готовое и сырое весят по-разному, калории те же.</span>
+      {onSwitch && <Button variant="text" size="sm" icon="swap" onClick={() => onSwitch(pair.food, other)}>Ввести вес {label}</Button>}
+    </div>
+  );
+}
+
 function LogSheet({ log, onClose }: { log: FoodLog | null; onClose: () => void }) {
+  const { snapshot: s } = useData();
   const { ok, banner, busy } = useCommand();
   const [grams, setGrams] = useState('');
   if (!log) return null;
   const g = parseDecimal(grams);
+  const logFood = s.foods.find((f) => f.id === log.snapshot.foodId);
   const done = async (fn: Parameters<typeof ok>[0]) => {
     if (await ok(fn)) {
       setGrams('');
@@ -255,6 +295,7 @@ function LogSheet({ log, onClose }: { log: FoodLog | null; onClose: () => void }
           <div className="grow"><TextField label="Правильное количество" unit="г" inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} /></div>
           <Button variant="secondary" disabled={busy || !(g > 0)} onClick={() => void done((d) => setLogAmount(d, log.id, g))}>Изменить</Button>
         </div>
+        <PortionChips portions={logFood?.portions} grams={g} onPick={(v) => setGrams(String(v))} />
         <Button block variant="danger" icon="trash" disabled={busy} onClick={() => void done((d) => undoLog(d, log.id))}>Удалить запись</Button>
       </div>
     </Sheet>
@@ -309,6 +350,8 @@ function ItemSheet({ item, onClose }: { item: PlannedItem | null; onClose: () =>
           <div className="grow"><TextField label="Съел другое количество" unit="г" inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} /></div>
           <Button variant="secondary" disabled={busy || !(g > 0)} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'eaten', grams: g }))}>Записать</Button>
         </div>
+        <PortionChips portions={food?.portions} grams={g} onPick={(v) => setGrams(String(v))} />
+        {food && <ConvertHint food={food as Food} grams={g > 0 ? g : item.plannedAmountG} />}
         <div className="row" style={{ flexWrap: 'wrap' }}>
           <Button variant="secondary" disabled={busy} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'skipped' }))}>Пропустил</Button>
           {log && <Button variant="secondary" icon="close" disabled={busy} onClick={() => void done((d) => undoLog(d, log.id))}>Убрать отметку</Button>}
@@ -340,6 +383,9 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
   const [grams, setGrams] = useState('100');
   const [mode, setMode] = useState<'eaten' | 'plan'>('eaten');
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [dishing, setDishing] = useState<'new' | 'edit' | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanNote, setScanNote] = useState<string | null>(null);
   const [looking, setLooking] = useState(false);
@@ -402,6 +448,9 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
     setQuery('');
     setCat('all');
     setCreating(false);
+    setEditing(false);
+    setDishing(null);
+    setConfirmDelete(false);
     setScanning(false);
     setScanNote(null);
     setBarcode(null);
@@ -417,6 +466,18 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
           <p className="t-body">Ищу продукт по штрих-коду…</p>
         ) : scanning ? (
           <BarcodeScanner onCode={(c) => void onCode(c)} onCancel={() => setScanning(false)} />
+        ) : dishing ? (
+          <DishForm
+            initial={dishing === 'edit' ? food : undefined}
+            onCancel={() => setDishing(null)}
+            onSaved={(id, totalG) => { setDishing(null); setPicked(id); setGrams(String(totalG)); }}
+          />
+        ) : editing && food ? (
+          <CustomFoodForm
+            initial={food}
+            onCancel={() => setEditing(false)}
+            onCreated={() => setEditing(false)}
+          />
         ) : creating ? (
           <CustomFoodForm
             barcode={barcode}
@@ -432,6 +493,7 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
               <Button variant="secondary" size="sm" block icon="scan" onClick={() => setScanning(true)}>Сканировать штрих-код</Button>
               <Button variant="secondary" size="sm" block icon="plus" onClick={() => setCreating(true)}>Добавить свой продукт</Button>
             </div>
+            <Button variant="secondary" size="sm" block icon="plus" onClick={() => setDishing('new')}>Создать блюдо из ингредиентов</Button>
             <TextField label="Поиск продукта" className="search-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" />
             <div className="cat-chips" role="group" aria-label="Категория">
               <button type="button" className="chip" aria-pressed={cat === 'all'} onClick={() => setCat('all')}>Все</button>
@@ -449,6 +511,8 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
             <div className="t-h3">{food.name}</div>
             <p className="t-small">{food.basis === 'raw' ? 'Вес сырого продукта' : food.basis === 'cooked' ? 'Вес готового продукта' : 'Вес как на упаковке'}</p>
             <TextField label="Количество" unit="г" inputMode="decimal" value={grams} onChange={(e) => setGrams(e.target.value)} />
+            <PortionChips portions={food.portions} grams={g} onPick={(v) => setGrams(String(v))} />
+            <ConvertHint food={food} grams={g} onSwitch={(other, v) => { setPicked(other.id); setGrams(String(v)); }} />
             {preview && <p className="t-body">{fmt(preview.kcal, 0)} ккал · Б {fmt(preview.proteinG, 0)} Ж {fmt(preview.fatG, 0)} У {fmt(preview.carbG, 0)}</p>}
             <div className="t-caption">Какой приём пищи</div>
             <Segmented<MealSlot> value={slotSel} onChange={setSlotSel} options={SLOT_ORDER.map((k) => ({ value: k, label: SLOT_LABEL[k] }))} label="Приём пищи" small />
@@ -465,6 +529,16 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
                 Добавить
               </Button>
             </div>
+            {food.origin === 'custom' && (
+              <div className="row" style={{ flexWrap: 'wrap' }}>
+                <Button variant="text" size="sm" icon="edit" onClick={() => (food.recipe ? setDishing('edit') : setEditing(true))}>{food.recipe ? 'Изменить блюдо' : 'Изменить продукт'}</Button>
+                {!confirmDelete ? (
+                  <Button variant="text" size="sm" icon="trash" onClick={() => setConfirmDelete(true)}>Удалить</Button>
+                ) : (
+                  <Button variant="danger" size="sm" icon="trash" disabled={busy} onClick={async () => { if (await ok((d) => deleteCustomFood(d, food.id))) { setConfirmDelete(false); setPicked(null); } }}>Точно удалить?</Button>
+                )}
+              </div>
+            )}
             {mode === 'eaten' && <p className="t-small">Остальные приёмы пищи, которые ты ещё не отметил, пересчитаются так, чтобы день закончился на норме. Уже съеденное не меняется.</p>}
           </>
         )}
@@ -473,17 +547,18 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
   );
 }
 
-function CustomFoodForm({ barcode, onCancel, onCreated }: { barcode?: string | null; onCancel: () => void; onCreated: (id: string) => void }) {
-  const { run, banner, busy } = useCommand();
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState<FoodCategory>('other');
-  const [basis, setBasis] = useState<'as_sold' | 'raw' | 'cooked'>('as_sold');
-  const [kcal, setKcal] = useState('');
-  const [p, setP] = useState('');
-  const [f, setF] = useState('');
-  const [c, setC] = useState('');
-  const [fiber, setFiber] = useState('');
-  const [label, setLabel] = useState(true);
+function CustomFoodForm({ barcode, initial, onCancel, onCreated }: { barcode?: string | null; initial?: Food; onCancel: () => void; onCreated: (id: string) => void }) {
+  const { run, ok, banner, busy } = useCommand();
+  const txt = (v: number | undefined): string => (v === undefined ? '' : String(v).replace('.', ','));
+  const [name, setName] = useState(initial?.name ?? '');
+  const [category, setCategory] = useState<FoodCategory>(initial?.category ?? 'other');
+  const [basis, setBasis] = useState<'as_sold' | 'raw' | 'cooked'>(initial?.basis ?? 'as_sold');
+  const [kcal, setKcal] = useState(txt(initial?.per100.kcal));
+  const [p, setP] = useState(txt(initial?.per100.proteinG));
+  const [f, setF] = useState(txt(initial?.per100.fatG));
+  const [c, setC] = useState(txt(initial?.per100.carbG));
+  const [fiber, setFiber] = useState(txt(initial?.per100.fiberG));
+  const [label, setLabel] = useState(initial ? initial.dataSource.kind === 'label' : true);
   const num = (v: string): number => (v.trim() === '' ? 0 : parseDecimal(v));
   const valid = name.trim().length > 0 && [kcal, p, f, c].every((v) => Number.isFinite(num(v)) && num(v) >= 0) && num(p) + num(f) + num(c) <= 100;
   return (
@@ -511,11 +586,82 @@ function CustomFoodForm({ barcode, onCancel, onCreated }: { barcode?: string | n
         <Button
           disabled={busy || !valid}
           onClick={async () => {
-            const id = await run((d) => createCustomFood(d, { name, brand: null, category, basis, per100: { kcal: num(kcal), proteinG: num(p), fatG: num(f), carbG: num(c), fiberG: num(fiber) }, fromLabel: label, barcode: barcode && isBarcode(barcode) ? barcode : null }));
+            const per100 = { kcal: num(kcal), proteinG: num(p), fatG: num(f), carbG: num(c), fiberG: num(fiber) };
+            if (initial) {
+              if (await ok((d) => updateCustomFood(d, initial.id, { name, brand: initial.brand, category, basis, per100, fromLabel: label }))) onCreated(initial.id);
+              return;
+            }
+            const id = await run((d) => createCustomFood(d, { name, brand: null, category, basis, per100, fromLabel: label, barcode: barcode && isBarcode(barcode) ? barcode : null }));
             if (id) onCreated(id);
           }}
         >
           Сохранить
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** A dish from the user's own ingredients ("blini with cheese and mushrooms", "PP shawarma"): the numbers are calculated from the list. */
+function DishForm({ initial, onCancel, onSaved }: { initial?: Food; onCancel: () => void; onSaved: (id: string, totalG: number) => void }) {
+  const { snapshot: s } = useData();
+  const { ok, banner, busy } = useCommand();
+  const [name, setName] = useState(initial?.name ?? '');
+  const [items, setItems] = useState<Array<{ foodId: string; grams: string }>>(initial?.recipe ? initial.recipe.items.map((i) => ({ foodId: i.foodId, grams: String(i.grams) })) : []);
+  const [totalText, setTotalText] = useState(initial?.recipe ? String(initial.recipe.totalG) : '');
+  const [query, setQuery] = useState('');
+  const foods = s.foods.filter((f) => f.deletedAt === null && !f.recipe);
+  const hits = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q === '' ? [] : foods.filter((f) => f.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [query, foods]);
+  const parsed = items.map((i) => ({ foodId: i.foodId, grams: parseDecimal(i.grams) })).filter((i) => i.grams > 0);
+  const total = totalText.trim() === '' ? null : parseDecimal(totalText);
+  const calc = dishPer100(foods, parsed, total !== null && total > 0 ? total : null);
+  const sum = parsed.reduce((a, i) => a + i.grams, 0);
+  const valid = name.trim().length > 0 && parsed.length > 0 && calc !== undefined;
+  return (
+    <div className="stack">
+      {banner}
+      <TextField label="Название блюда" value={name} onChange={(e) => setName(e.target.value)} placeholder="Например, блины с сыром и грибами" />
+      <div className="t-caption">Ингредиенты: вес как ты их кладёшь в блюдо (сырой, готовый или с упаковки, смотри подпись продукта)</div>
+      <div className="list">
+        {items.map((it, idx) => {
+          const f = foods.find((x) => x.id === it.foodId);
+          return (
+            <div key={`${it.foodId}-${idx}`} className="row" style={{ alignItems: 'flex-end' }}>
+              <div className="grow">
+                <TextField label={f ? `${f.name} · ${f.basis === 'raw' ? 'сырой' : f.basis === 'cooked' ? 'готовый' : 'как на упаковке'}` : 'Продукт'} unit="г" inputMode="decimal" value={it.grams} onChange={(e) => setItems(items.map((x, j) => (j === idx ? { ...x, grams: e.target.value } : x)))} />
+              </div>
+              <IconButton icon="trash" label="Убрать ингредиент" tone="ghost" onClick={() => setItems(items.filter((_, j) => j !== idx))} />
+            </div>
+          );
+        })}
+      </div>
+      <TextField label="Найти ингредиент" className="search-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, творог" />
+      {hits.length > 0 && (
+        <div className="list">
+          {hits.map((f) => <ListItem key={f.id} title={f.name} subtitle={`${fmt(f.per100.kcal, 0)} ккал/100 г`} onClick={() => { setItems([...items, { foodId: f.id, grams: f.gramsPerPiece ? String(f.gramsPerPiece) : '100' }]); setQuery(''); }} />)}
+        </div>
+      )}
+      <TextField label="Вес готового блюда (необязательно)" unit="г" inputMode="decimal" value={totalText} onChange={(e) => setTotalText(e.target.value)} hint={`Если оставить пустым, возьмём сумму ингредиентов: ${fmt(sum, 0)} г. При готовке вес меняется, взвесь результат, если хочешь точнее.`} />
+      {calc && (
+        <p className="t-body">
+          Всё блюдо ({fmt(calc.totalG, 0)} г): {fmt((calc.per100.kcal * calc.totalG) / 100, 0)} ккал · Б {fmt((calc.per100.proteinG * calc.totalG) / 100, 0)} Ж {fmt((calc.per100.fatG * calc.totalG) / 100, 0)} У {fmt((calc.per100.carbG * calc.totalG) / 100, 0)}
+          <br />
+          На 100 г: {fmt(calc.per100.kcal, 0)} ккал
+        </p>
+      )}
+      <div className="row">
+        <Button variant="text" onClick={onCancel}>Отмена</Button>
+        <Button
+          disabled={busy || !valid}
+          onClick={async () => {
+            let saved: string | undefined;
+            if (await ok(async (d) => { saved = await saveDish(d, { id: initial?.id, name, items: parsed, totalG: total !== null && total > 0 ? total : null }); })) if (saved && calc) onSaved(saved, Math.round(calc.totalG));
+          }}
+        >
+          Сохранить блюдо
         </Button>
       </div>
     </div>

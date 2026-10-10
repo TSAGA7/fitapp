@@ -290,3 +290,22 @@ html, body { overflow-x: hidden; }
 .sum-set { text-align: right; flex: none; max-width: 55%; }
 [data-theme='dark'] .sum-tile { background: rgba(255, 255, 255, .06); }
 [data-theme='dark'] .sum-group.up { color: #4ade80; } [data-theme='dark'] .sum-group.down { color: #fbbf24; }
+
+/* Vacation: the screen fills up with beer */
+.beer-fill { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; animation: beer-out .6s ease 1.9s forwards; }
+.beer-liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; transform: translateY(100%); background: linear-gradient(to top, #b45309 0%, #d97706 35%, #fbbf24 80%, #fcd34d 100%); animation: beer-rise 1.4s cubic-bezier(.3,.7,.3,1) forwards; }
+.beer-foam { animation: beer-foam-out .4s ease 1.3s forwards; position: absolute; left: -5%; right: -5%; top: -34px; height: 56px; background: #fffbeb; border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%; box-shadow: 0 -8px 0 -2px #fff, 24px -14px 0 4px #fffbeb, -30px -12px 0 6px #fffbeb, 110px -10px 0 2px #fffbeb; }
+.beer-bubble { position: absolute; bottom: -20px; border-radius: 50%; background: rgba(255, 255, 255, .55); animation: beer-bubble 1.3s ease-in infinite; }
+@keyframes beer-rise { to { transform: translateY(-6%); } }
+@keyframes beer-bubble { to { transform: translateY(-70vh); opacity: 0; } }
+@keyframes beer-foam-out { to { opacity: 0; } }
+@keyframes beer-out { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .beer-liquid { animation-duration: .01s; } .beer-bubble { animation: none; } }
+
+/* Exercise technique sheet */
+.exinfo section { display: grid; gap: 6px; }
+.exinfo .t-h3 { display: flex; align-items: center; gap: 6px; }
+.exinfo-steps, .exinfo-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; line-height: 22px; }
+.exinfo-list.bad li::marker { color: var(--danger); }
+.var-pick { display: grid; gap: 6px; }
+.convert-hint { display: grid; gap: 4px; justify-items: start; }

@@ -7,6 +7,7 @@ import {
   macrosForAmount,
   replaceFood,
   startOfWeek,
+  sumMacros,
   ZERO_MACROS,
   type Availability,
   type Food,
@@ -331,6 +332,91 @@ export async function createCustomFood(deps: AppDeps, input: CustomFoodInput): P
     }),
   );
   return id;
+}
+
+export async function updateCustomFood(deps: AppDeps, id: string, input: Omit<CustomFoodInput, 'barcode' | 'sourceNote'>): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const food = await r.foods.get(id);
+    if (!food || food.origin !== 'custom') throw new Error('Менять можно только свои продукты');
+    await r.foods.put({
+      ...food,
+      updatedAt: deps.clock.now(),
+      name: input.name.trim(),
+      brand: input.brand?.trim() || null,
+      category: input.category,
+      basis: input.basis,
+      per100: input.per100,
+      dataSource: { kind: input.fromLabel ? 'label' : 'user', note: input.fromLabel ? 'С упаковки' : 'Введено пользователем' },
+    });
+  });
+}
+
+/** Deletes one of the user's own foods. Diary entries keep their own copy of the numbers; the seed catalog cannot be deleted. */
+export async function deleteCustomFood(deps: AppDeps, id: string): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const food = await r.foods.get(id);
+    if (!food || food.origin !== 'custom') throw new Error('Удалять можно только свои продукты');
+    await r.foods.softDelete(id);
+  });
+}
+
+export interface DishInput {
+  /** Set when an existing dish is edited. */
+  id?: string;
+  name: string;
+  items: ReadonlyArray<{ foodId: string; grams: number }>;
+  /** Weight of the finished dish; the sum of the ingredients when empty (e.g. nothing is lost in cooking). */
+  totalG: number | null;
+}
+
+/** Per-100 g numbers of a dish: the ingredients are summed and divided by the weight of the finished dish. */
+export function dishPer100(foods: readonly { id: string; per100: Macros }[], items: DishInput['items'], totalG: number | null): { per100: Macros; totalG: number } | undefined {
+  const lines = items.filter((i) => i.grams > 0);
+  const byId = new Map(foods.map((f) => [f.id, f]));
+  if (lines.length === 0 || lines.some((i) => !byId.has(i.foodId))) return undefined;
+  const sum = lines.reduce((a, i) => a + i.grams, 0);
+  const total = totalG && totalG > 0 ? totalG : sum;
+  const m = sumMacros(lines.map((i) => macrosForAmount((byId.get(i.foodId) as { per100: Macros }).per100, i.grams)));
+  const k = 100 / total;
+  const r1 = (v: number): number => Math.round(v * k * 10) / 10;
+  return { per100: { kcal: Math.round(m.kcal * k), proteinG: r1(m.proteinG), fatG: r1(m.fatG), carbG: r1(m.carbG), fiberG: r1(m.fiberG) }, totalG: total };
+}
+
+/** Saves a dish (pancakes with cheese and mushrooms, a "PP shawarma"...) as a food: it is added to a meal like any product. */
+export async function saveDish(deps: AppDeps, input: DishInput): Promise<string> {
+  const name = input.name.trim();
+  if (!name) throw new Error('Дай блюду название');
+  return deps.uow.run(async (r) => {
+    const foods = await r.foods.listAll();
+    const calc = dishPer100(foods, input.items, input.totalG);
+    if (!calc) throw new Error('Добавь хотя бы один ингредиент с весом');
+    const recipe = { items: input.items.filter((i) => i.grams > 0).map((i) => ({ foodId: i.foodId, grams: i.grams })), totalG: calc.totalG };
+    const common = {
+      name,
+      brand: null,
+      barcode: null,
+      category: 'ready_meals' as const,
+      basis: 'cooked' as const,
+      unit: 'g' as const,
+      gramsPerPiece: Math.round(calc.totalG),
+      per100: calc.per100,
+      variantGroup: null,
+      yieldFactor: null,
+      autoPlan: false,
+      recipe,
+      dataSource: { kind: 'user' as const, note: `Блюдо из ${recipe.items.length} ингредиентов: цифры посчитаны из состава` },
+      origin: 'custom' as const,
+    };
+    if (input.id) {
+      const existing = await r.foods.get(input.id);
+      if (!existing || existing.origin !== 'custom') throw new Error('Блюдо не найдено');
+      await r.foods.put({ ...existing, ...common, updatedAt: deps.clock.now() });
+      return existing.id;
+    }
+    const id = deps.ids.newId();
+    await r.foods.put({ ...createBase(id, deps.clock.now(), deps.deviceId), key: `dish_${id.replace(/-/g, '').slice(0, 16)}`, ...common });
+    return id;
+  });
 }
 
 export async function setFoodPreference(deps: AppDeps, foodId: string, patch: Partial<{ preference: Preference; availability: Availability; excluded: boolean; maxPerDayG: number | null }>): Promise<void> {

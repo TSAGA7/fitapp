@@ -7,7 +7,7 @@ import { userFoodOf } from '../app/derive';
 import { fmt, formatDay } from '../app/format';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, TextField } from '../ui';
-import { parseDecimal, ScreenHeader } from './shared';
+import { parseDecimal, RebuildOffer, ScreenHeader } from './shared';
 
 const AREA_LABELS: Record<BodyArea, string> = { shoulder: 'Плечо', elbow: 'Локоть', wrist: 'Запястье', neck: 'Шея', upper_back: 'Верх спины', lower_back: 'Поясница', hip: 'Таз', knee: 'Колено', ankle: 'Голеностоп', other: 'Другое' };
 const SIDE_LABELS: Record<Side, string> = { left: 'Слева', right: 'Справа', both: 'Обе стороны' };
@@ -75,6 +75,7 @@ export function EquipmentScreen() {
   const { snapshot: s } = useData();
   const { ok, banner } = useCommand();
   const [stepFor, setStepFor] = useState<string | null>(null);
+  const [changed, setChanged] = useState(false);
   const [step, setStep] = useState('');
   const [max, setMax] = useState('');
   const list = s.equipment.filter((e) => e.deletedAt === null).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
@@ -88,6 +89,7 @@ export function EquipmentScreen() {
     <main className="screen">
       <ScreenHeader title="Тренажёры" back="profile" />
       {banner}
+      {changed && <RebuildOffer title="Оборудование изменено. Пересобрать программу?" onClose={() => setChanged(false)} />}
       <p className="t-small">Поставь галочку у того, что есть в твоём зале. Нажми на название, чтобы задать шаг веса (для кардио-тренажёров — скорость или уровни). После изменений можно пересобрать программу на вкладке «Тренировки».</p>
       <div className="stack" style={{ gap: 8 }}>
         {list.map((e) => {
@@ -95,7 +97,7 @@ export function EquipmentScreen() {
           const available = u?.available ?? true;
           return (
             <div key={e.id} className="eq-row">
-              <button type="button" className="check" role="checkbox" aria-checked={available} aria-label={`${e.name}: ${available ? 'есть' : 'нет'}`} onClick={() => void ok((d) => setEquipmentAvailable(d, e.id, !available))}>
+              <button type="button" className="check" role="checkbox" aria-checked={available} aria-label={`${e.name}: ${available ? 'есть' : 'нет'}`} onClick={() => void ok((d) => setEquipmentAvailable(d, e.id, !available)).then((done) => done && setChanged(true))}>
                 {available && <Icon name="check" size={20} />}
               </button>
               <button type="button" className="eq-main" onClick={() => { setStepFor(e.id); setStep(u?.stepKg ? String(u.stepKg) : ''); setMax(u?.maxKg ? String(u.maxKg) : ''); }}>

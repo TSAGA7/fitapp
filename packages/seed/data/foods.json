@@ -20,7 +20,8 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "buckwheat_dry",
@@ -43,7 +44,8 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "buckwheat_cooked",
@@ -89,7 +91,8 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "rice_cooked",
@@ -135,7 +138,8 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "chicken_breast_cooked",
@@ -181,6 +185,11 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "portions": {
+      "small": 45,
+      "medium": 55,
+      "large": 65
     }
   },
   {
@@ -251,7 +260,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 90,
+      "medium": 120,
+      "large": 150
+    }
   },
   {
     "key": "olive_oil",
@@ -320,7 +334,8 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "beef_lean_raw",
@@ -338,12 +353,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "beef_lean",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "salmon_raw",
@@ -361,12 +377,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "salmon",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "cod_raw",
@@ -384,12 +401,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "cod",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "tuna_canned",
@@ -522,12 +540,13 @@
       "carbG": 46,
       "fiberG": 11
     },
-    "variantGroup": null,
+    "variantGroup": "lentils",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "chickpeas_canned",
@@ -573,7 +592,8 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
-    }
+    },
+    "autoPlan": false
   },
   {
     "key": "potato_raw",
@@ -596,6 +616,11 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "portions": {
+      "small": 80,
+      "medium": 120,
+      "large": 180
     }
   },
   {
@@ -665,6 +690,11 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "portions": {
+      "small": 90,
+      "medium": 130,
+      "large": 180
     }
   },
   {
@@ -688,6 +718,11 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "portions": {
+      "small": 70,
+      "medium": 110,
+      "large": 160
     }
   },
   {
@@ -734,6 +769,11 @@
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "portions": {
+      "small": 60,
+      "medium": 90,
+      "large": 130
     }
   },
   {
@@ -804,7 +844,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 130,
+      "medium": 180,
+      "large": 230
+    }
   },
   {
     "key": "orange",
@@ -828,7 +873,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 110,
+      "medium": 150,
+      "large": 200
+    }
   },
   {
     "key": "walnuts",
@@ -1179,13 +1229,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "chicken_thigh_fillet",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "turkey_thigh_raw",
@@ -1203,13 +1253,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "turkey_thigh",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "pork_tenderloin_raw",
@@ -1227,13 +1277,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "pork_tenderloin",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "pork_neck_raw",
@@ -1323,13 +1373,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "mince_chicken",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "chicken_liver_raw",
@@ -1659,13 +1709,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "mackerel",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "pink_salmon_raw",
@@ -1683,13 +1733,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "pink_salmon",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "trout_raw",
@@ -1707,13 +1757,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "trout",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "pollock_raw",
@@ -1731,13 +1781,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "pollock",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "tuna_fresh_raw",
@@ -1755,13 +1805,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "tuna_fresh",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "shrimp_boiled",
@@ -1803,13 +1853,13 @@
       "carbG": 0,
       "fiberG": 0
     },
-    "variantGroup": null,
+    "variantGroup": "squid",
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "crab_sticks",
@@ -2361,7 +2411,7 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": false
   },
   {
     "key": "bulgur_cooked",
@@ -2433,7 +2483,7 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": false
+    "autoPlan": true
   },
   {
     "key": "oatmeal_milk",
@@ -2457,7 +2507,7 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": false
+    "autoPlan": true
   },
   {
     "key": "muesli",
@@ -2601,7 +2651,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 80,
+      "medium": 120,
+      "large": 180
+    }
   },
   {
     "key": "potato_fried",
@@ -2721,7 +2776,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 100,
+      "medium": 170,
+      "large": 250
+    }
   },
   {
     "key": "pancakes_water",
@@ -3657,7 +3717,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 150,
+      "medium": 250,
+      "large": 350
+    }
   },
   {
     "key": "bell_pepper",
@@ -3681,7 +3746,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 100,
+      "medium": 150,
+      "large": 200
+    }
   },
   {
     "key": "cauliflower",
@@ -3753,7 +3823,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 60,
+      "medium": 90,
+      "large": 130
+    }
   },
   {
     "key": "avocado",
@@ -3777,7 +3852,12 @@
       "kind": "estimate",
       "note": "Углеводы указаны без клетчатки; приблизительно"
     },
-    "autoPlan": false
+    "autoPlan": false,
+    "portions": {
+      "small": 100,
+      "medium": 150,
+      "large": 200
+    }
   },
   {
     "key": "grapes",
@@ -3825,7 +3905,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 130,
+      "medium": 170,
+      "large": 220
+    }
   },
   {
     "key": "kiwi",
@@ -3849,7 +3934,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 60,
+      "medium": 80,
+      "large": 100
+    }
   },
   {
     "key": "strawberry",
@@ -3897,7 +3987,12 @@
       "kind": "estimate",
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
-    "autoPlan": true
+    "autoPlan": true,
+    "portions": {
+      "small": 50,
+      "medium": 70,
+      "large": 90
+    }
   },
   {
     "key": "dried_apricots",
@@ -9994,5 +10089,605 @@
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
     "autoPlan": false
+  },
+  {
+    "key": "cappuccino",
+    "name": "Капучино (молоко 3,2%)",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 42,
+      "proteinG": 2.4,
+      "fatG": 2.1,
+      "carbG": 3.6,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "americano",
+    "name": "Американо (без молока)",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 2,
+      "proteinG": 0.1,
+      "fatG": 0,
+      "carbG": 0.3,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "raf",
+    "name": "Раф-кофе (сливки)",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 85,
+      "proteinG": 2.3,
+      "fatG": 5.6,
+      "carbG": 6.5,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "flat_white",
+    "name": "Флэт уайт",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 48,
+      "proteinG": 2.8,
+      "fatG": 2.5,
+      "carbG": 3.8,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "latte_macchiato",
+    "name": "Латте маккиато",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 50,
+      "proteinG": 2.6,
+      "fatG": 2.6,
+      "carbG": 4.0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "prosecco_brut",
+    "name": "Просекко брют",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 68,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbG": 1.2,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "prosecco_extra_dry",
+    "name": "Просекко экстра драй",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 78,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbG": 2.8,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "prosecco_rose",
+    "name": "Просекко розе",
+    "brand": null,
+    "barcode": null,
+    "category": "drinks",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 72,
+      "proteinG": 0.2,
+      "fatG": 0,
+      "carbG": 2.0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Калории включают алкоголь, поэтому не равны сумме БЖУ"
+    },
+    "autoPlan": false
+  },
+  {
+    "key": "beef_lean_cooked",
+    "name": "Говядина постная, тушёная",
+    "brand": null,
+    "barcode": null,
+    "category": "meat",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 243,
+      "proteinG": 32.3,
+      "fatG": 12.3,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "beef_lean",
+    "yieldFactor": 0.65,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "pork_tenderloin_cooked",
+    "name": "Свинина (вырезка), запечённая",
+    "brand": null,
+    "barcode": null,
+    "category": "meat",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 199,
+      "proteinG": 29.2,
+      "fatG": 8.3,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "pork_tenderloin",
+    "yieldFactor": 0.72,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "chicken_thigh_cooked",
+    "name": "Куриное бедро без кожи, запечённое",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 168,
+      "proteinG": 26.4,
+      "fatG": 6.9,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "chicken_thigh_fillet",
+    "yieldFactor": 0.72,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "turkey_thigh_cooked",
+    "name": "Индейка (бедро), запечённая",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 206,
+      "proteinG": 27.9,
+      "fatG": 10.0,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "turkey_thigh",
+    "yieldFactor": 0.7,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "mince_chicken_cooked",
+    "name": "Фарш куриный, обжаренный",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 191,
+      "proteinG": 23.3,
+      "fatG": 10.7,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "mince_chicken",
+    "yieldFactor": 0.75,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "salmon_cooked",
+    "name": "Сёмга/лосось запечённый",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 260,
+      "proteinG": 25.0,
+      "fatG": 16.8,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "salmon",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "cod_cooked",
+    "name": "Треска запечённая",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 98,
+      "proteinG": 22.1,
+      "fatG": 0.9,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "cod",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "mackerel_cooked",
+    "name": "Скумбрия запечённая",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 225,
+      "proteinG": 22.5,
+      "fatG": 15.0,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "mackerel",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "pink_salmon_cooked",
+    "name": "Горбуша запечённая",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 172,
+      "proteinG": 26.2,
+      "fatG": 7.5,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "pink_salmon",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "trout_cooked",
+    "name": "Форель запечённая",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 175,
+      "proteinG": 25.0,
+      "fatG": 8.1,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "trout",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "pollock_cooked",
+    "name": "Минтай запечённый",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 90,
+      "proteinG": 19.9,
+      "fatG": 1.1,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "pollock",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "tuna_cooked",
+    "name": "Тунец (стейк), приготовленный",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 135,
+      "proteinG": 30.0,
+      "fatG": 1.2,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "tuna_fresh",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "squid_cooked",
+    "name": "Кальмар варёный",
+    "brand": null,
+    "barcode": null,
+    "category": "seafood",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 94,
+      "proteinG": 22.5,
+      "fatG": 0.4,
+      "carbG": 0.0,
+      "fiberG": 0.0
+    },
+    "variantGroup": "squid",
+    "yieldFactor": 0.8,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "lentils_cooked",
+    "name": "Чечевица варёная",
+    "brand": null,
+    "barcode": null,
+    "category": "legumes",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 118,
+      "proteinG": 9.6,
+      "fatG": 0.6,
+      "carbG": 18.4,
+      "fiberG": 4.4
+    },
+    "variantGroup": "lentils",
+    "yieldFactor": 2.5,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Пересчёт из сырого продукта при запекании/варке без масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "chicken_breast_fried",
+    "name": "Куриная грудка жареная",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 172,
+      "proteinG": 30.0,
+      "fatG": 5.5,
+      "carbG": 0.0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Жарка на сковороде с небольшим количеством масла; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "chicken_legs_fried",
+    "name": "Куриные ножки жареные (голень с кожей)",
+    "brand": null,
+    "barcode": null,
+    "category": "poultry",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 220,
+      "proteinG": 22.0,
+      "fatG": 14.0,
+      "carbG": 0.5,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Жарка без панировки; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "trout_salted",
+    "name": "Форель слабосолёная",
+    "brand": null,
+    "barcode": null,
+    "category": "fish",
+    "basis": "as_sold",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 202,
+      "proteinG": 21.0,
+      "fatG": 12.5,
+      "carbG": 0.0,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Типовое значение для слабосолёной форели; сверь с упаковкой"
+    },
+    "autoPlan": true
   }
 ]

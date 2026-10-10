@@ -285,5 +285,33 @@
     "category": "cardio",
     "loadType": "none",
     "defaultStepKg": null
+  },
+  {
+    "key": "lever_pulldown",
+    "name": "Верхняя тяга рычажная (независимые рукоятки)",
+    "category": "machines",
+    "loadType": "plates",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "high_row_lever",
+    "name": "Рычажная тяга под углом (high row)",
+    "category": "machines",
+    "loadType": "plates",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "low_row_lever",
+    "name": "Горизонтальная рычажная тяга (low row)",
+    "category": "machines",
+    "loadType": "plates",
+    "defaultStepKg": 5.0
+  },
+  {
+    "key": "tbar_row_station",
+    "name": "Т-тяга (упор для грифа / тренажёр)",
+    "category": "machines",
+    "loadType": "plates",
+    "defaultStepKg": 2.5
   }
 ]

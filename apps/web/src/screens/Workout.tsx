@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, addSetToExercise, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, addSetToExercise, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt } from '../app/format';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, Icon, IconButton, ListItem, ProgressBar, Sheet, TextField } from '../ui';
+import { ExerciseInfoSheet } from './ExerciseInfo';
 import { TvaGuideBody } from './TvaGuide';
 import { parseDecimal } from './shared';
 import { ActivityBar, WorkoutSummaryCard } from './WorkoutActivity';
@@ -268,6 +269,7 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardP
   const restSec = restOverride ?? suggestion.seconds;
   const [noteOpen, setNoteOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const unit = timed ? ' с' : '';
   const settled = settledSets(ev);
   const allSettled = plan.length > 0 && settled >= plan.length;
@@ -294,6 +296,17 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardP
           </div>
         ))}
         {ev.ownNote && <p className="t-small"><Icon name="edit" size={14} /> {ev.ownNote.text}</p>}
+        {exercise.variants.length > 1 && (
+          <div className="var-pick">
+            <div className="t-caption">Хват / вариант{working.length > 0 || readOnly ? '' : ' (до первого подхода)'}</div>
+            <div className="chips" role="group" aria-label="Вариант упражнения">
+              {exercise.variants.map((v) => (
+                <Chip key={v.key} pressed={se.variantKey === v.key} onClick={() => { if (!readOnly && working.length === 0 && !busy && se.variantKey !== v.key) void mutate((d) => changeExerciseVariant(d, { sessionExerciseId: se.id, variantKey: v.key })); }}>{v.label}</Chip>
+              ))}
+            </div>
+            {exercise.variants.find((v) => v.key === se.variantKey)?.note && <p className="t-small">{exercise.variants.find((v) => v.key === se.variantKey)?.note}</p>}
+          </div>
+        )}
 
         <div className="list">
           {plan.map((p) => {
@@ -359,12 +372,14 @@ function ExerciseCard({ ev, readOnly, busy, mutate, run, open, onToggle }: CardP
               <Button size="sm" variant="text" icon="plus" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}>Добавить подход</Button>
               <Button size="sm" variant="text" icon="swap" onClick={() => setSwapOpen(true)}>Заменить</Button>
               <Button size="sm" variant="text" icon="edit" onClick={() => setNoteOpen(true)}>Заметка</Button>
+              <Button size="sm" variant="text" icon="info" onClick={() => setInfoOpen(true)}>Техника</Button>
               {VACUUM_KEYS.has(exercise.key) && <Button size="sm" variant="text" icon="info" onClick={() => setGuideOpen(true)}>Как это работает</Button>}
             </div>
           </div>
         )}
       </div>
 
+      {infoOpen && <ExerciseInfoSheet exercise={exercise} onClose={() => setInfoOpen(false)} />}
       <PainSheet
         open={painOpen}
         advice={advice}

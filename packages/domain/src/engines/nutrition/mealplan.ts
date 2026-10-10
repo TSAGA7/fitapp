@@ -73,27 +73,28 @@ const ROLES: Record<MealSlot, Role[]> = { breakfast: BREAKFAST, lunch: MAIN, din
 export const VACATION_MEALS = /^(pizza_|[a-z]+_pizza_|vit_(hamburger|cheeseburger|double_cheese|big_hit|big_tasty|chicken_burger|fish)$|bk_(whopper|double_whopper|cheeseburger|long_chicken|chicken_king)$|rostics_(boxmaster|twister|burger)$|roll_|maki_|nigiri_|sushi_rolls$|gunkan$|philadelphia_roll$|california_roll$|baked_roll$|tempura_roll$|spicy_roll$|unagi_roll$|chicken_roll$|inari$|dodo_dodster_|cheburek$|samsa_meat$|teremok_blin_(ham|chicken|meat|salmon)$)/;
 const VACATION_SIDES = /^(potato_fries$|nuggets_chicken$|vit_(fries|nuggets|strips|wings)$|bk_(fries|nuggets|onion_rings|wings)$|rostics_(fries|nuggets|potato_country|leg|wings|strips)$|dodo_(wings|cheese_sticks)$|gyoza$|shrimp_tempura$|salad_(olivier|crab|mimosa|herring_fur_coat|caesar_chicken|caesar_shrimp|crispy_eggplant|greek)$)/;
 const VACATION_BAKERY = /^(pie_|bun_|croissant|vatrushka_|vit_apple_pie$|teremok_blin_(jam|condensed)$)/;
-const VACATION_ALCOHOL = /^(beer_(lager|dark|wheat|ipa)$|wine_|champagne_)/;
-const VACATION_SOFT = /^(cola$|sprite$|fanta$|juice_|latte$|energy_drink$)/;
+const VACATION_ALCOHOL = /^(beer_(lager|dark|wheat|ipa)$|wine_|champagne_|prosecco_)/;
+const VACATION_COFFEE = /^(latte$|cappuccino$|americano$|raf$|flat_white$|latte_macchiato$)/;
+const VACATION_WINE = /^(wine_|champagne_|prosecco_)/;
 const VACATION_SWEETS = /^(dodo_(brownie|cheesecake)$)/;
 const byId = (re: RegExp) => (f: PlanFood): boolean => re.test(f.id);
 const VAC_BREAKFAST: Role[] = [
   { name: 'bake', categories: [], match: byId(VACATION_BAKERY), min: 60, max: 240, start: 120 },
-  { name: 'drink', categories: [], match: byId(/^(latte$|juice_)/), min: 200, max: 400, start: 250, fixed: true },
+  { name: 'drink', categories: [], match: byId(new RegExp(`${VACATION_COFFEE.source}|${VACATION_WINE.source}`)), min: 100, max: 300, start: 200, fixed: true },
 ];
 const VAC_MAIN: Role[] = [
   { name: 'main', categories: [], match: byId(VACATION_MEALS), min: 100, max: 450, start: 250 },
   { name: 'side', categories: [], match: byId(VACATION_SIDES), min: 50, max: 250, start: 120 },
-  { name: 'drink', categories: [], match: byId(VACATION_SOFT), min: 200, max: 500, start: 330, fixed: true },
+  { name: 'alcohol', categories: [], match: byId(VACATION_ALCOHOL), min: 100, max: 330, start: 150, fixed: true },
 ];
 const VAC_DINNER: Role[] = [
   { name: 'main', categories: [], match: byId(VACATION_MEALS), min: 100, max: 450, start: 250 },
   { name: 'side', categories: [], match: byId(VACATION_SIDES), min: 50, max: 250, start: 120 },
-  { name: 'alcohol', categories: [], match: byId(VACATION_ALCOHOL), min: 150, max: 500, start: 330, fixed: true },
+  { name: 'alcohol', categories: [], match: byId(VACATION_ALCOHOL), min: 150, max: 330, start: 200, fixed: true },
 ];
 const VAC_SNACK: Role[] = [
   { name: 'sweet', categories: [], match: byId(new RegExp(`${VACATION_SWEETS.source}|${VACATION_BAKERY.source}`)), min: 40, max: 200, start: 90 },
-  { name: 'alcohol', categories: [], match: byId(/^(wine_|champagne_)/), min: 100, max: 250, start: 150, fixed: true },
+  { name: 'alcohol', categories: [], match: byId(VACATION_WINE), min: 100, max: 200, start: 100, fixed: true },
 ];
 const VACATION_ROLES: Record<MealSlot, Role[]> = { breakfast: VAC_BREAKFAST, lunch: VAC_MAIN, dinner: VAC_DINNER, snack: VAC_SNACK };
 
@@ -144,6 +145,8 @@ export function commonness(f: Pick<PlanFood, 'category' | 'name' | 'preference'>
       return rx(/арахис|грецк|миндал/) ? 0 : 1;
     case 'dairy':
       return rx(/творог|кефир|йогурт/) ? 0 : 1;
+    case 'eggs':
+      return rx(/белк/) ? 1 : 0;
     default:
       return 0;
   }
@@ -170,6 +173,14 @@ interface Variable {
   food: PlanFood;
   role: Role;
   grams: number;
+  lo: number;
+  hi: number;
+}
+
+/** Amount limits of a role for one food: a ready porridge is a big bowl (a few hundred grams), bread or muesli a few dozen. */
+function boundsFor(role: Role, food: PlanFood): { min: number; max: number; start: number } {
+  if (role.name === 'carb' && /каша/i.test(food.name)) return { min: 120, max: 400, start: 250 };
+  return { min: role.min, max: role.max, start: role.start };
 }
 
 const WEIGHTS = { kcal: 1, proteinG: 2, fatG: 1, carbG: 1 } as const;
@@ -195,7 +206,7 @@ function fit(vars: Variable[], target: Macros, base: Macros = ZERO_MACROS): void
       const s = step(v.food);
       for (const dir of [1, -1]) {
         const next = v.grams + dir * s;
-        if (next < v.role.min || next > v.role.max || next <= 0) continue;
+        if (next < v.lo || next > v.hi || next <= 0) continue;
         const cap = v.food.maxPerDayG;
         if (cap !== null && next > cap) continue;
         const prev = v.grams;
@@ -243,7 +254,8 @@ function attempt(input: SlotInput, rotation: string): { vars: Variable[]; err: n
     const food = list[0];
     if (!food) continue;
     used.add(food.id);
-    vars.push({ food, role, grams: snapGrams(food, role.start, role.min, role.max) });
+    const b = boundsFor(role, food);
+    vars.push({ food, role, grams: snapGrams(food, b.start, b.min, b.max), lo: b.min, hi: b.max });
   }
   fit(vars, input.target);
   return { vars, err: error(sumMacros(vars.map((v) => macrosForAmount(v.food.per100, v.grams))), input.target) };
@@ -255,9 +267,17 @@ const ATTEMPTS = 40;
 /** One meal: tries several food combinations (deterministically, from the seed) and keeps the closest to the targets. */
 export function generateMeal(input: SlotInput): PlanLine[] {
   let best = attempt(input, input.rotation);
-  for (let i = 1; i < ATTEMPTS && best.err > 0.004; i++) {
+  const tried = [best];
+  const vacation = input.mode === 'vacation';
+  for (let i = 1; i < ATTEMPTS && (vacation || best.err > 0.004); i++) {
     const next = attempt(input, `${input.rotation}#${i}`);
+    tried.push(next);
     if (next.err + 1e-9 < best.err) best = next;
+  }
+  if (vacation) {
+    // Holiday food: any combination that fits about as well is fine, so "redo" gives something new instead of the single closest one.
+    const near = tried.filter((t) => t.err <= best.err * 1.6 + 0.004);
+    best = near[hash(`${input.rotation}|pick`) % near.length] as typeof best;
   }
   return best.vars
     .filter((v) => v.grams > 0)
@@ -389,12 +409,14 @@ function buildDay(input: DayPlanInput): DayPlan {
   }
   for (const slot of toBuild) {
     const k = SLOT_SHARE[slot] / shareSum;
+    // In vacation mode a meal never shrinks below 60% of its usual share, otherwise a full day would always give the same smallest snack.
+    const floor = (n: number, day: number): number => Math.max(0, n * k, input.mode === 'vacation' ? day * SLOT_SHARE[slot] * 0.6 : 0);
     const target: Macros = {
-      kcal: Math.max(0, remaining.kcal * k),
-      proteinG: Math.max(0, remaining.proteinG * k),
-      fatG: Math.max(0, remaining.fatG * k),
-      carbG: Math.max(0, remaining.carbG * k),
-      fiberG: Math.max(0, remaining.fiberG * k),
+      kcal: floor(remaining.kcal, dayTarget.kcal),
+      proteinG: floor(remaining.proteinG, dayTarget.proteinG),
+      fatG: floor(remaining.fatG, dayTarget.fatG),
+      carbG: floor(remaining.carbG, dayTarget.carbG),
+      fiberG: floor(remaining.fiberG, dayTarget.fiberG),
     };
     const covered = [...(input.coveredBySlot?.[slot] ?? []), ...keep.filter((l) => l.slot === slot).map((l) => l.foodId)];
     const meal = generateMeal({ slot, target, foods: input.foods, rotation: input.seed, avoidFoodIds: input.avoidFoodIds, mode: input.mode, covered, garnishId, avoidProteinIds: new Set(usedProteins) });

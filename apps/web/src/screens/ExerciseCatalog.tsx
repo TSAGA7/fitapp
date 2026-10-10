@@ -6,6 +6,7 @@ import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { Chip, TextField } from '../ui';
 import { ScreenHeader } from './shared';
+import { ExerciseInfoSheet } from './ExerciseInfo';
 import { useCommand } from '../app/useCommand';
 
 type Filter = 'all' | 'like' | 'dislike' | 'core' | 'legs' | 'chest' | 'back' | 'shoulders' | 'arms' | 'bodyweight';
@@ -35,6 +36,7 @@ export function ExerciseCatalogScreen() {
   const { ok, banner } = useCommand();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
+  const [info, setInfo] = useState<Exercise | null>(null);
   const pref = useMemo(() => new Map(s.userExercises.filter((u) => u.deletedAt === null).map((u) => [u.exerciseId, u.preference])), [s.userExercises]);
 
   const items = useMemo(() => {
@@ -76,6 +78,7 @@ export function ExerciseCatalogScreen() {
               {removedByPain.has(e.id) && <div className="li-sub" style={{ color: 'var(--danger)' }}>{pref.get(e.id) === 'like' ? 'Возвращено лайком: выполняй осторожно' : 'Убрано из программы из‑за болевой точки. «Нравится» вернёт его'}</div>}
             </div>
             <div className="chips">
+              <Chip pressed={false} onClick={() => setInfo(e)}>Техника</Chip>
               <Chip pressed={pref.get(e.id) === 'like'} onClick={() => set(e, 'like')}>Нравится</Chip>
               <Chip pressed={pref.get(e.id) === 'dislike'} onClick={() => set(e, 'dislike')}>Не нравится</Chip>
             </div>
@@ -83,6 +86,7 @@ export function ExerciseCatalogScreen() {
         ))}
         {items.length === 0 && <div className="empty-hint"><span className="eh-ic" aria-hidden="true">🔍</span><span className="eh-t">Ничего не найдено</span><span className="eh-s">Попробуй другой фильтр или поиск</span></div>}
       </div>
+      <ExerciseInfoSheet exercise={info} onClose={() => setInfo(null)} />
     </main>
   );
 }

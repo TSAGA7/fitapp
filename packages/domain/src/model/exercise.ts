@@ -18,6 +18,15 @@ export const ExerciseVariant = z.object({
   note: z.string().max(300).nullable(),
 });
 
+/** How to do the exercise: shown from the workout, the program preview and the catalog. */
+export const ExerciseTechnique = z.object({
+  steps: z.array(z.string().min(1).max(300)),
+  nuances: z.array(z.string().min(1).max(300)),
+  mistakes: z.array(z.string().min(1).max(300)),
+  focus: z.array(z.string().min(1).max(300)),
+});
+export type ExerciseTechnique = z.infer<typeof ExerciseTechnique>;
+
 /**
  * Exercise content. The tags are rough, non-medical estimates used to
  * filter and rank exercises; they are not a medical system.
@@ -56,6 +65,7 @@ export const ExerciseDefinition = z.object({
   curatedSubstituteKeys: z.array(key),
   /** Variants (angle, one/two dumbbells...) get separate progression history. */
   variants: z.array(ExerciseVariant),
+  technique: ExerciseTechnique.optional(),
 });
 export type ExerciseDefinition = z.infer<typeof ExerciseDefinition>;
 

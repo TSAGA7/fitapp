@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useCommand } from '../app/useCommand';
 import { ageYears, isLocalDate, type Experience, type FocusArea, type GoalType, type JobActivity, type Sex, type TrainingSchedule, type Weekday, WEEKDAYS } from '@fitapp/domain';
 import { applyDietMode, saveGoal, updateProfile } from '../actions';
@@ -14,7 +15,7 @@ import { ImportPanel } from './ImportPanel';
 import { CardioGuideScreen } from './Cardio';
 import { TvaGuideScreen } from './TvaGuide';
 import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './ProfileMore';
-import { AddMeasurementSheet, AddWeightSheet, DateField, parseDecimal, ScreenHeader } from './shared';
+import { AddMeasurementSheet, AddWeightSheet, DateField, parseDecimal, RebuildOffer, ScreenHeader } from './shared';
 
 export function Profile({ route }: { route: string[] }) {
   // Every profile screen opens from the very top, not at the scroll position of the previous one.
@@ -114,7 +115,12 @@ function ProfileHome() {
 function VacationButton() {
   const on = useVacationMode();
   const { banner, run } = useCommand();
+  const [beer, setBeer] = useState(false);
   const toggle = async () => {
+    if (!on) {
+      setBeer(true);
+      window.setTimeout(() => setBeer(false), 2600);
+    }
     setVacationMode(!on);
     await run((d) => applyDietMode(d, Math.floor(Date.now() / 1000) % 1_000_000));
   };
@@ -128,7 +134,23 @@ function VacationButton() {
         {on && <Icon name="check" size={22} />}
       </button>
       {banner}
+      {beer && <BeerFill />}
     </>
+  );
+}
+
+/** Full-screen "beer pouring in" animation shown when vacation mode is switched on. */
+function BeerFill() {
+  return createPortal(
+    <div className="beer-fill" aria-hidden="true">
+      <div className="beer-liquid">
+        <div className="beer-foam" />
+        {Array.from({ length: 14 }, (_, i) => (
+          <span key={i} className="beer-bubble" style={{ left: `${5 + ((i * 37) % 90)}%`, animationDelay: `${(i % 7) * 0.12}s`, width: 6 + (i % 4) * 3, height: 6 + (i % 4) * 3 }} />
+        ))}
+      </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -216,6 +238,7 @@ function Goals() {
   const [focus, setFocus] = useState<FocusArea[]>(g ? [...g.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area) : []);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [explainOpen, setExplainOpen] = useState(false);
+  const [offer, setOffer] = useState(false);
   const toggle = (a: FocusArea) => setFocus((f) => (f.includes(a) ? f.filter((x) => x !== a) : f.length < 3 ? [...f, a] : f));
   const save = async () => {
     const w = tw.trim() ? parseDecimal(tw) : null;
@@ -223,8 +246,10 @@ function Goals() {
     if (w !== null && (!Number.isFinite(w) || w < 30 || w > 300)) return setMsg({ ok: false, text: 'Целевой вес: от 30 до 300 кг' });
     if (waist !== null && (!Number.isFinite(waist) || waist < 40 || waist > 200)) return setMsg({ ok: false, text: 'Целевая талия: от 40 до 200 см' });
     try {
+      const changed = !g || g.type !== type || [...g.focus].sort((a, b) => b.weight - a.weight).map((f) => f.area).join() !== focus.join();
       await act((d) => saveGoal(d, { type, targetWeightKg: w, targetWaistCm: waist, focus }, s.timezone));
       setMsg({ ok: true, text: 'Цель сохранена' });
+      setOffer(changed);
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
     }
@@ -243,6 +268,7 @@ function Goals() {
       {g && g.type !== type && <div className="warn">Предыдущая цель сохранится в истории, начнётся новая.</div>}
       {msg && <div className={msg.ok ? 'ok' : 'errbox'} role="status">{msg.text}</div>}
       <Button block onClick={save}>Сохранить</Button>
+      {offer && <RebuildOffer title="Цель изменилась. Пересобрать?" withDiet onClose={() => setOffer(false)} />}
     </main>
   );
 }

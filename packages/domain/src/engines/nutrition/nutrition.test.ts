@@ -89,7 +89,7 @@ describe('meal plan', () => {
   });
   it('vacation mode builds the day from holiday food only and still lands near the calories', () => {
     const t = { kcal: 1865, proteinG: 180, fatG: 65, carbG: 140, fiberG: 26, waterMl: 2700 };
-    const holiday = /^(pizza_|[a-z]+_pizza_|vit_|bk_|rostics_|roll_|maki_|nigiri_|sushi_rolls|gunkan|philadelphia_roll|california_roll|baked_roll|tempura_roll|spicy_roll|unagi_roll|chicken_roll|inari|dodo_|cheburek|samsa_meat|teremok_|potato_fries|nuggets_chicken|gyoza|shrimp_tempura|salad_|pie_|bun_|croissant|vatrushka_|latte|juice_|cola|sprite|fanta|energy_drink|beer_|wine_|champagne_)/;
+    const holiday = /^(pizza_|[a-z]+_pizza_|vit_|bk_|rostics_|roll_|maki_|nigiri_|sushi_rolls|gunkan|philadelphia_roll|california_roll|baked_roll|tempura_roll|spicy_roll|unagi_roll|chicken_roll|inari|dodo_|cheburek|samsa_meat|teremok_|potato_fries|nuggets_chicken|gyoza|shrimp_tempura|salad_|pie_|bun_|croissant|vatrushka_|latte|cappuccino|americano|raf|flat_white|juice_|cola|sprite|fanta|energy_drink|beer_|wine_|champagne_|prosecco_)/;
     for (let i = 0; i < 12; i++) {
       const plan = generateDayPlan({ targets: t, foods, seed: `v${i}`, mode: 'vacation' });
       expect(plan.lines.length).toBeGreaterThanOrEqual(6);
@@ -98,6 +98,38 @@ describe('meal plan', () => {
     }
     const normal = generateDayPlan({ targets: t, foods, seed: 'v0' });
     expect(normal.lines.some((l) => /^(pizza_|beer_|wine_|champagne_)/.test(l.foodId))).toBe(false);
+  });
+  it('vacation drinks: lunch and dinner are alcohol only, breakfast is coffee or sparkling/wine, and redoing the snack gives something new', () => {
+    const t = { kcal: 1865, proteinG: 180, fatG: 65, carbG: 140, fiberG: 26, waterMl: 2700 };
+    const alcohol = /^(beer_(lager|dark|wheat|ipa)|wine_|champagne_|prosecco_)/;
+    const coffee = /^(latte$|cappuccino$|americano$|raf$|flat_white$|latte_macchiato$)/;
+    const drinkOf = (plan: ReturnType<typeof generateDayPlan>, slot: string) => plan.lines.filter((l) => l.slot === slot && foods.find((f) => f.id === l.foodId)!.category === 'drinks').map((l) => l.foodId);
+    const breakfastKinds = new Set<string>();
+    for (let i = 0; i < 40; i++) {
+      const plan = generateDayPlan({ targets: t, foods, seed: `vd${i}`, mode: 'vacation' });
+      for (const slot of ['lunch', 'dinner']) {
+        const d = drinkOf(plan, slot);
+        expect(d.length, `${slot} ${i}`).toBe(1);
+        expect(alcohol.test(d[0] as string), `${slot} ${d[0]}`).toBe(true);
+      }
+      for (const id of drinkOf(plan, 'breakfast')) {
+        expect(coffee.test(id) || /^(wine_|champagne_|prosecco_)/.test(id), id).toBe(true);
+        breakfastKinds.add(coffee.test(id) ? 'coffee' : 'alcohol');
+      }
+    }
+    expect([...breakfastKinds].sort()).toEqual(['alcohol', 'coffee']);
+    // a full day: the snack target used to collapse to zero and gave the same smallest snack every time
+    const snacks = new Set<string>();
+    let prev: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      const day = generateDayPlan({ targets: t, foods, seed: 'full', mode: 'vacation' });
+      const kept = day.lines.filter((l) => l.slot !== 'snack').map((l) => ({ ...l, locked: true }));
+      const redo = generateDayPlan({ targets: t, foods, seed: `redo${i}`, mode: 'vacation', locked: kept, slots: ['snack'], avoidFoodIds: new Set(prev) });
+      prev = redo.lines.filter((l) => l.slot === 'snack').map((l) => l.foodId);
+      expect(prev.length).toBeGreaterThan(0);
+      snacks.add(prev.join('+'));
+    }
+    expect(snacks.size).toBeGreaterThan(5);
   });
   it('meals are dishes: one garnish per meal, the same garnish for lunch and dinner, no standalone oil, spinach or potato-as-vegetable', () => {
     const cat = new Map(foods.map((f) => [f.id, f]));
@@ -127,6 +159,14 @@ describe('meal plan', () => {
     expect(fruit.every((id) => ['banana', 'apple'].includes(id)), fruit.join()).toBe(true);
     const veg = [...seen].filter((id) => foods.find((f) => f.id === id)?.category === 'vegetables' && !/potato/.test(id));
     expect(veg.every((id) => ['cucumber', 'tomato'].includes(id)), veg.join()).toBe(true);
+  });
+  it('the menu is made of ready-to-eat products: no dry grains or raw meat and fish', () => {
+    const raw = foods.filter((f) => (f.basis === 'raw' && ['grains', 'poultry', 'meat', 'fish', 'seafood', 'legumes'].includes(f.category)) || /_dry$/.test(f.id)).map((f) => f.id);
+    expect(raw.length).toBeGreaterThan(10);
+    const seen = new Set<string>();
+    for (let i = 0; i < 60; i++) for (const l of generateDayPlan({ targets, foods, seed: `ready-${i}` }).lines) seen.add(l.foodId);
+    for (const id of raw) expect(seen.has(id), id).toBe(false);
+    expect([...seen].some((id) => /cooked|oatmeal|fried/.test(id))).toBe(true);
   });
   it('a product the user loves counts as everyday', () => {
     const loved = foods.map((f) => (f.id === 'strawberry' ? { ...f, preference: 'love' as const } : f));

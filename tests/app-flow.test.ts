@@ -35,6 +35,12 @@ import {
   saveExerciseNote,
   undoSet,
   addSetToExercise,
+  changeExerciseVariant,
+  deleteCustomFood,
+  dishPer100,
+  loadTrainingAdvice,
+  saveDish,
+  updateCustomFood,
   setExercisePreference,
   startBodyweightWorkout,
   addCardioSession,
@@ -467,5 +473,51 @@ describe('app flow on the real storage', () => {
     const after = (await loadWorkout(deps, sid)).exercises[0]!;
     expect(after.plan.length).toBe(before + 1);
     expect(after.plan[after.plan.length - 1]!.setNo).toBe(before + 1);
+  });
+  it('a grip can be switched before the first set (its own history), but not after', async () => {
+    const { deps } = await setup();
+    await ensureSessions(deps);
+    const s0 = await loadSnapshot(deps);
+    const first = s0.plannedSessions.sort((x, y) => (x.plannedDate < y.plannedDate ? -1 : 1))[0]!;
+    const sid = await startWorkout(deps, first.id);
+    const grips = s0.exercises.find((e) => e.key === 'lat_pulldown_grips')!;
+    expect(grips.variants.length).toBeGreaterThan(3);
+    const ex0 = (await loadWorkout(deps, sid)).exercises[0]!;
+    await replaceExerciseInSession(deps, { sessionExerciseId: ex0.se.id, newExerciseId: grips.id, reason: 'preference' });
+    const swapped = (await loadWorkout(deps, sid)).exercises.find((e) => e.exercise.id === grips.id)!;
+    await changeExerciseVariant(deps, { sessionExerciseId: swapped.se.id, variantKey: 'underhand' });
+    const view = (await loadWorkout(deps, sid)).exercises.find((e) => e.exercise.id === grips.id)!;
+    expect(view.se.variantKey).toBe('underhand');
+    expect(view.plan.every((p) => p.variantKey === 'underhand' && p.contextKey.includes('::underhand::'))).toBe(true);
+    await expect(changeExerciseVariant(deps, { sessionExerciseId: view.se.id, variantKey: 'nope' })).rejects.toThrow();
+    await logSet(deps, { sessionExerciseId: view.se.id, exerciseId: grips.id, variantKey: 'underhand', contextKey: view.plan[0]!.contextKey, plannedSetId: view.plan[0]!.id, setNo: 1, weightKg: 40, reps: 10, rir: 2 });
+    await expect(changeExerciseVariant(deps, { sessionExerciseId: view.se.id, variantKey: 'default' })).rejects.toThrow(/первого подхода/);
+    expect(await loadTrainingAdvice(deps)).toBeNull(); // not enough finished workouts to judge a plateau
+  });
+  it('a dish is a food with numbers calculated from its ingredients; custom foods can be edited and deleted', async () => {
+    const { deps } = await setup();
+    const s = await loadSnapshot(deps);
+    const egg = s.foods.find((f) => f.key === 'egg')!;
+    const cheese = s.foods.find((f) => f.category === 'cheese')!;
+    const calc = dishPer100(s.foods, [{ foodId: egg.id, grams: 110 }, { foodId: cheese.id, grams: 40 }], null)!;
+    expect(calc.totalG).toBe(150);
+    const kcal = (egg.per100.kcal * 110 + cheese.per100.kcal * 40) / 150;
+    expect(Math.abs(calc.per100.kcal - kcal)).toBeLessThan(1);
+    const id = await saveDish(deps, { name: 'Омлет с сыром', items: [{ foodId: egg.id, grams: 110 }, { foodId: cheese.id, grams: 40 }], totalG: 130 });
+    let dish = (await loadSnapshot(deps)).foods.find((f) => f.id === id)!;
+    expect(dish.origin).toBe('custom');
+    expect(dish.recipe?.items.length).toBe(2);
+    expect(dish.gramsPerPiece).toBe(130);
+    expect(dish.per100.kcal).toBeGreaterThan(calc.per100.kcal); // the dish lost water: the same food in fewer grams
+    await saveDish(deps, { id, name: 'Омлет с сыром и зеленью', items: [{ foodId: egg.id, grams: 165 }, { foodId: cheese.id, grams: 40 }], totalG: null });
+    dish = (await loadSnapshot(deps)).foods.find((f) => f.id === id)!;
+    expect(dish.name).toBe('Омлет с сыром и зеленью');
+    expect(dish.gramsPerPiece).toBe(205);
+    const mine = await createCustomFood(deps, { name: 'Мой батончик', brand: null, category: 'sweets', basis: 'as_sold', per100: { kcal: 400, proteinG: 20, fatG: 15, carbG: 45, fiberG: 3 }, fromLabel: true });
+    await updateCustomFood(deps, mine, { name: 'Батончик протеиновый', brand: null, category: 'sweets', basis: 'as_sold', per100: { kcal: 380, proteinG: 25, fatG: 12, carbG: 40, fiberG: 3 }, fromLabel: true });
+    expect((await loadSnapshot(deps)).foods.find((f) => f.id === mine)?.name).toBe('Батончик протеиновый');
+    await deleteCustomFood(deps, mine);
+    expect((await loadSnapshot(deps)).foods.find((f) => f.id === mine)?.deletedAt).not.toBeNull();
+    await expect(deleteCustomFood(deps, egg.id)).rejects.toThrow();
   });
 });

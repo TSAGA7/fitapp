@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, assessExercise, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
-import { createProgram, ensureSessions, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
+import { createProgram, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
@@ -10,6 +10,7 @@ import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet
 import { useBodyweightMode, useVacationMode } from '../app/prefs';
 import { BodyweightCard, BodyweightToggle } from './BodyweightMode';
 import { CardioSheet } from './Cardio';
+import { ExerciseInfoSheet } from './ExerciseInfo';
 import { ScreenHeader } from './shared';
 
 type View = 'week' | 'month' | 'program' | 'history';
@@ -88,6 +89,18 @@ function Week() {
   const labelOf = (key: string) => version.training.workouts.find((w) => w.key === key)?.label ?? 'Тренировка';
   const adaptation = inAdaptation(version.training, s.today);
   const open = s.openSession;
+  const { act } = useData();
+  const [advice, setAdvice] = useState<TrainingAdvice | null>(null);
+  useEffect(() => {
+    let live = true;
+    act((d) => loadTrainingAdvice(d))
+      .then((a) => live && setAdvice(a))
+      .catch(() => live && setAdvice(null));
+    return () => {
+      live = false;
+    };
+  }, [version.id, s.today, s.openSession?.id]);
+  const nextPlanned = sessions.find((p) => p.status === 'planned' && p.plannedDate >= addDays(s.today, -1));
 
   const begin = async (id: string, deload = false) => {
     const sessionId = await run((d) => startWorkout(d, id, { deload }));
@@ -110,6 +123,7 @@ function Week() {
           </div>
         </Card>
       )}
+      {advice && !open && <AdviceCard advice={advice} busy={busy} onDeload={nextPlanned ? () => void begin(nextPlanned.id, true) : undefined} />}
       {sessions.length === 0 && <p className="note">Ближайших тренировок нет. Проверь дни тренировок в профиле.</p>}
       <div className="stack">
         {sessions.map((p) => {
@@ -149,9 +163,66 @@ function Week() {
   );
 }
 
+const DELOAD_DISMISS_KEY = 'fitapp.deloadDismissed';
+const readDismissed = (): string => {
+  try {
+    return localStorage.getItem(DELOAD_DISMISS_KEY) ?? '';
+  } catch {
+    return '';
+  }
+};
+
+/** Plateau and "time for a lighter week": the engine's suggestion with the reason, an explanation and a one-tap start. */
+function AdviceCard({ advice, busy, onDeload }: { advice: TrainingAdvice; busy: boolean; onDeload?: () => void }) {
+  const { snapshot: s } = useData();
+  const [more, setMore] = useState(false);
+  const [dismissed, setDismissed] = useState(readDismissed() === s.today);
+  const suggest = advice.deload.suggest && !dismissed;
+  if (!suggest && advice.stalled.length === 0) return null;
+  const dismiss = () => {
+    try {
+      localStorage.setItem(DELOAD_DISMISS_KEY, s.today);
+    } catch {
+      /* the choice only lasts until the page is reloaded */
+    }
+    setDismissed(true);
+  };
+  return (
+    <Card>
+      <div className="stack">
+        {suggest ? (
+          <>
+            <div className="row"><Badge tone="warning">Совет</Badge><span className="t-h3">Пора на лёгкую неделю?</span></div>
+            <p className="t-body">{advice.deload.reasonText}</p>
+            {advice.deloadNames.length > 0 && <p className="t-small">Где это видно: {advice.deloadNames.join(', ')}.</p>}
+          </>
+        ) : (
+          <div className="row"><Badge tone="neutral">Плато</Badge><span className="t-h3">Вес и повторения стоят на месте</span></div>
+        )}
+        {advice.stalled.length > 0 && <p className="t-small">Застой: {advice.stalled.map((x) => x.name).join(', ')}. Это значит, что несколько тренировок подряд нет роста ни по весу, ни по повторениям.</p>}
+        <Button size="sm" variant="text" icon="info" onClick={() => setMore(!more)}>{more ? 'Скрыть объяснение' : 'Что это и зачем'}</Button>
+        {more && (
+          <div className="stack tight">
+            <p className="t-small"><b>Плато</b> — когда нагрузка уже не растёт: тело привыкло или не успевает восстановиться. Чаще всего помогают: больше отдыха между подходами, сон, смена хвата или диапазона повторений, замена упражнения, лёгкая неделя.</p>
+            <p className="t-small"><b>Лёгкая неделя (дилоуд)</b> — одна облегчённая неделя: вес примерно ×0,9, на один подход меньше, запас 3–4 повторения. Усталость копится быстрее, чем мышцы и связки перестраиваются. На лёгкой неделе организм «догоняет» накопленное, снижается риск перетренированности и болей в спине и плечах, а после неё веса обычно снова идут вверх. Прогресс при этом не теряется.</p>
+            <p className="t-small">Это совет, а не обязанность: ты решаешь сам. Нажми «Лёгкая тренировка», и ближайшая тренировка будет облегчённой. Дальше программа сама вернётся к обычным весам.</p>
+          </div>
+        )}
+        {suggest && (
+          <div className="row" style={{ flexWrap: 'wrap' }}>
+            {onDeload && <Button size="sm" icon="play" disabled={busy} onClick={onDeload}>Лёгкая тренировка</Button>}
+            <Button size="sm" variant="text" onClick={dismiss}>Не сейчас</Button>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 /** What is in the workout: the exercises with sets and reps, before it is started. */
 function PreviewSheet({ session, label, onClose, onStart }: { session: PlannedSession | null; label: string; onClose: () => void; onStart?: () => void }) {
   const { snapshot: s } = useData();
+  const [info, setInfo] = useState<Exercise | null>(null);
   if (!session) return null;
   const workout = s.activeVersion?.training.workouts.find((w) => w.key === session.workoutKey);
   const ctx = safetyContext(s, new Date().toISOString());
@@ -170,6 +241,7 @@ function PreviewSheet({ session, label, onClose, onStart }: { session: PlannedSe
                 icon={a?.status === 'caution' ? 'alert' : 'training'}
                 title={`${i + 1}. ${ex?.name ?? pe.exerciseId}`}
                 subtitle={`${pe.sets} × ${pe.repMin === pe.repMax ? pe.repMin : `${pe.repMin}–${pe.repMax}`}${timed ? ' с' : ''}${a?.status === 'caution' ? ' · осторожно' : ''}`}
+                trailing={ex ? <button type="button" className="icon-btn" aria-label={`Техника: ${ex.name}`} onClick={() => setInfo(ex as Exercise)}><Icon name="info" size={18} /></button> : undefined}
               />
             );
           })}
@@ -177,6 +249,7 @@ function PreviewSheet({ session, label, onClose, onStart }: { session: PlannedSe
         </div>
         {onStart && <Button block icon="play" onClick={onStart}>Начать сегодня</Button>}
       </div>
+      <ExerciseInfoSheet exercise={info} onClose={() => setInfo(null)} />
     </Sheet>
   );
 }

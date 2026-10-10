@@ -54,13 +54,44 @@ export function Onboarding() {
     return (
       <div className="onb-welcome">
         <div className="logo">
-          <span className="mark"><Icon name="leaf" size={38} /></span>
+          <span className="mark"><Icon name="leaf" size={44} /></span>
           <h1>Fitapp</h1>
-          <p style={{ opacity: 0.85 }}>Здоровье. Сила. Прогресс.</p>
+          <p className="tag">Здоровье. Сила. Прогресс.</p>
         </div>
-        <div className="stack">
-          <p style={{ opacity: 0.85, textAlign: 'center' }}>Питание, тренировки и прогресс в одном месте. Данные хранятся только на твоём устройстве и работают без интернета.</p>
-          <Button variant="accent" block onClick={() => setStep(0)}>Ехала</Button>
+        <div className="quote">
+          <p>Лучшие результаты — это не случайность, а система.</p>
+        </div>
+        <svg className="peaks" viewBox="0 0 390 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="onbHaze" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#f3e3b8" stopOpacity="0" />
+              <stop offset="0.55" stopColor="#f3e3b8" stopOpacity="0.55" />
+              <stop offset="1" stopColor="#f3e3b8" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="onbFar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#5f8a78" />
+              <stop offset="1" stopColor="#2d5a4a" />
+            </linearGradient>
+            <linearGradient id="onbMid" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#3f6b56" />
+              <stop offset="1" stopColor="#1f4a3a" />
+            </linearGradient>
+            <linearGradient id="onbNear" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#4a5a2e" />
+              <stop offset="1" stopColor="#1c2a14" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="118" width="390" height="46" fill="url(#onbHaze)" />
+          <path d="M0 170 L40 150 L85 165 L130 140 L180 160 L230 135 L285 158 L335 142 L390 160 V300 H0 Z" fill="url(#onbFar)" />
+          <path d="M0 200 L55 178 L110 196 L170 170 L235 192 L300 172 L350 186 L390 176 V300 H0 Z" fill="url(#onbMid)" />
+          <path d="M0 300 V250 L60 236 L120 214 L175 176 L205 150 L222 142 L240 150 L275 186 L330 214 L390 232 V300 Z" fill="url(#onbNear)" />
+          <g fill="#0b1209">
+            <circle cx="222" cy="106" r="5" />
+            <path d="M216 114 Q222 111 228 114 L230 132 L227 142 L225 125 L222 142 L219 125 L217 142 L214 132 Z" />
+          </g>
+        </svg>
+        <div className="stack start">
+          <Button variant="accent" block onClick={() => setStep(0)}>Начать</Button>
         </div>
       </div>
     );

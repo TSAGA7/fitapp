@@ -7,6 +7,7 @@ import {
   type SummaryExerciseInput,
   type WorkoutSummary,
   buildDeloadPrescription,
+  evaluateDeloadSuggestion,
   createBase,
   inAdaptation,
   nextPrescription,
@@ -15,6 +16,7 @@ import {
   toLocalDate,
   addDays,
   type BodyArea,
+  type DeloadSuggestion,
   type Exercise,
   type ExerciseNote,
   type RestTrend,
@@ -508,6 +510,70 @@ export async function reportPain(deps: AppDeps, input: PainReport): Promise<Pain
   });
 }
 
+/**
+ * Switches the grip / angle (variant) of an exercise in a running workout, before its first set.
+ * Every variant has its own progression history, so the target weight is taken from that variant's own results.
+ */
+export async function changeExerciseVariant(deps: AppDeps, input: { sessionExerciseId: string; variantKey: string }): Promise<void> {
+  await deps.uow.run(async (r) => {
+    let se: SessionExercise | undefined;
+    let session: WorkoutSession | undefined;
+    for (const s of await r.workouts.listSessions()) {
+      const found = (await r.workouts.listSessionExercises(s.id)).find((e) => e.id === input.sessionExerciseId);
+      if (found) {
+        se = found;
+        session = s;
+        break;
+      }
+    }
+    if (!se || !session) throw new Error('Упражнение не найдено');
+    if (se.variantKey === input.variantKey) return;
+    if ((await r.workouts.listSetLogs(se.id)).length > 0) throw new Error('Хват можно менять только до первого подхода');
+    const exercise = await r.exercises.get(se.exerciseId);
+    if (!exercise || !exercise.variants.some((v) => v.key === input.variantKey)) throw new Error('Такого варианта нет');
+    const version = await r.programs.getVersion(session.versionId);
+    if (!version || !session.plannedSessionId) throw new Error('Версия программы не найдена');
+    const planned = await r.plannedSessions.listSets(session.plannedSessionId);
+    const old = planned.filter((p) => p.plannedExerciseKey === se.plannedExerciseKey && p.exerciseId === se.exerciseId).sort((a, b) => a.setNo - b.setNo);
+    const ps = await r.plannedSessions.get(session.plannedSessionId);
+    const template = version.training.workouts.find((w) => w.key === ps?.workoutKey);
+    const fromProgram = template?.exercises.find((e) => e.key === se.plannedExerciseKey);
+    const rir = old[0]?.targetRir ?? { min: 2, max: 3 };
+    const pe: PlannedExercise = {
+      ...(fromProgram ?? {
+        key: se.plannedExerciseKey ?? 'x',
+        exerciseId: exercise.id,
+        position: se.position,
+        sets: old.length || exercise.defaultSets,
+        repMin: exercise.defaultRepRange.min,
+        repMax: exercise.defaultRepRange.max,
+        rirAdaptation: rir,
+        rirMain: rir,
+        restSec: exercise.defaultRestSec,
+        startWeightKg: null,
+        progression: { type: exercise.progressionType, stepKg: null },
+      }),
+      variantKey: input.variantKey,
+    };
+    const ctx = await prescriptionContext(r, deps, version, session.id);
+    const p = await prescribe(r, deps, ctx, pe, exercise, old[0]?.reasonCode === 'deload_week');
+    await r.workouts.putSessionExercise({ ...se, variantKey: input.variantKey });
+    await r.plannedSessions.putSets(
+      old.map((o) => ({
+        ...o,
+        variantKey: input.variantKey,
+        contextKey: p.contextKey,
+        targetWeightKg: p.prescription.weightKg,
+        repMin: p.prescription.repTarget.min,
+        repMax: p.prescription.repTarget.max,
+        targetRir: p.prescription.rirTarget,
+        reasonCode: o.reasonCode === 'deload_week' ? 'deload_week' : p.prescription.reasonCode,
+        reasonText: p.prescription.reasonText.slice(0, 500),
+      })),
+    );
+  });
+}
+
 /** Replaces an exercise for THIS session only (the program is not changed). The original stays in the history as replaced. */
 export async function replaceExerciseInSession(deps: AppDeps, input: { sessionExerciseId: string; newExerciseId: string; reason: ReplacementReason }): Promise<void> {
   await deps.uow.run(async (r) => {
@@ -657,6 +723,59 @@ export async function startBodyweightWorkout(deps: AppDeps): Promise<string> {
       await createSets(r, deps, ps.id, pe.key, exercise, pe.variantKey, p, false);
     }
     return sessionId;
+  });
+}
+
+// ---------------------------------------------------------------- plateau and deload
+
+export interface TrainingAdvice {
+  /** Exercises whose weight and reps have not grown for several sessions. */
+  stalled: Array<{ exerciseId: string; name: string }>;
+  deload: DeloadSuggestion;
+  /** Names of the exercises behind the deload suggestion. */
+  deloadNames: string[];
+  weeksOfLoad: number;
+}
+
+/**
+ * Looks at the exercises of the active program and reports a plateau (no growth for several sessions) and whether a lighter week is worth considering.
+ * The engine's own signals are used: nothing here is a new rule.
+ */
+export async function loadTrainingAdvice(deps: AppDeps): Promise<TrainingAdvice | null> {
+  return deps.uow.run(async (r) => {
+    const version = await activeVersion(r);
+    if (!version) return null;
+    const ctx = await prescriptionContext(r, deps, version, null);
+    if (ctx.history.length < 2) return null;
+    const dateOf = (h: HistoryEntry): string => toLocalDate(h.session.startedAt, ctx.tz);
+    const lastDate = new Map<string, string>();
+    for (const h of ctx.history) for (const se of h.exercises) if (!lastDate.has(se.exerciseId) && (h.sets.get(se.id) ?? []).some((l) => l.status === 'done')) lastDate.set(se.exerciseId, dateOf(h));
+    const seen = new Set<string>();
+    const items: Array<{ exerciseId: string; lastSessionDate: string; signals: Array<'fatigue' | 'stall'> }> = [];
+    const names = new Map<string, string>();
+    for (const w of version.training.workouts) {
+      for (const pe of w.exercises) {
+        if (seen.has(pe.exerciseId) || !lastDate.has(pe.exerciseId)) continue;
+        seen.add(pe.exerciseId);
+        const exercise = await r.exercises.get(pe.exerciseId);
+        if (!exercise) continue;
+        names.set(exercise.id, exercise.name);
+        const p = await prescribe(r, deps, ctx, pe, exercise, false);
+        const codes = p.prescription.signals.map((x) => x.code).filter((c): c is 'fatigue' | 'stall' => c === 'fatigue' || c === 'stall');
+        items.push({ exerciseId: exercise.id, lastSessionDate: lastDate.get(pe.exerciseId) as string, signals: codes });
+      }
+    }
+    const sessionDates = ctx.history.map(dateOf);
+    const deloadDates = ctx.history.filter((h) => h.planned.some((p) => p.reasonCode === 'deload_week')).map(dateOf);
+    const since = deloadDates[0] ?? (sessionDates[sessionDates.length - 1] as string);
+    const deload = evaluateDeloadSuggestion({ forDate: ctx.today, continuousLoadSince: since, recentWorkoutDates: sessionDates.slice(0, 2), exercises: items });
+    const weeksOfLoad = Math.floor((new Date(ctx.today).getTime() - new Date(since).getTime()) / (7 * 86_400_000));
+    return {
+      stalled: items.filter((i) => i.signals.includes('stall')).map((i) => ({ exerciseId: i.exerciseId, name: names.get(i.exerciseId) ?? i.exerciseId })),
+      deload,
+      deloadNames: deload.exerciseIds.map((id) => names.get(id) ?? id),
+      weeksOfLoad,
+    };
   });
 }
 

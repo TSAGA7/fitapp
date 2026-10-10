@@ -35,6 +35,10 @@ const foodFields = {
   dataSource: FoodDataSource,
   /** false = the meal planner never picks it by itself (sweets, drinks, ready meals, branded items); it can still be added by hand. */
   autoPlan: z.boolean().default(true),
+  /** Typical piece sizes in grams of the edible part (banana, apple...): lets people pick small / medium / large instead of weighing. */
+  /** A dish made by the user from other foods: the ingredients (grams as entered) and the weight of the finished dish. */
+  recipe: z.object({ items: z.array(z.object({ foodId: z.string().min(1), grams: z.number().positive() })).min(1).max(40), totalG: z.number().positive() }).optional(),
+  portions: z.object({ small: z.number().positive(), medium: z.number().positive(), large: z.number().positive() }).optional(),
 };
 
 function foodRules(
