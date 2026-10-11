@@ -100,6 +100,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const [itemSheet, setItemSheet] = useState<PlannedItem | null>(null);
   const [logSheet, setLogSheet] = useState<FoodLog | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
 
   const adjustment = useMemo(
     () =>
@@ -112,6 +113,12 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const remaining = targets.kcal - eaten.kcal;
   const logOf = (itemId: string) => logs.find((l) => l.plannedItemId === itemId);
   const isPast = date < s.today;
+  const slotDone = (slot: MealSlot): boolean => {
+    const its = items.filter((i) => i.slot === slot);
+    return its.length > 0 && its.every((i) => logOf(i.id));
+  };
+  // По умолчанию раскрыт только ближайший не съеденный приём; съеденные и прошедшие свёрнуты.
+  const firstPending = isPast ? null : SLOT_ORDER.find((sl) => items.some((i) => i.slot === sl) && !slotDone(sl)) ?? null;
 
   return (
     <>
@@ -167,13 +174,22 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         const loose = slotLogs.filter((l) => l.plannedItemId === null || !itemIds.has(l.plannedItemId));
         const plan = sumMacros(slotItems.map((i) => i.plannedMacros));
         const fact = eatenOf(slotLogs);
-        const allDone = slotItems.length > 0 && slotItems.every((i) => logOf(i.id));
+        const allDone = slotDone(slot);
+        const has = slotItems.length > 0 || slotLogs.length > 0;
+        const key = `${date}:${slot}`;
+        const open = openMap[key] ?? (slot === firstPending);
+        const doneCount = slotItems.filter((i) => logOf(i.id)).length;
         return (
-          <section key={slot} aria-label={SLOT_LABEL[slot]} className="stack">
-            <div className="section-title">
-              <h2 className="t-h3">{SLOT_LABEL[slot]}</h2>
-              <span className="t-small">{slotItems.length > 0 || slotLogs.length > 0 ? `${fmt(fact.kcal, 0)} / ${fmt(plan.kcal, 0)} ккал` : ''}</span>
-            </div>
+          <Card key={slot} className={`ex-acc ${open ? 'open' : ''}`}>
+            <button type="button" className="ex-head" aria-expanded={open} aria-label={SLOT_LABEL[slot]} onClick={() => setOpenMap((m) => ({ ...m, [key]: !open }))}>
+              <span className="ex-title">
+                <span className="t-h3">{SLOT_LABEL[slot]}</span>
+                <span className="t-small">{has ? `${fmt(fact.kcal, 0)} / ${fmt(plan.kcal, 0)} ккал` : 'Пока пусто'}</span>
+              </span>
+              {allDone ? <Badge>Готово</Badge> : slotItems.length > 0 ? <Badge tone="neutral">{doneCount}/{slotItems.length}</Badge> : null}
+              <span className="ex-chev" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
+            </button>
+            <div className="stack ex-body" hidden={!open}>
             {(slotItems.length > 0 || slotLogs.length > 0) && (
               <div className="macro-strip" aria-label={`БЖУ: ${SLOT_LABEL[slot]}`}>
                 <MacroLine label="План" m={plan} muted />
@@ -214,7 +230,8 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
               {(slotLogs.length > 0 || slotItems.length > 0) && <Button size="sm" variant="text" icon="plus" onClick={() => setSaveMeal(slot)}>Сохранить как мой приём</Button>}
             </div>
             {slotLogs.length > 0 && <p className="t-small">«Переделать» не трогает то, что ты уже съел. Нажми на строку, чтобы изменить граммы или убрать отметку.</p>}
-          </section>
+            </div>
+          </Card>
         );
       })}
 
