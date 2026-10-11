@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDays, counterpart, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek, suggestTargetAdjustment, sumMacros, weekdayOf, type Food, type FoodCategory, type MealSlot, type PlannedItem } from '@fitapp/domain';
+import { addDays, amountLabel, counterpart, mealDish, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek, suggestTargetAdjustment, sumMacros, weekdayOf, type Food, type FoodCategory, type MealSlot, type PlannedItem } from '@fitapp/domain';
 import {
   acceptTargetAdjustment,
   addPlannedItem,
@@ -31,7 +31,7 @@ import {
   undoLog,
 } from '../actions';
 import { useData } from '../app/DataContext';
-import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, SLOT_ORDER, userFoodOf } from '../app/derive';
+import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, planFoods, SLOT_ORDER, userFoodOf } from '../app/derive';
 import { fmt, formatDateShort, formatDay, GOAL_LABELS, plural, WEEKDAY_SHORT } from '../app/format';
 import { goalNutritionText } from './GoalExplain';
 import { useCommand } from '../app/useCommand';
@@ -83,6 +83,18 @@ export function Nutrition() {
 
 // ------------------------------------------------------------------ day
 
+/**
+ * Which meals are open on the Nutrition tab. Lives outside the screen so it survives switching tabs:
+ * everything starts collapsed, and a meal the user opened or closed stays that way until the app is restarted.
+ */
+const mealOpenState: Record<string, boolean> = {};
+
+/** Amount of a planned or eaten food: eggs and other foods counted in pieces as "3 шт (150 г)", the rest in grams. */
+function amountText(food: Food | undefined, grams: number): string {
+  const label = amountLabel(food, grams);
+  return label.endsWith('шт') ? `${label} (${fmt(grams, 0)} г)` : `${fmt(grams, 0)} г`;
+}
+
 function DayView({ date, setDate }: { date: string; setDate: (d: string) => void }) {
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
@@ -100,7 +112,13 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const [itemSheet, setItemSheet] = useState<PlannedItem | null>(null);
   const [logSheet, setLogSheet] = useState<FoodLog | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>(() => ({ ...mealOpenState }));
+  const toggleMeal = (key: string, open: boolean) => {
+    mealOpenState[key] = open;
+    setOpenMap((m) => ({ ...m, [key]: open }));
+  };
+  const pFoods = useMemo(() => planFoods(s.foods, s.userFoods), [s.foods, s.userFoods]);
+  const foodOf = (id: string): Food | undefined => s.foods.find((f) => f.id === id);
 
   const adjustment = useMemo(
     () =>
@@ -117,8 +135,6 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
     const its = items.filter((i) => i.slot === slot);
     return its.length > 0 && its.every((i) => logOf(i.id));
   };
-  // По умолчанию раскрыт только ближайший не съеденный приём; съеденные и прошедшие свёрнуты.
-  const firstPending = isPast ? null : SLOT_ORDER.find((sl) => items.some((i) => i.slot === sl) && !slotDone(sl)) ?? null;
 
   return (
     <>
@@ -177,14 +193,16 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         const allDone = slotDone(slot);
         const has = slotItems.length > 0 || slotLogs.length > 0;
         const key = `${date}:${slot}`;
-        const open = openMap[key] ?? (slot === firstPending);
+        const open = openMap[key] ?? false;
+        const dish = slotItems.length > 0 ? mealDish(slot, slotItems.map((i) => i.foodId), pFoods) : null;
         const doneCount = slotItems.filter((i) => logOf(i.id)).length;
         return (
           <Card key={slot} className={`ex-acc ${open ? 'open' : ''}`}>
-            <button type="button" className="ex-head" aria-expanded={open} aria-label={SLOT_LABEL[slot]} onClick={() => setOpenMap((m) => ({ ...m, [key]: !open }))}>
+            <button type="button" className="ex-head" aria-expanded={open} aria-label={SLOT_LABEL[slot]} onClick={() => toggleMeal(key, !open)}>
               <span className="ex-title">
                 <span className="t-h3">{SLOT_LABEL[slot]}</span>
                 <span className="t-small">{has ? `${fmt(fact.kcal, 0)} / ${fmt(plan.kcal, 0)} ккал` : 'Пока пусто'}</span>
+                {dish && <span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>{dish.title}</span>}
               </span>
               {allDone ? <Badge>Готово</Badge> : slotItems.length > 0 ? <Badge tone="neutral">{doneCount}/{slotItems.length}</Badge> : null}
               <span className="ex-chev" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
@@ -203,9 +221,9 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
                 ? log.entryType === 'skipped_planned'
                   ? 'Пропущено'
                   : log.entryType === 'modified'
-                    ? `Съедено ${fmt(log.actualAmountG, 0)} г вместо ${fmt(i.plannedAmountG, 0)} г`
-                    : `${fmt(i.plannedAmountG, 0)} г · съедено`
-                : `${fmt(i.plannedAmountG, 0)} г · Б ${fmt(i.plannedMacros.proteinG, 0)} Ж ${fmt(i.plannedMacros.fatG, 0)} У ${fmt(i.plannedMacros.carbG, 0)}`;
+                    ? `Съедено ${amountText(foodOf(i.foodId), log.actualAmountG)} вместо ${amountText(foodOf(i.foodId), i.plannedAmountG)}`
+                    : `${amountText(foodOf(i.foodId), i.plannedAmountG)} · съедено`
+                : `${amountText(foodOf(i.foodId), i.plannedAmountG)} · Б ${fmt(i.plannedMacros.proteinG, 0)} Ж ${fmt(i.plannedMacros.fatG, 0)} У ${fmt(i.plannedMacros.carbG, 0)}`;
               return (
                 <ListItem
                   key={i.id}
@@ -363,7 +381,7 @@ function ItemSheet({ item, onClose }: { item: PlannedItem | null; onClose: () =>
     <Sheet open title={food?.name ?? 'Продукт'} onClose={onClose}>
       <div className="stack">
         {banner}
-        <p className="t-small">План: {fmt(item.plannedAmountG, 0)} г · {fmt(item.plannedMacros.kcal, 0)} ккал · Б {fmt(item.plannedMacros.proteinG, 0)} Ж {fmt(item.plannedMacros.fatG, 0)} У {fmt(item.plannedMacros.carbG, 0)}</p>
+        <p className="t-small">План: {amountText(food as Food | undefined, item.plannedAmountG)} · {fmt(item.plannedMacros.kcal, 0)} ккал · Б {fmt(item.plannedMacros.proteinG, 0)} Ж {fmt(item.plannedMacros.fatG, 0)} У {fmt(item.plannedMacros.carbG, 0)}</p>
         {food && <p className="t-small">{food.basis === 'raw' ? 'Вес сырого продукта' : food.basis === 'cooked' ? 'Вес готового продукта' : 'Вес как на упаковке'}</p>}
         {log && <p className="t-small">Сейчас: {log.entryType === 'skipped_planned' ? 'пропущено' : `съедено ${fmt(log.actualAmountG, 0)} г`}</p>}
         <Button block icon="check" disabled={busy} onClick={() => void done((d) => logPlanned(d, item.id, { kind: 'eaten' }))}>Съел как в плане</Button>

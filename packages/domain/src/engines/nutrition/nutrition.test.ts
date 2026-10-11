@@ -6,7 +6,8 @@ import { analyzeWeight } from '../analysis/weight';
 import { computeTargets, macrosForKcal, MIN_KCAL, recommendedWaterMl } from './energy';
 import { suggestTargetAdjustment } from './adjust';
 import { counterpart, macrosForAmount, sumMacros } from './foods';
-import { generateDayPlan, generateMeal, remainingMacros, replaceFood, type PlanFood } from './mealplan';
+import { generateDayPlan, generateMeal, mealDish, remainingMacros, replaceFood } from './mealplan';
+import type { PlanFood } from './planfood';
 
 const foods = rawSeedCatalog.foods.map((f) => ({
   id: f.key, name: f.name, category: f.category, basis: f.basis, per100: f.per100, unit: f.unit, gramsPerPiece: f.gramsPerPiece,
@@ -145,7 +146,7 @@ describe('meal plan', () => {
     const cat = new Map(foods.map((f) => [f.id, f]));
     const isGarnish = (id: string): boolean => {
       const f = cat.get(id)!;
-      return (f.category === 'grains' && !/овсян|мюсли/i.test(f.name)) || /картоф|батат/i.test(f.name);
+      return (f.category === 'grains' && !/овсян|мюсли|каш/i.test(f.name)) || /картоф|батат|чечевиц/i.test(f.name);
     };
     for (let i = 0; i < 40; i++) {
       const plan = generateDayPlan({ targets, foods, seed: `dish-${i}` });
@@ -161,14 +162,14 @@ describe('meal plan', () => {
       expect(new Set(proteins).size, `proteins ${i}`).toBe(proteins.length);
     }
   });
-  it('only everyday products are picked on their own: bananas and apples, cucumbers and tomatoes, no strawberries, broccoli or hazelnuts', () => {
+  it('only everyday products are picked on their own: apples, bananas, pears, citrus; cucumbers, tomatoes, cabbage, carrots, peppers; no strawberries, broccoli or hazelnuts', () => {
     const seen = new Set<string>();
     for (let i = 0; i < 60; i++) for (const l of generateDayPlan({ targets, foods, seed: `usual-${i}` }).lines) seen.add(l.foodId);
     for (const bad of ['strawberry', 'broccoli', 'hazelnuts', 'kiwi', 'grapes', 'cauliflower', 'bulgur_dry', 'bulgur_cooked', 'salmon_raw', 'trout_raw']) expect(seen.has(bad), bad).toBe(false);
     const fruit = [...seen].filter((id) => foods.find((f) => f.id === id)?.category === 'fruits');
-    expect(fruit.every((id) => ['banana', 'apple'].includes(id)), fruit.join()).toBe(true);
+    expect(fruit.every((id) => ['banana', 'apple', 'pear', 'orange', 'mandarin', 'avocado'].includes(id)), fruit.join()).toBe(true);
     const veg = [...seen].filter((id) => foods.find((f) => f.id === id)?.category === 'vegetables' && !/potato/.test(id));
-    expect(veg.every((id) => ['cucumber', 'tomato'].includes(id)), veg.join()).toBe(true);
+    expect(veg.every((id) => ['cucumber', 'tomato', 'cabbage', 'carrot', 'bell_pepper', 'zucchini'].includes(id)), veg.join()).toBe(true);
   });
   it('the menu is made of ready-to-eat products: no dry grains or raw meat and fish', () => {
     const raw = foods.filter((f) => (f.basis === 'raw' && ['grains', 'poultry', 'meat', 'fish', 'seafood', 'legumes'].includes(f.category)) || /_dry$/.test(f.id)).map((f) => f.id);
@@ -188,7 +189,7 @@ describe('meal plan', () => {
     const eaten = { slot: 'breakfast' as const, foodId: 'cottage_cheese_5', grams: 200, macros: macrosForAmount(cat100('cottage_cheese_5'), 200), locked: false };
     const plan = generateDayPlan({ targets, foods, seed: 'x', keepLines: [eaten], coveredBySlot: { breakfast: ['cottage_cheese_5'] }, slots: ['breakfast', 'lunch', 'dinner', 'snack'] });
     const bf = plan.lines.filter((l) => l.slot === 'breakfast');
-    const proteinish = bf.filter((l) => ['dairy', 'eggs'].includes(foods.find((f) => f.id === l.foodId)!.category));
+    const proteinish = bf.filter((l) => { const f = foods.find((x) => x.id === l.foodId)!; return ['dairy', 'eggs'].includes(f.category) && f.per100.proteinG >= 8; });
     expect(proteinish.map((l) => l.foodId)).toEqual(['cottage_cheese_5']);
   });
   it('another seed gives another set of foods', () => {
@@ -225,6 +226,46 @@ describe('meal plan', () => {
     expect(swapped).toBeDefined();
     expect(swapped!.foodId).not.toBe(protein.foodId);
     expect(Math.abs(swapped!.macros.proteinG - protein.macros.proteinG)).toBeLessThan(8);
+  });
+  it('meals are real dishes and a month of days gives many different breakfasts, mains and snacks', () => {
+    const kinds: Record<string, Set<string>> = { breakfast: new Set(), lunch: new Set(), dinner: new Set(), snack: new Set() };
+    for (let i = 0; i < 30; i++) {
+      const plan = generateDayPlan({ targets, foods, seed: `2026-11-${i}|7` });
+      for (const slot of ['breakfast', 'lunch', 'dinner', 'snack'] as const) {
+        const dish = mealDish(slot, plan.lines.filter((l) => l.slot === slot).map((l) => l.foodId), foods);
+        expect(dish, `${slot} ${i}: ${plan.lines.filter((l) => l.slot === slot).map((l) => l.foodId).join()}`).not.toBeNull();
+        kinds[slot]!.add(dish!.kind);
+      }
+    }
+    expect(kinds.breakfast!.size).toBeGreaterThanOrEqual(8);
+    expect(kinds.lunch!.size).toBeGreaterThanOrEqual(3);
+    expect(kinds.snack!.size).toBeGreaterThanOrEqual(3);
+  });
+  it('"redo" of a meal gives another dish, not the same products with other grams', () => {
+    for (let i = 0; i < 20; i++) {
+      const first = generateDayPlan({ targets, foods, seed: `redo-${i}` });
+      for (const slot of ['breakfast', 'lunch', 'snack'] as const) {
+        const before = first.lines.filter((l) => l.slot === slot);
+        const kind = mealDish(slot, before.map((l) => l.foodId), foods)!.kind;
+        const keep = first.lines.filter((l) => l.slot !== slot).map((l) => ({ ...l, locked: true }));
+        const again = generateDayPlan({ targets, foods, seed: `redo-${i}|2`, locked: keep, slots: [slot], avoidFoodIds: new Set(before.map((l) => l.foodId)), avoidKindsBySlot: { [slot]: [kind] } });
+        const after = again.lines.filter((l) => l.slot === slot);
+        expect(mealDish(slot, after.map((l) => l.foodId), foods)!.kind, `${slot} ${i}`).not.toBe(kind);
+      }
+    }
+  });
+  it('eggs are planned in whole pieces', () => {
+    const egg = new Set(foods.filter((f) => f.category === 'eggs' && f.unit === 'piece').map((f) => f.id));
+    let seen = 0;
+    for (let i = 0; i < 40; i++) {
+      for (const l of generateDayPlan({ targets, foods, seed: `egg-${i}` }).lines) {
+        if (!egg.has(l.foodId)) continue;
+        seen++;
+        const per = foods.find((f) => f.id === l.foodId)!.gramsPerPiece!;
+        expect(l.grams % per, l.foodId).toBe(0);
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
   });
   it('remaining macros never go below zero', () => {
     expect(remainingMacros({ ...targets }, { kcal: 9999, proteinG: 999, fatG: 999, carbG: 999, fiberG: 99 }).kcal).toBe(0);

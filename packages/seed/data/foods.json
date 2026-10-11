@@ -11010,7 +11010,7 @@
     "barcode": null,
     "category": "eggs",
     "basis": "cooked",
-    "unit": "g",
+    "unit": "piece",
     "gramsPerPiece": 55,
     "per100": {
       "kcal": 155,
@@ -11034,8 +11034,8 @@
     "barcode": null,
     "category": "eggs",
     "basis": "cooked",
-    "unit": "g",
-    "gramsPerPiece": null,
+    "unit": "piece",
+    "gramsPerPiece": 50,
     "per100": {
       "kcal": 196,
       "proteinG": 13.6,
@@ -11047,7 +11047,7 @@
     "yieldFactor": null,
     "dataSource": {
       "kind": "estimate",
-      "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
+      "note": "1 шт = яйцо, обжаренное на масле (~50 г готового); приблизительно"
     },
     "autoPlan": true
   },
@@ -12538,5 +12538,101 @@
       "note": "Типовое справочное значение, приблизительно; сверь с упаковкой"
     },
     "autoPlan": false
+  },
+  {
+    "key": "oat_milk_cooked",
+    "name": "Овсяная каша на молоке",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 102,
+      "proteinG": 3.6,
+      "fatG": 3.2,
+      "carbG": 14.2,
+      "fiberG": 1.4
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Геркулес на молоке 2,5% без сахара; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "rice_porridge_milk",
+    "name": "Рисовая каша на молоке",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 97,
+      "proteinG": 2.9,
+      "fatG": 2.6,
+      "carbG": 15.4,
+      "fiberG": 0.3
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Рис на молоке 2,5% без сахара; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "rice_porridge_water",
+    "name": "Рисовая каша на воде",
+    "brand": null,
+    "barcode": null,
+    "category": "grains",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 78,
+      "proteinG": 1.5,
+      "fatG": 0.2,
+      "carbG": 17.4,
+      "fiberG": 0.3
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Рис, разваренный на воде, без сахара; приблизительно"
+    },
+    "autoPlan": true
+  },
+  {
+    "key": "scrambled_eggs",
+    "name": "Скрэмбл (яйца с молоком)",
+    "brand": null,
+    "barcode": null,
+    "category": "eggs",
+    "basis": "cooked",
+    "unit": "g",
+    "gramsPerPiece": null,
+    "per100": {
+      "kcal": 150,
+      "proteinG": 10.5,
+      "fatG": 11.2,
+      "carbG": 1.6,
+      "fiberG": 0
+    },
+    "variantGroup": null,
+    "yieldFactor": null,
+    "dataSource": {
+      "kind": "estimate",
+      "note": "Яйца, взбитые с молоком, на сливочном масле; приблизительно"
+    },
+    "autoPlan": true
   }
 ]

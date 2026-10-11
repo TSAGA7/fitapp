@@ -22,6 +22,7 @@ import {
   movePlannedSession,
   rebuildTrainingPlan,
   regenerateDay,
+  regenerateMeal,
   replaceExerciseInPlan,
   replaceExerciseInSession,
   replacePlannedItem,
@@ -48,6 +49,8 @@ import {
   createCustomFood,
   setEquipmentLimits,
 } from '../apps/web/src/actions';
+import { mealDish } from '../packages/domain/src';
+import { planFoods } from '../apps/web/src/app/derive';
 import { lookupBarcode } from '../apps/web/src/app/openFoodFacts';
 
 const MON = '2026-10-05T09:00:00+03:00';
@@ -210,6 +213,30 @@ describe('app flow on the real storage', () => {
     expect(bar.snapshot.dataSource.kind).toBe('label');
   });
 
+  it('"redo" of a meal and of a day gives other dishes, not the same products with other grams', async () => {
+    const { deps } = await setup();
+    await generateWeekPlan(deps, '2026-10-05', 0);
+    const kindsOf = async () => {
+      const s = await loadSnapshot(deps);
+      const foods = planFoods(s.foods, s.userFoods);
+      const day = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.deletedAt === null);
+      return Object.fromEntries((['breakfast', 'lunch', 'dinner', 'snack'] as const).map((slot) => [slot, mealDish(slot, day.filter((i) => i.slot === slot).map((i) => i.foodId), foods)?.kind]));
+    };
+    let before = await kindsOf();
+    for (let v = 1; v <= 4; v++) {
+      await regenerateMeal(deps, '2026-10-05', 'breakfast', v);
+      const after = await kindsOf();
+      expect(after.breakfast).toBeDefined();
+      expect(after.breakfast, `redo ${v}`).not.toBe(before.breakfast);
+      expect(after.lunch).toBe(before.lunch);
+      before = after;
+    }
+    await regenerateDay(deps, '2026-10-05', 9);
+    const day = await kindsOf();
+    expect(day.breakfast).not.toBe(before.breakfast);
+    expect(day.snack === before.snack && day.lunch === before.lunch && day.dinner === before.dinner).toBe(false);
+  });
+
   it('eating another amount changes that very item: no second copy of it appears in the meal', async () => {
     const { deps } = await setup();
     await generateWeekPlan(deps, '2026-10-05', 0);
@@ -219,8 +246,8 @@ describe('app flow on the real storage', () => {
     await logPlanned(deps, protein.id, { kind: 'eaten', grams: Math.max(10, protein.plannedAmountG - 60) });
     s = await loadSnapshot(deps);
     const after = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.slot === 'breakfast' && i.deletedAt === null);
-    const sameKind = after.filter((i) => ['dairy', 'eggs'].includes(s.foods.find((f) => f.id === i.foodId)!.category));
-    expect(sameKind.map((i) => i.id)).toEqual([protein.id]);
+    // the meal keeps its dish: the same items (only grams of the others may move), nothing added next to the eaten one
+    expect(after.map((i) => i.id).sort()).toEqual(breakfast.map((i) => i.id).sort());
     expect(s.foodLogs.filter((l) => l.slot === 'breakfast' && l.date === '2026-10-05' && l.deletedAt === null)).toHaveLength(1);
   });
 

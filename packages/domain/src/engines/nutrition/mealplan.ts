@@ -1,21 +1,7 @@
-import type { Availability, FoodCategory, Macros, MealSlot, NutritionTargets, Preference } from '../../model';
-import { macrosForAmount, subtractMacros, sumMacros, ZERO_MACROS } from './foods';
-
-export interface PlanFood {
-  id: string;
-  name: string;
-  category: FoodCategory;
-  basis: 'raw' | 'cooked' | 'as_sold';
-  per100: Macros;
-  unit: 'g' | 'ml' | 'piece';
-  gramsPerPiece: number | null;
-  preference: Preference;
-  availability: Availability;
-  excluded: boolean;
-  maxPerDayG: number | null;
-  /** false: never picked by the generator on its own. */
-  autoPlan?: boolean;
-}
+import type { MealSlot, Macros, NutritionTargets } from '../../model';
+import { dishesFor, describeMeal, isGarnish, isMainProtein, usable, type Dish, type DishPart } from './dishes';
+import { macrosForAmount, subtractMacros, sumMacros } from './foods';
+import { commonness, hash, PREF_RANK, snapGrams, step, type PlanFood } from './planfood';
 
 export const SLOTS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 export const SLOT_LABEL: Record<MealSlot, string> = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' };
@@ -31,43 +17,15 @@ export interface PlanLine {
 
 interface Role {
   name: string;
-  categories: FoodCategory[];
+  categories: string[];
   /** Holiday mode: picks foods by id instead of by category (and ignores the autoPlan flag). */
   match?: (f: PlanFood) => boolean;
   min: number;
   max: number;
   start: number;
-  /** A fixed-size garnish is not fitted to the targets. */
+  /** A fixed-size side is not fitted to the targets. */
   fixed?: boolean;
 }
-
-/**
- * Meals are built like dishes of a meal-plan service: one protein, ONE garnish, a salad vegetable.
- * No standalone oil, spinach or a second garnish; the garnish stays the same for lunch and dinner of a day.
- */
-const NOT_SALAD = /картоф|батат|шпинат|лук|свёкл|свекл|эдамаме/i;
-const isGarnish = (f: PlanFood): boolean => f.autoPlan !== false && ((f.category === 'grains' && !/овсян|мюсли/i.test(f.name)) || (f.category === 'vegetables' && /картоф|батат/i.test(f.name)));
-const isSaladVeg = (f: PlanFood): boolean => f.autoPlan !== false && f.category === 'vegetables' && !NOT_SALAD.test(f.name);
-const isMainProtein = (f: PlanFood): boolean => f.autoPlan !== false && (f.category === 'poultry' || f.category === 'fish' || f.category === 'meat' || f.category === 'seafood') && !/печен/i.test(f.name);
-const isBreakfastCarb = (f: PlanFood): boolean => f.autoPlan !== false && ((f.category === 'grains' && /овсян|мюсли/i.test(f.name)) || (f.category === 'bread_bakery' && /ржан|цельнозерн|бородин|чёрн|черн/i.test(f.name)));
-const isBreakfastProtein = (f: PlanFood): boolean => f.autoPlan !== false && (f.category === 'eggs' || (f.category === 'dairy' && /творог|йогурт/i.test(f.name)));
-
-const BREAKFAST: Role[] = [
-  { name: 'carb', categories: [], match: isBreakfastCarb, min: 30, max: 160, start: 70 },
-  { name: 'protein', categories: [], match: isBreakfastProtein, min: 60, max: 300, start: 150 },
-  { name: 'fruit', categories: ['fruits'], min: 80, max: 200, start: 120, fixed: true },
-  { name: 'topping', categories: ['nuts_seeds'], min: 10, max: 40, start: 15 },
-];
-const MAIN: Role[] = [
-  { name: 'protein', categories: [], match: isMainProtein, min: 80, max: 300, start: 150 },
-  { name: 'garnish', categories: [], match: isGarnish, min: 30, max: 300, start: 150 },
-  { name: 'veg', categories: [], match: isSaladVeg, min: 120, max: 250, start: 150, fixed: true },
-];
-const SNACK: Role[] = [
-  { name: 'protein', categories: ['dairy', 'supplements', 'eggs'], min: 60, max: 250, start: 150 },
-  { name: 'nuts', categories: ['nuts_seeds', 'fruits'], min: 15, max: 50, start: 25 },
-];
-const ROLES: Record<MealSlot, Role[]> = { breakfast: BREAKFAST, lunch: MAIN, dinner: MAIN, snack: SNACK };
 
 /** "Отпуск": holiday food. Foods are recognised by their catalog keys, so the user's own foods never end up here by accident. */
 export const VACATION_MEALS = /^(pizza_|[a-z]+_pizza_|vit_(hamburger|cheeseburger|double_cheese|big_hit|big_tasty|chicken_burger|fish)$|bk_(whopper|double_whopper|cheeseburger|long_chicken|chicken_king)$|rostics_(boxmaster|twister|burger)$|roll_|maki_|nigiri_|sushi_rolls$|gunkan$|philadelphia_roll$|california_roll$|baked_roll$|tempura_roll$|spicy_roll$|unagi_roll$|chicken_roll$|inari$|dodo_dodster_|cheburek$|samsa_meat$|teremok_blin_(ham|chicken|meat|salmon)$)/;
@@ -100,58 +58,6 @@ const VACATION_ROLES: Record<MealSlot, Role[]> = { breakfast: VAC_BREAKFAST, lun
 
 export type DietMode = 'normal' | 'vacation';
 
-const PREF_RANK: Record<Preference, number> = { love: 0, like: 1, ok: 2, avoid: 3 };
-
-function hash(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-const step = (f: PlanFood): number => (f.unit === 'piece' && f.gramsPerPiece ? f.gramsPerPiece : 5);
-
-function snapGrams(f: PlanFood, grams: number, min: number, max: number): number {
-  const s = step(f);
-  const lo = Math.max(s, Math.ceil(min / s) * s);
-  const hi = Math.max(lo, Math.floor(max / s) * s);
-  return Math.min(hi, Math.max(lo, Math.round(grams / s) * s));
-}
-
-/**
- * How usual a product is on an ordinary Russian table: 0 = everyday, 1 = fine now and then, 2 = rare.
- * The generator only takes products of the best tier that is available, so strawberries, broccoli or hazelnuts never turn up
- * on their own; a product the user marked "love" counts as everyday.
- */
-export function commonness(f: Pick<PlanFood, 'category' | 'name' | 'preference'>): number {
-  if (f.preference === 'love') return 0;
-  const n = f.name.toLowerCase();
-  const rx = (re: RegExp): boolean => re.test(n);
-  switch (f.category) {
-    case 'fruits':
-      return rx(/банан|яблок/) ? 0 : rx(/груш|апельсин|мандарин/) ? 1 : 2;
-    case 'vegetables':
-      return rx(/огурец|огурц|помидор|томат|картоф/) ? 0 : rx(/капуст|морков|перец|кабач/) ? 1 : 2;
-    case 'grains':
-      return rx(/гречк|рис|макарон|овсян/) ? 0 : 1;
-    case 'poultry':
-    case 'meat':
-    case 'fish':
-    case 'seafood':
-      return rx(/курин|индейк|говядин|свинин|минтай|треск|горбуш|фарш/) ? 0 : 1;
-    case 'nuts_seeds':
-      return rx(/арахис|грецк|миндал/) ? 0 : 1;
-    case 'dairy':
-      return rx(/творог|кефир|йогурт/) ? 0 : 1;
-    case 'eggs':
-      return rx(/белк/) ? 1 : 0;
-    default:
-      return 0;
-  }
-}
-
 /** Keeps only the products of the best (most everyday) tier present. */
 function bestTier<T extends Pick<PlanFood, 'category' | 'name' | 'preference'>>(list: readonly T[]): T[] {
   if (list.length === 0) return [];
@@ -171,16 +77,10 @@ export function candidatesFor(foods: readonly PlanFood[], role: Pick<Role, 'cate
 
 interface Variable {
   food: PlanFood;
-  role: Role;
+  fixed: boolean;
   grams: number;
   lo: number;
   hi: number;
-}
-
-/** Amount limits of a role for one food: a ready porridge is a big bowl (a few hundred grams), bread or muesli a few dozen. */
-function boundsFor(role: Role, food: PlanFood): { min: number; max: number; start: number } {
-  if (role.name === 'carb' && /каша/i.test(food.name)) return { min: 120, max: 400, start: 250 };
-  return { min: role.min, max: role.max, start: role.start };
 }
 
 const WEIGHTS = { kcal: 1, proteinG: 2, fatG: 1, carbG: 1 } as const;
@@ -195,23 +95,24 @@ function error(total: Macros, target: Macros): number {
   return e;
 }
 
+const linesTotal = (vars: readonly Variable[]): Macros => sumMacros(vars.map((v) => macrosForAmount(v.food.per100, v.grams)));
+
 /** Coordinate descent over the amounts: moves one item by one step while the error to the target shrinks. Deterministic. */
-function fit(vars: Variable[], target: Macros, base: Macros = ZERO_MACROS): void {
-  const total = (): Macros => sumMacros([base, ...vars.map((v) => macrosForAmount(v.food.per100, v.grams))]);
-  let best = error(total(), target);
+function fit(vars: Variable[], target: Macros): void {
+  let best = error(linesTotal(vars), target);
   for (let iter = 0; iter < 400; iter++) {
     let improved = false;
     for (const v of vars) {
-      if (v.role.fixed) continue;
+      if (v.fixed) continue;
       const s = step(v.food);
       for (const dir of [1, -1]) {
         const next = v.grams + dir * s;
-        if (next < v.lo || next > v.hi || next <= 0) continue;
+        if (next < v.lo || next > v.hi || next < 0) continue;
         const cap = v.food.maxPerDayG;
         if (cap !== null && next > cap) continue;
         const prev = v.grams;
         v.grams = next;
-        const e = error(total(), target);
+        const e = error(linesTotal(vars), target);
         if (e + 1e-9 < best) {
           best = e;
           improved = true;
@@ -229,57 +130,145 @@ export interface SlotInput {
   foods: readonly PlanFood[];
   /** Different values give different (but deterministic) food choices. */
   rotation: string;
+  /** Foods not to take when there is anything else (e.g. the ones the user just asked to redo). */
   avoidFoodIds?: ReadonlySet<string>;
   mode?: DietMode;
-  /** Food ids already present in this meal (eaten, skipped or kept): the roles they fill are not built again. */
+  /** Food ids already present in this meal (eaten, skipped or kept): the parts they fill are not built again. */
   covered?: readonly string[];
-  /** The garnish of the day: used for the garnish role of this meal. */
+  /** The garnish of the day: used for the garnish of lunch and dinner. */
   garnishId?: string;
   /** Proteins already used by other meals of the day: not repeated. */
   avoidProteinIds?: ReadonlySet<string>;
+  /** Dishes not to repeat when there is anything else (what stood here before "redo", yesterday's dish). */
+  avoidKinds?: ReadonlySet<string>;
 }
+
+// ---- holiday mode: loose holiday food picked by roles ----------------------------------------
 
 const roleHas = (role: Pick<Role, 'categories' | 'match'>, f: PlanFood): boolean => (role.match ? role.match(f) : role.categories.includes(f.category));
 
-/** One attempt: picks a food for each role (rotated by `rotation`), then fits the amounts to the meal targets. */
-function attempt(input: SlotInput, rotation: string): { vars: Variable[]; err: number } {
+function vacationAttempt(input: SlotInput, rotation: string): { vars: Variable[]; err: number } {
   const vars: Variable[] = [];
   const used = new Set<string>(input.avoidFoodIds ?? []);
   const coveredFoods = (input.covered ?? []).map((id) => input.foods.find((f) => f.id === id)).filter((f): f is PlanFood => f !== undefined);
-  for (const role of (input.mode === 'vacation' ? VACATION_ROLES : ROLES)[input.slot]) {
+  for (const role of VACATION_ROLES[input.slot]) {
     if (coveredFoods.some((f) => roleHas(role, f))) continue;
-    const forced = role.name === 'garnish' && input.garnishId ? input.foods.find((f) => f.id === input.garnishId && !f.excluded && isGarnish(f)) : undefined;
-    const avoid = role.name === 'protein' && input.avoidProteinIds ? new Set([...used, ...input.avoidProteinIds]) : used;
-    const list = forced ? [forced] : candidatesFor(input.foods, role, `${rotation}|${input.slot}|${role.name}`, avoid);
-    const food = list[0];
+    const food = candidatesFor(input.foods, role, `${rotation}|${input.slot}|${role.name}`, used)[0];
     if (!food) continue;
     used.add(food.id);
-    const b = boundsFor(role, food);
-    vars.push({ food, role, grams: snapGrams(food, b.start, b.min, b.max), lo: b.min, hi: b.max });
+    vars.push({ food, fixed: role.fixed === true, grams: snapGrams(food, role.start, role.min, role.max), lo: role.min, hi: role.max });
   }
   fit(vars, input.target);
-  return { vars, err: error(sumMacros(vars.map((v) => macrosForAmount(v.food.per100, v.grams))), input.target) };
+  return { vars, err: error(linesTotal(vars), input.target) };
 }
 
-/** Number of food combinations tried per meal; the one that fits the meal targets best wins. */
-const ATTEMPTS = 40;
+function vacationMeal(input: SlotInput): Variable[] {
+  const tried = Array.from({ length: 40 }, (_, i) => vacationAttempt(input, i === 0 ? input.rotation : `${input.rotation}#${i}`));
+  const best = tried.reduce((a, t) => (t.err + 1e-9 < a.err ? t : a));
+  // Holiday food: any combination that fits about as well is fine, so "redo" gives something new instead of the single closest one.
+  const near = tried.filter((t) => t.err <= best.err * 1.6 + 0.004);
+  return (near[hash(`${input.rotation}|pick`) % near.length] ?? best).vars;
+}
 
-/** One meal: tries several food combinations (deterministically, from the seed) and keeps the closest to the targets. */
+// ---- normal mode: dishes ------------------------------------------------------------------------
+
+/** Picks one product for a part of a dish: liked products more often, the avoided ones only when there is nothing else. */
+function pickFood(foods: readonly PlanFood[], part: DishPart, seed: string, taken: ReadonlySet<string>, avoid: ReadonlySet<string>): PlanFood | undefined {
+  let list = foods.filter((f) => !taken.has(f.id) && usable(part, f));
+  const fresh = list.filter((f) => !avoid.has(f.id));
+  if (fresh.length > 0) list = fresh;
+  if (list.length === 0) return undefined;
+  list.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const weight = (f: PlanFood): number => (f.preference === 'love' ? 4 : f.preference === 'like' ? 2 : 1);
+  let r = hash(seed) % list.reduce((a, f) => a + weight(f), 0);
+  for (const f of list) {
+    r -= weight(f);
+    if (r < 0) return f;
+  }
+  return list[0];
+}
+
+/** Assigns the products that already stand in the meal to the parts of a dish; nothing when one of them has no place in it. */
+function coveredParts(dish: Dish, covered: readonly PlanFood[]): Set<string> | null {
+  const out = new Set<string>();
+  for (const f of covered) {
+    const part = dish.parts.find((p) => !out.has(p.name) && p.match(f));
+    if (!part) return null;
+    out.add(part.name);
+  }
+  return out;
+}
+
+/** Below this an optional side (a spoon of cottage cheese next to the eggs) is dropped. */
+const OPTIONAL_MIN_G = 50;
+
+function dishAttempt(input: SlotInput, dish: Dish, covered: readonly PlanFood[], rotation: string): { vars: Variable[]; err: number } | null {
+  const skip = coveredParts(dish, covered) ?? new Set<string>();
+  const avoid = input.avoidFoodIds ?? new Set<string>();
+  const taken = new Set<string>(covered.map((f) => f.id));
+  const vars: Variable[] = [];
+  for (const part of dish.parts) {
+    if (skip.has(part.name)) continue;
+    let food: PlanFood | undefined;
+    if (part.name === 'garnish' && input.garnishId) {
+      food = input.foods.find((f) => f.id === input.garnishId && part.match(f) && !f.excluded);
+    } else {
+      const avoidHere = part.name === 'protein' && input.avoidProteinIds ? new Set([...avoid, ...input.avoidProteinIds]) : avoid;
+      food = pickFood(input.foods, part, `${rotation}|${input.slot}|${dish.kind}|${part.name}`, taken, avoidHere);
+    }
+    if (!food) {
+      if (part.min === 0) continue;
+      return null;
+    }
+    taken.add(food.id);
+    vars.push({ food, fixed: part.fixed === true, grams: snapGrams(food, part.start, Math.max(part.min, 1), part.max), lo: part.min, hi: part.max });
+  }
+  if (vars.length === 0) return null;
+  fit(vars, input.target);
+  const optional = vars.filter((v) => v.lo === 0 && v.grams < OPTIONAL_MIN_G);
+  if (optional.length > 0) {
+    const kept = vars.filter((v) => !optional.includes(v));
+    fit(kept, input.target);
+    return { vars: kept, err: error(linesTotal(kept), input.target) };
+  }
+  return { vars, err: error(linesTotal(vars), input.target) };
+}
+
+/** Error margin within which any dish counts as "fits": the dish is then chosen for variety, not for the last gram. */
+const DISH_TOLERANCE = 0.06;
+
+function dishMeal(input: SlotInput): Variable[] {
+  const byId = new Map(input.foods.map((f) => [f.id, f]));
+  const covered = [...new Set(input.covered ?? [])].map((id) => byId.get(id)).filter((f): f is PlanFood => f !== undefined);
+  const garnish = input.garnishId ? byId.get(input.garnishId) : undefined;
+  let pool = dishesFor(input.slot).filter((d) => !d.garnish || (garnish !== undefined && d.garnish(garnish)));
+  if (covered.length > 0) {
+    const fitting = pool.filter((d) => coveredParts(d, covered) !== null);
+    if (fitting.length > 0) pool = fitting;
+    // Best of all: what was eaten is the main part of the dish (eaten cottage cheese → "cottage cheese with fruit", not eggs next to it).
+    const around = pool.filter((d) => coveredParts(d, covered)?.has(d.parts[0]!.name));
+    if (around.length > 0) pool = around;
+  }
+  const fresh = pool.filter((d) => !input.avoidKinds?.has(d.kind));
+  if (fresh.length > 0) pool = fresh;
+  const order = [...pool].sort((a, b) => hash(`${input.rotation}|${a.kind}`) - hash(`${input.rotation}|${b.kind}`));
+  const tried: Array<{ vars: Variable[]; err: number }> = [];
+  for (let i = 0; i < Math.min(24, order.length * 3); i++) {
+    const r = dishAttempt(input, order[i % order.length] as Dish, covered, i < order.length ? input.rotation : `${input.rotation}#${i}`);
+    if (r) tried.push(r);
+  }
+  if (tried.length === 0) return [];
+  const best = tried.reduce((a, t) => (t.err + 1e-9 < a.err ? t : a));
+  // The first dish (in the seed's order) that fits about as well as the best one: variety first, as long as the numbers hold.
+  // Breakfast is first: whatever it misses is fitted by the meals after it, so any breakfast that is roughly right is fine.
+  const tolerance = input.slot === 'breakfast' ? DISH_TOLERANCE * 2.5 : input.slot === 'snack' ? DISH_TOLERANCE * 2 : DISH_TOLERANCE;
+  return (tried.find((t) => t.err <= best.err + tolerance) ?? best).vars;
+}
+
+/** One meal: a dish of the meal's group (or holiday food), with the amounts fitted to the meal targets. */
 export function generateMeal(input: SlotInput): PlanLine[] {
-  let best = attempt(input, input.rotation);
-  const tried = [best];
-  const vacation = input.mode === 'vacation';
-  for (let i = 1; i < ATTEMPTS && (vacation || best.err > 0.004); i++) {
-    const next = attempt(input, `${input.rotation}#${i}`);
-    tried.push(next);
-    if (next.err + 1e-9 < best.err) best = next;
-  }
-  if (vacation) {
-    // Holiday food: any combination that fits about as well is fine, so "redo" gives something new instead of the single closest one.
-    const near = tried.filter((t) => t.err <= best.err * 1.6 + 0.004);
-    best = near[hash(`${input.rotation}|pick`) % near.length] as typeof best;
-  }
-  return best.vars
+  const vars = input.mode === 'vacation' ? vacationMeal(input) : dishMeal(input);
+  return vars
     .filter((v) => v.grams > 0)
     .map((v) => ({ slot: input.slot, foodId: v.food.id, grams: v.grams, macros: macrosForAmount(v.food.per100, v.grams) }));
 }
@@ -295,10 +284,12 @@ export interface DayPlanInput {
   keepLines?: readonly PlanLine[];
   /** Meals to (re)generate; the default is all. */
   slots?: readonly MealSlot[];
-  /** Foods that must not appear (e.g. the ones the user just rejected). */
+  /** Foods to change (e.g. the ones the user just asked to redo): not taken again when there is anything else. */
   avoidFoodIds?: ReadonlySet<string>;
-  /** Food ids that already stand in a meal (eaten or skipped ones included): the matching roles of that meal are not built again. */
+  /** Food ids that already stand in a meal (eaten or skipped ones included): the matching parts of that meal are not built again. */
   coveredBySlot?: Partial<Record<MealSlot, readonly string[]>>;
+  /** Dishes not to repeat in a meal when there is anything else: what stood there before "redo", yesterday's dish. */
+  avoidKindsBySlot?: Partial<Record<MealSlot, readonly string[]>>;
   /** 'vacation': the day is built from holiday food (pizza, rolls, burgers, beer, wine...). */
   mode?: DietMode;
 }
@@ -333,7 +324,7 @@ function refineDay(lines: PlanLine[], kept: readonly PlanLine[], foods: readonly
       const g0 = start.get(l) as number;
       for (const dir of [1, -1]) {
         const next = l.grams + dir * s;
-        if (next <= 0 || next < g0 * 0.5 || next > g0 * 1.7) continue;
+        if (next <= 0 || next < Math.max(g0 * 0.5, Math.min(g0, 50)) || next > g0 * 1.7) continue;
         if (f.maxPerDayG !== null && next > f.maxPerDayG) continue;
         const prev = { grams: l.grams, macros: l.macros };
         l.grams = next;
@@ -360,7 +351,7 @@ function refineDay(lines: PlanLine[], kept: readonly PlanLine[], foods: readonly
           const nb = b.grams - step(fb);
           const ga = start.get(a) as number;
           const gb = start.get(b) as number;
-          if (nb <= 0 || na > ga * 1.7 || nb < gb * 0.5) continue;
+          if (nb <= 0 || na > ga * 1.7 || nb < Math.max(gb * 0.5, Math.min(gb, 50))) continue;
           if (fa.maxPerDayG !== null && na > fa.maxPerDayG) continue;
           const prevA = { grams: a.grams, macros: a.macros };
           const prevB = { grams: b.grams, macros: b.macros };
@@ -384,42 +375,56 @@ function refineDay(lines: PlanLine[], kept: readonly PlanLine[], foods: readonly
 function buildDay(input: DayPlanInput): DayPlan {
   const locked = input.locked ?? [];
   const slots = input.slots ?? SLOTS;
-  const lockedTotal = sumMacros(locked.map((l) => l.macros));
   const fixed = locked.filter((l) => !slots.includes(l.slot) || l.locked);
   const keep = [...fixed, ...(input.keepLines ?? [])];
-  const toBuild = slots.filter((s) => !fixed.some((l) => l.slot === s && l.locked));
+  const toBuild = SLOTS.filter((s) => slots.includes(s) && !fixed.some((l) => l.slot === s && l.locked));
   const dayTarget: Macros = { kcal: input.targets.kcal, proteinG: input.targets.proteinG, fatG: input.targets.fatG, carbG: input.targets.carbG, fiberG: input.targets.fiberG };
-  const keptTotal = sumMacros(keep.map((l) => l.macros));
-  const remaining = subtractMacros(dayTarget, keptTotal);
-  const shareSum = toBuild.reduce((a, s) => a + SLOT_SHARE[s], 0) || 1;
   const lines: PlanLine[] = [...keep];
-  void lockedTotal;
+  const vacation = input.mode === 'vacation';
   // One garnish for the whole day (cooked once): taken from what already stands in lunch/dinner, otherwise chosen from the seed.
   const byFoodId = new Map(input.foods.map((f) => [f.id, f]));
-  const standing = [...keep.map((l) => l.foodId), ...(input.coveredBySlot?.lunch ?? []), ...(input.coveredBySlot?.dinner ?? [])];
-  const garnishId =
-    standing.find((id) => {
-      const f = byFoodId.get(id);
-      return f !== undefined && isGarnish(f);
-    }) ?? candidatesFor(input.foods, { categories: [], match: isGarnish }, `${input.seed}|garnish`, input.avoidFoodIds)[0]?.id;
+  const standing = [...keep.filter((l) => l.slot === 'lunch' || l.slot === 'dinner').map((l) => l.foodId), ...(input.coveredBySlot?.lunch ?? []), ...(input.coveredBySlot?.dinner ?? [])];
+  const garnishId = vacation
+    ? undefined
+    : (standing.find((id) => {
+        const f = byFoodId.get(id);
+        return f !== undefined && isGarnish(f);
+      }) ?? pickGarnish(input));
   const usedProteins = new Set<string>();
   for (const l of keep) {
     const f = byFoodId.get(l.foodId);
     if (f && isMainProtein(f)) usedProteins.add(f.id);
   }
-  for (const slot of toBuild) {
-    const k = SLOT_SHARE[slot] / shareSum;
+  let lunchKind = mealDish('lunch', lines.filter((l) => l.slot === 'lunch').map((l) => l.foodId), input.foods)?.kind;
+  // Meals are built in their order and each gets its share of what is STILL left: a lighter breakfast leaves more to lunch, dinner and the snack.
+  for (let i = 0; i < toBuild.length; i++) {
+    const slot = toBuild[i] as MealSlot;
+    const left = subtractMacros(dayTarget, sumMacros(lines.map((l) => l.macros)));
+    const k = SLOT_SHARE[slot] / toBuild.slice(i).reduce((a, s) => a + SLOT_SHARE[s], 0);
     // In vacation mode a meal never shrinks below 60% of its usual share, otherwise a full day would always give the same smallest snack.
-    const floor = (n: number, day: number): number => Math.max(0, n * k, input.mode === 'vacation' ? day * SLOT_SHARE[slot] * 0.6 : 0);
+    const floor = (n: number, day: number): number => Math.max(0, n * k, vacation ? day * SLOT_SHARE[slot] * 0.6 : 0);
     const target: Macros = {
-      kcal: floor(remaining.kcal, dayTarget.kcal),
-      proteinG: floor(remaining.proteinG, dayTarget.proteinG),
-      fatG: floor(remaining.fatG, dayTarget.fatG),
-      carbG: floor(remaining.carbG, dayTarget.carbG),
-      fiberG: floor(remaining.fiberG, dayTarget.fiberG),
+      kcal: floor(left.kcal, dayTarget.kcal),
+      proteinG: floor(left.proteinG, dayTarget.proteinG),
+      fatG: floor(left.fatG, dayTarget.fatG),
+      carbG: floor(left.carbG, dayTarget.carbG),
+      fiberG: floor(left.fiberG, dayTarget.fiberG),
     };
     const covered = [...(input.coveredBySlot?.[slot] ?? []), ...keep.filter((l) => l.slot === slot).map((l) => l.foodId)];
-    const meal = generateMeal({ slot, target, foods: input.foods, rotation: input.seed, avoidFoodIds: input.avoidFoodIds, mode: input.mode, covered, garnishId, avoidProteinIds: new Set(usedProteins) });
+    const meal = generateMeal({
+      slot,
+      target,
+      foods: input.foods,
+      rotation: input.seed,
+      avoidFoodIds: input.avoidFoodIds,
+      mode: input.mode,
+      covered,
+      garnishId,
+      avoidProteinIds: new Set(usedProteins),
+      avoidKinds: new Set([...(input.avoidKindsBySlot?.[slot] ?? []), ...(slot === 'dinner' && lunchKind ? [lunchKind] : [])]),
+    });
+    // Dinner is another dish than lunch (the garnish stays the same: it is cooked once).
+    if (slot === 'lunch') lunchKind = mealDish('lunch', meal.map((l) => l.foodId), input.foods)?.kind;
     for (const l of meal) {
       const f = byFoodId.get(l.foodId);
       if (f && isMainProtein(f)) usedProteins.add(f.id);
@@ -434,6 +439,33 @@ function buildDay(input: DayPlanInput): DayPlan {
     totals,
     deviation: { kcal: dev(totals.kcal, dayTarget.kcal), proteinG: dev(totals.proteinG, dayTarget.proteinG), fatG: dev(totals.fatG, dayTarget.fatG), carbG: dev(totals.carbG, dayTarget.carbG) },
   };
+}
+
+/**
+ * After something was eaten differently from the plan: the amounts of the meals still to eat are refitted so the day ends at its
+ * targets — the products and dishes stay as they are (only the grams move, within 50–170% of what was planned).
+ */
+export function refitDay(input: { targets: NutritionTargets; foods: readonly PlanFood[]; keep: readonly PlanLine[]; lines: readonly PlanLine[] }): PlanLine[] {
+  const keep = input.keep.map((l) => ({ ...l }));
+  const free = input.lines.map((l) => ({ ...l }));
+  const t = input.targets;
+  refineDay([...keep, ...free], keep, input.foods, { kcal: t.kcal, proteinG: t.proteinG, fatG: t.fatG, carbG: t.carbG, fiberG: t.fiberG });
+  return free;
+}
+
+/** The garnish of the day: rice, buckwheat, pasta, potatoes... by the seed; the one that is being redone only when there is nothing else. */
+function pickGarnish(input: DayPlanInput): string | undefined {
+  const part = { match: isGarnish, tier: 0 as const };
+  const list = input.foods.filter((f) => usable(part, f)).sort((a, b) => (a.id < b.id ? -1 : 1));
+  const fresh = list.filter((f) => !input.avoidFoodIds?.has(f.id));
+  const pool = fresh.length > 0 ? fresh : list;
+  return pool.length > 0 ? pool[hash(`${input.seed}|garnish`) % pool.length]?.id : undefined;
+}
+
+/** Which dish a meal is (kind and a readable title); nothing for a meal put together by hand. */
+export function mealDish(slot: MealSlot, foodIds: readonly string[], foods: readonly PlanFood[]): { kind: string; title: string } | null {
+  const byId = new Map(foods.map((f) => [f.id, f]));
+  return describeMeal(slot, foodIds.map((id) => byId.get(id)).filter((f): f is PlanFood => f !== undefined));
 }
 
 /** The day is built from a few deterministic variants of the seed; the first one within 3% of every target wins, otherwise the closest. */

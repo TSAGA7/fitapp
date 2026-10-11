@@ -4,6 +4,8 @@ import {
   buildSnapshot,
   createBase,
   generateDayPlan,
+  mealDish,
+  refitDay,
   macrosForAmount,
   replaceFood,
   startOfWeek,
@@ -16,6 +18,7 @@ import {
   type FoodLog,
   type Macros,
   type MealSlot,
+  SLOTS,
   type PlanLine,
   type PlannedItem,
   type Preference,
@@ -52,7 +55,26 @@ async function ensurePlan(r: Repositories, deps: AppDeps, weekStart: string, ver
   return plan;
 }
 
-async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typeof context>>, date: string, variation: number, slots?: readonly MealSlot[], avoid?: ReadonlySet<string>) {
+/**
+ * Dishes not to repeat: yesterday's dish of each meal (so the week is varied) and, when the user presses "redo",
+ * the dish that stands there now.
+ */
+async function kindsToAvoid(r: Repositories, c: Awaited<ReturnType<typeof context>>, date: string, current: readonly PlannedItem[], redo: boolean): Promise<Partial<Record<MealSlot, string[]>>> {
+  const out: Partial<Record<MealSlot, string[]>> = {};
+  const add = (items: readonly PlannedItem[]) => {
+    for (const slot of SLOTS) {
+      const d = mealDish(slot, items.filter((i) => i.slot === slot).map((i) => i.foodId), c.foods);
+      if (d) (out[slot] ??= []).push(d.kind);
+    }
+  };
+  const prevDate = addDays(date, -1);
+  const prevPlan = await r.mealPlans.getByWeek(startOfWeek(prevDate, c.weekStartsOn));
+  if (prevPlan) add((await r.mealPlans.listItems(prevPlan.id)).filter((i) => i.date === prevDate && i.deletedAt === null));
+  if (redo) add(current);
+  return out;
+}
+
+async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typeof context>>, date: string, variation: number, slots?: readonly MealSlot[], avoid?: ReadonlySet<string>, mode: 'build' | 'redo' | 'refit' = 'build') {
   const weekStart = startOfWeek(date, c.weekStartsOn);
   const plan = await ensurePlan(r, deps, weekStart, c.version.id, String(variation));
   const items = (await r.mealPlans.listItems(plan.id)).filter((i) => i.date === date && i.deletedAt === null);
@@ -80,7 +102,27 @@ async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typ
   // What already stands in a meal (eaten, skipped, locked) fills its role: the rest of the meal is not built around a second copy of it.
   const coveredBySlot: Partial<Record<MealSlot, string[]>> = {};
   for (const i of items.filter(isKept)) (coveredBySlot[i.slot] ??= []).push(i.foodId);
-  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, coveredBySlot, slots, avoidFoodIds: avoid, mode: isVacationMode() ? 'vacation' : 'normal' });
+  const rebuilt = items.filter((i) => !isKept(i));
+  if (mode === 'refit') {
+    // Usually only the grams of what is still to eat move and the dishes stay. When that cannot bring the day back
+    // to its norm (a whole pizza off the plan), the meals that are not eaten yet are rebuilt below.
+    if (rebuilt.length === 0) return;
+    const refit = refitDay({ targets, foods: c.foods, keep: [...protectedLines, ...partialLines], lines: rebuilt.map(toLine) });
+    const dayKcal = sumMacros([...protectedLines, ...partialLines, ...refit].map((l) => l.macros)).kcal;
+    if (targets.kcal <= 0 || Math.abs(dayKcal - targets.kcal) / targets.kcal <= 0.05) {
+      const changed = rebuilt.flatMap((i, k) => {
+        const l = refit[k] as PlanLine;
+        return l.grams === i.plannedAmountG ? [] : [{ ...i, plannedAmountG: l.grams, plannedMacros: l.macros }];
+      });
+      if (changed.length > 0) await r.mealPlans.putItems(changed);
+      return;
+    }
+  }
+  // "Redo": what stands in the meals being rebuilt is changed — other products and another dish.
+  const redo = mode === 'redo';
+  const avoidFoodIds = redo ? new Set([...(avoid ?? []), ...rebuilt.map((i) => i.foodId)]) : avoid;
+  const avoidKindsBySlot = await kindsToAvoid(r, c, date, rebuilt, redo);
+  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, coveredBySlot, slots, avoidFoodIds, avoidKindsBySlot, mode: isVacationMode() ? 'vacation' : 'normal' });
   const keepIds = new Set(items.filter(isKept).map((i) => i.id));
   const fixedLines = [...protectedLines, ...partialLines];
   const now = deps.clock.now();
@@ -100,7 +142,7 @@ async function rebalanceDay(r: Repositories, deps: AppDeps, date: string): Promi
   if (date < deps.clock.today(profile.timezone)) return;
   const plan = await r.mealPlans.getByWeek(startOfWeek(date, profile.weekStartsOn));
   if (!plan || !(await r.mealPlans.listItems(plan.id)).some((i) => i.date === date && i.deletedAt === null)) return;
-  await fillDay(r, deps, await context(r, deps), date, Number(plan.generatorSeed) || 0);
+  await fillDay(r, deps, await context(r, deps), date, Number(plan.generatorSeed) || 0, undefined, undefined, 'refit');
 }
 
 /** Builds (or rebuilds) the meal plan for the days of a week that are not in the past. Locked items are kept. */
@@ -134,7 +176,7 @@ export async function applyDietMode(deps: AppDeps, variation: number): Promise<v
 }
 
 export async function regenerateDay(deps: AppDeps, date: string, variation: number): Promise<void> {
-  await deps.uow.run(async (r) => fillDay(r, deps, await context(r, deps), date, variation));
+  await deps.uow.run(async (r) => fillDay(r, deps, await context(r, deps), date, variation, undefined, undefined, 'redo'));
 }
 
 export async function regenerateMeal(deps: AppDeps, date: string, slot: MealSlot, variation: number): Promise<void> {
@@ -142,7 +184,7 @@ export async function regenerateMeal(deps: AppDeps, date: string, slot: MealSlot
     const c = await context(r, deps);
     const plan = await r.mealPlans.getByWeek(startOfWeek(date, c.weekStartsOn));
     const current = plan ? (await r.mealPlans.listItems(plan.id)).filter((i) => i.date === date && i.slot === slot && !i.locked) : [];
-    await fillDay(r, deps, c, date, variation, [slot], new Set(current.map((i) => i.foodId)));
+    await fillDay(r, deps, c, date, variation, [slot], new Set(current.map((i) => i.foodId)), 'redo');
   });
 }
 
