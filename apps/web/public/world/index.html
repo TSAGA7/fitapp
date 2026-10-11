@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>MY WORLD переехал</title>
+    <meta name="robots" content="noindex" />
+    <script>
+      /* MY WORLD moved to /myworld/. Same origin, so all saved data stays. Keep the in-app route (#/trips/…). */
+      (function () {
+        var to = new URL('../../myworld/', location.href).href + location.hash;
+        var go = function () { location.replace(to); };
+        try {
+          if (navigator.serviceWorker) {
+            navigator.serviceWorker.getRegistrations().then(function (rs) {
+              return Promise.all(rs.filter(function (r) { return /\/world\/$/.test(r.scope) && r.scope.indexOf('/myworld/') < 0; }).map(function (r) { return r.unregister(); }));
+            }).then(go, go);
+            setTimeout(go, 1500);
+          } else go();
+        } catch (e) { go(); }
+      })();
+    </script>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: -apple-system, system-ui, sans-serif; background: #141416; color: #f2f2f4; text-align: center; padding: 24px; }
+      a { color: #ddf36f; }
+    </style>
+  </head>
+  <body>
+    <p>MY WORLD переехал на новый адрес.<br /><a href="../../myworld/">Открыть tsaga7.github.io/myworld</a></p>
+  </body>
+</html>

@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 
 /** Writes dist/sw.js: precaches every built file so the app opens and works with no network.
- * It only manages caches named fitapp-*: MY WORLD (dist/world) shares the origin and keeps its own cache. */
+ * It only manages caches named fitapp-*: other apps on the same origin (tsaga7.github.io) keep their own caches. */
 function offlineWorker(): Plugin {
   let outDir = 'dist';
   return {
@@ -32,7 +32,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  // MY WORLD (./world/) has its own worker and cache.
+  // ./world/ is the redirect to MY WORLD with its own worker: never serve it from this cache.
   if (url.pathname.startsWith(new URL('./world/', self.registration.scope).pathname)) return;
   e.respondWith(caches.match(e.request, { ignoreSearch: true, ignoreVary: true }).then((hit) => hit || fetch(e.request).catch(() => (e.request.mode === 'navigate' ? caches.match('./') : Response.error()))));
 });

@@ -11,10 +11,9 @@ npm install
 npm run check        # типы + линтер границ + тесты
 npm run seed:validate  # проверка каталога упражнений/продуктов
 npm run dev          # веб-оболочка (этап 1)
-npm run dev:world    # MY WORLD — отдельное приложение путешествий
 ```
 
-В репозитории два приложения: Fitapp (`apps/web`, публикуется в корень) и MY WORLD (`apps/myworld`, публикуется в `/world/`, см. `apps/myworld/README.md`). Они не импортируют код друг друга и хранят данные в разных базах.
+MY WORLD (путешествия) переехал в отдельный репозиторий: https://github.com/TSAGA7/myworld. По старому адресу `/world/` осталась только переадресация (`apps/web/public/world/`).
 
 ## Слои (зависимости только сверху вниз)
 
