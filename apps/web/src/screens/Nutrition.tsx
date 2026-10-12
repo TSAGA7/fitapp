@@ -276,6 +276,10 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         const key = `${date}:${slot}`;
         const open = openMap[key] ?? false;
         const dish = slotItems.length > 0 ? mealDish(slot, slotItems.map((i) => i.foodId), pFoods) : null;
+        const eatenLogs = slotLogs.filter((l) => l.entryType !== 'skipped_planned' && l.actualAmountG > 0);
+        const eatenNames = eatenLogs.map((l) => l.snapshot.foodName).join(', ');
+        // Whether the meal came out less or more than planned: shown on the collapsed card too, once the meal is eaten.
+        const verdict = (allDone || own) && (slotItems.length > 0 || byNorm) && eatenLogs.length > 0 ? mealVerdict(plan.kcal, fact.kcal) : null;
         const doneCount = slotItems.filter((i) => logOf(i.id)).length;
         return (
           <Card key={slot} className={`ex-acc ${open ? 'open' : ''}`}>
@@ -283,7 +287,13 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
               <span className="ex-title">
                 <span className="t-h3">{SLOT_LABEL[slot]}</span>
                 <span className="t-small">{has ? `${fmt(fact.kcal, 0)} / ${fmt(plan.kcal, 0)} ккал` : 'Пока пусто'}</span>
-                {dish && <span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>{dish.title}</span>}
+                {own ? (
+                  // The meal is the user's own: the collapsed card shows what was really eaten, like the dish of the other meals.
+                  <span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>{eatenNames}</span>
+                ) : (
+                  dish && <span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>{dish.title}</span>
+                )}
+                {verdict && <span className={`t-small ${verdict.close ? 'tone-good' : 'tone-bad'}`} style={{ fontWeight: 600 }}>{verdict.text}</span>}
               </span>
               {allDone ? <Badge>Готово</Badge> : own ? <Badge tone="neutral">Своё</Badge> : slotItems.length > 0 ? <Badge tone="neutral">{doneCount}/{slotItems.length}</Badge> : null}
               <span className="ex-chev" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
@@ -364,13 +374,18 @@ function MacroLine({ label, m, muted }: { label: string; m: { proteinG: number; 
   );
 }
 
+/** "По плану" within 5% (at least 25 kcal), otherwise how much the user ate less or more than planned. */
+function mealVerdict(planKcal: number, factKcal: number): { close: boolean; text: string } {
+  const kcal = Math.round(factKcal - planKcal);
+  const close = Math.abs(kcal) <= Math.max(25, planKcal * 0.05);
+  return { close, text: close ? 'По плану' : kcal > 0 ? `Переел +${fmt(kcal, 0)} ккал` : `Недоел ${fmt(-kcal, 0)} ккал` };
+}
+
 /** Eaten minus planned for a meal: whether the user ate less or more than the plan, in calories and per macro. */
 function DiffLine({ plan, fact }: { plan: { kcal: number; proteinG: number; fatG: number; carbG: number }; fact: { kcal: number; proteinG: number; fatG: number; carbG: number } }) {
   const d = (k: 'kcal' | 'proteinG' | 'fatG' | 'carbG'): number => Math.round(fact[k] - plan[k]);
   const sign = (n: number): string => (n > 0 ? `+${fmt(n, 0)}` : n < 0 ? `−${fmt(-n, 0)}` : '0');
-  const kcal = d('kcal');
-  const close = Math.abs(kcal) <= Math.max(25, plan.kcal * 0.05);
-  const verdict = close ? 'По плану' : kcal > 0 ? `Переел +${fmt(kcal, 0)} ккал` : `Недоел ${fmt(-kcal, 0)} ккал`;
+  const { close, text: verdict } = mealVerdict(plan.kcal, fact.kcal);
   return (
     <>
       <div className="macro-line">
