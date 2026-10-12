@@ -399,3 +399,6 @@ input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; d
 .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
 .to-top:active { transform: scale(0.94); }
 [data-theme='dark'] .to-top { background: rgba(24, 32, 30, 0.45); border-color: rgba(255, 255, 255, 0.10); }
+.chip.chip-loved { display: inline-flex; align-items: center; gap: 6px; }
+.chip.chip-loved svg { color: #e11d48; }
+.chip.chip-loved[aria-pressed='true'] svg { color: #fff; }

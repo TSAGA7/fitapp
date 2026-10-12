@@ -536,7 +536,7 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
   const { snapshot: s } = useData();
   const { ok, run, banner, busy } = useCommand();
   const [query, setQuery] = useState('');
-  const [cat, setCat] = useState<FoodCategory | 'all'>('all');
+  const [cat, setCat] = useState<FoodCategory | 'all' | 'loved'>('all');
   const [picked, setPicked] = useState<string | null>(null);
   const [grams, setGrams] = useState('100');
   const [mode, setMode] = useState<'eaten' | 'plan'>('eaten');
@@ -590,7 +590,11 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
   const foods = useMemo(() => {
     const q = query.trim().toLowerCase();
     return s.foods
-      .filter((f) => f.deletedAt === null && !userFoodOf(s.userFoods, f.id)?.excluded && (cat === 'all' || f.category === cat) && (q === '' || f.name.toLowerCase().includes(q)))
+      .filter((f) => {
+        const u = userFoodOf(s.userFoods, f.id);
+        const inCat = cat === 'all' || (cat === 'loved' ? u?.preference === 'love' : f.category === cat);
+        return f.deletedAt === null && !u?.excluded && inCat && (q === '' || f.name.toLowerCase().includes(q));
+      })
       .sort((a, b) => (a.origin === b.origin ? a.name.localeCompare(b.name, 'ru') : a.origin === 'custom' ? -1 : 1))
       .slice(0, cat === 'all' ? 40 : 120);
   }, [s.foods, s.userFoods, query, cat]);
@@ -671,13 +675,15 @@ function AddFoodSheet({ open, slot, startScan, date, onClose }: { open: boolean;
             <TextField label="Поиск продукта" className="search-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Например, гречка" />
             <div className="cat-chips" role="group" aria-label="Категория">
               <button type="button" className="chip" aria-pressed={cat === 'all'} onClick={() => setCat('all')}>Все</button>
+              <button type="button" className="chip chip-loved" aria-pressed={cat === 'loved'} onClick={() => setCat('loved')}><Icon name="heart" size={15} fill="currentColor" /> Любимые</button>
               {presentCategories.map((k) => <button key={k} type="button" className="chip" aria-pressed={cat === k} onClick={() => setCat(k)}>{CATEGORY_LABELS[k]}</button>)}
             </div>
             <div className="list">
               {foods.map((f) => (
                 <ListItem key={f.id} title={f.name} subtitle={`${CATEGORY_LABELS[f.category]} · ${fmt(f.per100.kcal, 0)} ккал/100 г`} onClick={() => { setPicked(f.id); setGrams(f.gramsPerPiece ? String(f.gramsPerPiece) : '100'); }} />
               ))}
-              {foods.length === 0 && <div className="empty-hint"><span className="eh-ic" aria-hidden="true">🔍</span><span className="eh-t">Ничего не найдено</span><span className="eh-s">Попробуй другое название или добавь свой продукт</span></div>}
+              {foods.length === 0 && cat === 'loved' && query.trim() === '' && <div className="empty-hint"><span className="eh-ic" aria-hidden="true">❤️</span><span className="eh-t">Любимых пока нет</span><span className="eh-s">Отметь продукты сердечком в правом верхнем углу «Питания»</span></div>}
+              {foods.length === 0 && !(cat === 'loved' && query.trim() === '') && <div className="empty-hint"><span className="eh-ic" aria-hidden="true">🔍</span><span className="eh-t">Ничего не найдено</span><span className="eh-s">Попробуй другое название или добавь свой продукт</span></div>}
             </div>
           </>
         ) : (
