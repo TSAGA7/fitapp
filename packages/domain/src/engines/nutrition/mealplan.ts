@@ -5,7 +5,15 @@ import { commonness, hash, PREF_RANK, snapGrams, step, type PlanFood } from './p
 
 export const SLOTS: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 export const SLOT_LABEL: Record<MealSlot, string> = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' };
-const SLOT_SHARE: Record<MealSlot, number> = { breakfast: 0.26, lunch: 0.34, dinner: 0.28, snack: 0.12 };
+/** Share of the day's norm that each meal gets. */
+export const SLOT_SHARE: Record<MealSlot, number> = { breakfast: 0.26, lunch: 0.34, dinner: 0.28, snack: 0.12 };
+
+/** The norm of one meal: its share of the day's targets (what a meal is compared with when it has no plan). */
+export function mealNorm(targets: Pick<NutritionTargets, 'kcal' | 'proteinG' | 'fatG' | 'carbG' | 'fiberG'>, slot: MealSlot): Macros {
+  const k = SLOT_SHARE[slot];
+  const r = (n: number) => Math.round(n * k);
+  return { kcal: r(targets.kcal), proteinG: r(targets.proteinG), fatG: r(targets.fatG), carbG: r(targets.carbG), fiberG: r(targets.fiberG) };
+}
 
 export interface PlanLine {
   slot: MealSlot;

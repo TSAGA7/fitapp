@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDays, amountLabel, counterpart, mealDish, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek, suggestTargetAdjustment, sumMacros, weekdayOf, type Food, type FoodCategory, type MealSlot, type PlannedItem } from '@fitapp/domain';
+import { addDays, amountLabel, counterpart, mealDish, mealNorm, dateRange, diffDays, macrosForAmount, SLOT_LABEL, startOfWeek, suggestTargetAdjustment, sumMacros, weekdayOf, type Food, type FoodCategory, type MealSlot, type PlannedItem } from '@fitapp/domain';
 import {
   acceptTargetAdjustment,
   addPlannedItem,
@@ -265,7 +265,10 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         const slotLogs = logs.filter((l) => l.slot === slot);
         // Entries that are not tied to a plan item (added by hand, or whose plan item was replaced).
         const loose = slotLogs.filter((l) => l.plannedItemId === null || !itemIds.has(l.plannedItemId));
-        const plan = sumMacros(slotItems.map((i) => i.plannedMacros));
+        // No plan in this meal but food is logged (eaten before the plan was made, or the plan was lost): it is compared with
+        // the meal's share of the day's norm, so it is always visible whether the user ate less or more.
+        const byNorm = slotItems.length === 0 && slotLogs.some((l) => l.entryType !== 'skipped_planned' && l.actualAmountG > 0);
+        const plan = byNorm ? mealNorm(targets, slot) : sumMacros(slotItems.map((i) => i.plannedMacros));
         const fact = eatenOf(slotLogs);
         const own = taken.has(slot);
         const allDone = slotDone(slot);
@@ -288,9 +291,9 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
             <div className="stack ex-body" hidden={!open}>
             {(slotItems.length > 0 || slotLogs.length > 0) && (
               <div className="macro-strip" aria-label={`БЖУ: ${SLOT_LABEL[slot]}`}>
-                <MacroLine label="План" m={plan} muted />
+                <MacroLine label={byNorm ? 'Норма' : 'План'} m={plan} muted />
                 <MacroLine label="Съедено" m={fact} />
-                {(allDone || own) && slotItems.length > 0 && <DiffLine plan={plan} fact={fact} />}
+                {(allDone || own) && (slotItems.length > 0 || byNorm) && <DiffLine plan={plan} fact={fact} />}
               </div>
             )}
             {slotItems.map((i) => {
@@ -328,6 +331,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
               {slotLogs.length === 0 && logsOnDate(s, addDays(date, -1)).some((l) => l.slot === slot && l.actualAmountG > 0 && l.entryType !== 'skipped_planned') && <Button size="sm" variant="text" icon="history" disabled={busy} onClick={() => void run((d) => repeatMealFrom(d, { from: addDays(date, -1), to: date, slot }))}>Как вчера</Button>}
               {(slotLogs.length > 0 || slotItems.length > 0) && <Button size="sm" variant="text" icon="plus" onClick={() => setSaveMeal(slot)}>Сохранить как мой приём</Button>}
             </div>
+            {byNorm && <p className="t-small">Рациона на этот приём нет — сравниваю с нормой приёма: {Math.round(mealNorm(targets, slot).kcal)} ккал, это его доля дневной нормы. Остальные приёмы подогнаны под остаток.</p>}
             {own && slotItems.length > 0 && <p className="t-small">Ты записал свою еду: план приёма остался для сравнения, неотмеченное из него считается заменённым, а остальные приёмы подогнаны под остаток нормы. Съел и что-то из плана — нажми на строку.</p>}
             {slotLogs.length > 0 && !own && <p className="t-small">«Переделать» не трогает то, что ты уже съел. Нажми на строку, чтобы изменить граммы или убрать отметку.</p>}
             </div>

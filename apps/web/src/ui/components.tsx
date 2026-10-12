@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useEffect, useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
 import { Icon, type IconName } from './Icon';
 
 type Variant = 'primary' | 'secondary' | 'text' | 'accent' | 'danger' | 'on-dark';
@@ -13,9 +13,9 @@ export function Button({ variant = 'primary', size = 'md', block, icon, classNam
   );
 }
 
-export function IconButton({ icon, label, tone = 'default', ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & { icon: IconName; label: string; tone?: 'default' | 'ghost' | 'on-dark' }) {
+export function IconButton({ icon, label, tone = 'default', className = '', ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & { icon: IconName; label: string; tone?: 'default' | 'ghost' | 'on-dark' }) {
   return (
-    <button type="button" aria-label={label} className={`icon-btn ${tone === 'default' ? '' : tone}`} {...rest}>
+    <button type="button" aria-label={label} className={`icon-btn ${tone === 'default' ? '' : tone} ${className}`} {...rest}>
       <Icon name={icon} />
     </button>
   );
@@ -105,14 +105,37 @@ export function Segmented<T extends string>({ options, value, onChange, small, l
   );
 }
 
+const CLEARABLE_TYPES = new Set(['text', 'search', 'number', 'email', 'tel', 'url', 'password']);
+
+/** Empties an input the way typing would, so the field's own onChange sees an empty value. */
+function clearInput(el: HTMLInputElement | null): void {
+  if (!el) return;
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  setter?.call(el, '');
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.focus();
+}
+
 export function TextField({ label, hint, error, unit, className = '', ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string | null; unit?: ReactNode }) {
   const id = useId();
+  const ref = useRef<HTMLInputElement>(null);
+  // A cross clears the field in one tap; only for typed values, and only when there is something to clear.
+  const clearable = CLEARABLE_TYPES.has(rest.type ?? 'text') && !rest.readOnly && !rest.disabled && rest.value !== undefined && String(rest.value) !== '';
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
       <div className="input-wrap">
-        <input id={id} className={`input ${unit ? 'has-unit' : ''} ${error ? 'invalid' : ''} ${className}`} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-e` : undefined} {...rest} />
-        {unit && <span className="unit">{unit}</span>}
+        <input ref={ref} id={id} className={`input ${unit ? 'has-unit' : ''} ${clearable ? 'has-clear' : ''} ${error ? 'invalid' : ''} ${className}`} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-e` : undefined} {...rest} />
+        {(clearable || unit) && (
+          <span className="input-trail">
+            {clearable && (
+              <button type="button" className="input-clear" aria-label={`Очистить: ${label}`} onMouseDown={(e) => e.preventDefault()} onClick={() => clearInput(ref.current)}>
+                <Icon name="close" size={14} strokeWidth={2.6} />
+              </button>
+            )}
+            {unit && <span className="unit">{unit}</span>}
+          </span>
+        )}
       </div>
       {hint && !error && <span className="hint">{hint}</span>}
       {error && (

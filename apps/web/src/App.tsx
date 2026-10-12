@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getAppRuntime, type AppRuntime } from './composition';
 import { DataProvider, useData } from './app/DataContext';
 import { useRoute } from './app/router';
-import { BottomNav, Button, Sheet } from './ui';
+import { BottomNav, Button, ScrollTop, Sheet } from './ui';
 import { DesignSystem } from './screens/DesignSystem';
 import { Nutrition } from './screens/Nutrition';
 import { Onboarding } from './screens/Onboarding';
@@ -74,6 +74,7 @@ function Gate() {
       {tab === 'training' && <Training />}
       {tab === 'progress' && <Progress route={route} />}
       {tab === 'profile' && <Profile route={route} />}
+      <ScrollTop key={tab} />
       <BottomNav current={tab} />
     </>
   );
