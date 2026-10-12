@@ -385,7 +385,6 @@ function mealVerdict(planKcal: number, factKcal: number): { close: boolean; text
 function DiffLine({ plan, fact }: { plan: { kcal: number; proteinG: number; fatG: number; carbG: number }; fact: { kcal: number; proteinG: number; fatG: number; carbG: number } }) {
   const d = (k: 'kcal' | 'proteinG' | 'fatG' | 'carbG'): number => Math.round(fact[k] - plan[k]);
   const sign = (n: number): string => (n > 0 ? `+${fmt(n, 0)}` : n < 0 ? `−${fmt(-n, 0)}` : '0');
-  const { close, text: verdict } = mealVerdict(plan.kcal, fact.kcal);
   return (
     <>
       <div className="macro-line">
@@ -394,7 +393,6 @@ function DiffLine({ plan, fact }: { plan: { kcal: number; proteinG: number; fatG
         <span><i className="dot" style={{ background: '#f59e0b' }} /> Ж {sign(d('fatG'))}</span>
         <span><i className="dot" style={{ background: '#a78bfa' }} /> У {sign(d('carbG'))}</span>
       </div>
-      <span className={`t-small ${close ? 'tone-good' : 'tone-bad'}`} style={{ fontWeight: 600 }}>{verdict}</span>
     </>
   );
 }
