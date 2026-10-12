@@ -28,6 +28,7 @@ import {
   replacePlannedItem,
   reportPain,
   setFoodPreference,
+  repairDay,
   skipPlannedSession,
   skipSet,
   startWorkout,
@@ -128,10 +129,62 @@ describe('app flow on the real storage', () => {
     for (const id of eatenIds) expect(day.some((i) => i.id === id)).toBe(true);
     // the whole day (eaten + still planned) stays at the norm instead of going over
     const eatenKcal = s.foodLogs.filter((l) => l.date === '2026-10-05' && l.deletedAt === null).reduce((a, l) => a + l.macros.kcal, 0);
-    const notEaten = day.filter((i) => !eatenIds.includes(i.id)).reduce((a, i) => a + i.plannedMacros.kcal, 0);
+    // lunch keeps its plan (to compare with the pizza), but its items count as replaced: they are not part of what is still to eat
+    expect(day.some((i) => i.slot === 'lunch')).toBe(true);
+    const notEaten = day.filter((i) => !eatenIds.includes(i.id) && i.slot !== 'lunch').reduce((a, i) => a + i.plannedMacros.kcal, 0);
     const norm = s.activeVersion!.nutrition.kcal;
     expect(Math.abs(eatenKcal + notEaten - norm) / norm).toBeLessThan(0.06);
     expect(notEaten).toBeLessThan(planKcalBefore);
+  });
+
+  it('food logged by hand in a meal keeps that meal\'s plan for comparison and fits the other meals to what is left', async () => {
+    const { deps } = await setup();
+    await generateWeekPlan(deps, '2026-10-05', 0);
+    let s = await loadSnapshot(deps);
+    const before = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.deletedAt === null);
+    const breakfastBefore = before.filter((i) => i.slot === 'breakfast').map((i) => i.id).sort();
+    expect(breakfastBefore.length).toBeGreaterThan(0);
+    const yogurt = s.foods.find((f) => /йогурт/i.test(f.name))!;
+    await logUnplanned(deps, { date: '2026-10-05', slot: 'breakfast', foodId: yogurt.id, grams: 250 });
+    s = await loadSnapshot(deps);
+    const day = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.deletedAt === null);
+    // the breakfast plan is still there (plan B/F/C of the meal is not zero), untouched
+    expect(day.filter((i) => i.slot === 'breakfast').map((i) => i.id).sort()).toEqual(breakfastBefore);
+    // the other meals + what was eaten make the day's norm
+    const eatenKcal = s.foodLogs.filter((l) => l.date === '2026-10-05' && l.deletedAt === null).reduce((a, l) => a + l.macros.kcal, 0);
+    const rest = day.filter((i) => i.slot !== 'breakfast').reduce((a, i) => a + i.plannedMacros.kcal, 0);
+    const norm = s.activeVersion!.nutrition.kcal;
+    expect(Math.abs(eatenKcal + rest - norm) / norm).toBeLessThan(0.06);
+  });
+
+  it('brings back a meal plan that an older version removed when own food was logged', async () => {
+    const { deps } = await setup();
+    await generateWeekPlan(deps, '2026-10-05', 0);
+    let s = await loadSnapshot(deps);
+    const yogurt = s.foods.find((f) => /йогурт/i.test(f.name))!;
+    await logUnplanned(deps, { date: '2026-10-05', slot: 'breakfast', foodId: yogurt.id, grams: 250 });
+    s = await loadSnapshot(deps);
+    const day = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.deletedAt === null);
+    const breakfast = day.filter((i) => i.slot === 'breakfast').map((i) => i.id).sort();
+    // what the old rebuild did: breakfast and dinner removed at one moment, after the yogurt was logged
+    const at = '2099-01-01T00:00:00.000Z';
+    await deps.uow.run((r) => r.mealPlans.putItems(day.filter((i) => i.slot === 'breakfast' || i.slot === 'dinner').map((i) => ({ ...i, deletedAt: at }))));
+    await repairDay(deps, '2026-10-05');
+    s = await loadSnapshot(deps);
+    const after = s.mealWeeks[0]!.items.filter((i) => i.date === '2026-10-05' && i.deletedAt === null);
+    expect(after.filter((i) => i.slot === 'breakfast').map((i) => i.id).sort()).toEqual(breakfast);
+  });
+
+  it('builds the week from loved foods when asked', async () => {
+    const { deps } = await setup();
+    let s = await loadSnapshot(deps);
+    const buckwheat = s.foods.find((f) => /гречк/i.test(f.name) && f.category === 'grains')!;
+    await setFoodPreference(deps, buckwheat.id, { preference: 'love' });
+    await generateWeekPlan(deps, '2026-10-05', 3, { favorites: true });
+    s = await loadSnapshot(deps);
+    const week = s.mealWeeks[0]!.items.filter((i) => i.deletedAt === null);
+    const days = new Set(week.filter((i) => i.foodId === buckwheat.id).map((i) => i.date));
+    expect(days.size).toBeGreaterThanOrEqual(5);
   });
 
   it('stores cardio sessions with machine-specific fields and the equipment limits of a treadmill', async () => {

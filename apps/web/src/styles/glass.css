@@ -369,3 +369,8 @@ html, body { overflow-x: hidden; }
 .sheet-head > button { flex: none; width: 44px; height: 44px; aspect-ratio: 1; border-radius: 50%; }
 .grid-3.align-end { align-items: end; }
 .last-level { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border, rgba(127,127,127,.2)); display: grid; gap: 2px; }
+
+/* ---- favourites (heart in the Nutrition header) */
+.icon-btn.fav-head { color: #e11d48; }
+.fav-mark { display: inline-flex; color: var(--muted); }
+.fav-mark.on { color: #e11d48; }

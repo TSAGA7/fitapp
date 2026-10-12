@@ -123,6 +123,9 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
       const rows = alive(await this.items.where('planId').equals(planId).toArray());
       return rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.createdAt < b.createdAt ? -1 : 1));
     }
+    async listDeletedItems(planId: string): Promise<PlannedItem[]> {
+      return (await this.items.where('planId').equals(planId).toArray()).filter((i) => i.deletedAt !== null);
+    }
     async putItems(items: readonly PlannedItem[]): Promise<void> {
       const stamped = items.map((i) => stamp(ENTITY_SCHEMAS.plannedItems, 'plannedItems', now, i));
       await this.items.bulkPut(stamped);

@@ -141,6 +141,8 @@ export interface SlotInput {
   avoidProteinIds?: ReadonlySet<string>;
   /** Dishes not to repeat when there is anything else (what stood here before "redo", yesterday's dish). */
   avoidKinds?: ReadonlySet<string>;
+  /** "From my favourites": every part of a dish is taken from the foods the user loves when there is one that fits. */
+  favorites?: boolean;
 }
 
 // ---- holiday mode: loose holiday food picked by roles ----------------------------------------
@@ -173,8 +175,12 @@ function vacationMeal(input: SlotInput): Variable[] {
 // ---- normal mode: dishes ------------------------------------------------------------------------
 
 /** Picks one product for a part of a dish: liked products more often, the avoided ones only when there is nothing else. */
-function pickFood(foods: readonly PlanFood[], part: DishPart, seed: string, taken: ReadonlySet<string>, avoid: ReadonlySet<string>): PlanFood | undefined {
+function pickFood(foods: readonly PlanFood[], part: DishPart, seed: string, taken: ReadonlySet<string>, avoid: ReadonlySet<string>, favorites = false): PlanFood | undefined {
   let list = foods.filter((f) => !taken.has(f.id) && usable(part, f));
+  if (favorites) {
+    const loved = list.filter((f) => f.preference === 'love');
+    if (loved.length > 0) list = loved;
+  }
   const fresh = list.filter((f) => !avoid.has(f.id));
   if (fresh.length > 0) list = fresh;
   if (list.length === 0) return undefined;
@@ -214,7 +220,7 @@ function dishAttempt(input: SlotInput, dish: Dish, covered: readonly PlanFood[],
       food = input.foods.find((f) => f.id === input.garnishId && part.match(f) && !f.excluded);
     } else {
       const avoidHere = part.name === 'protein' && input.avoidProteinIds ? new Set([...avoid, ...input.avoidProteinIds]) : avoid;
-      food = pickFood(input.foods, part, `${rotation}|${input.slot}|${dish.kind}|${part.name}`, taken, avoidHere);
+      food = pickFood(input.foods, part, `${rotation}|${input.slot}|${dish.kind}|${part.name}`, taken, avoidHere, input.favorites);
     }
     if (!food) {
       if (part.min === 0) continue;
@@ -262,7 +268,14 @@ function dishMeal(input: SlotInput): Variable[] {
   // The first dish (in the seed's order) that fits about as well as the best one: variety first, as long as the numbers hold.
   // Breakfast is first: whatever it misses is fitted by the meals after it, so any breakfast that is roughly right is fine.
   const tolerance = input.slot === 'breakfast' ? DISH_TOLERANCE * 2.5 : input.slot === 'snack' ? DISH_TOLERANCE * 2 : DISH_TOLERANCE;
-  return (tried.find((t) => t.err <= best.err + tolerance) ?? best).vars;
+  const fitting = tried.filter((t) => t.err <= best.err + tolerance);
+  if (input.favorites) {
+    // From favourites: of the dishes that fit, the one with the most loved foods (the first such in the seed's order).
+    const loved = (t: { vars: Variable[] }): number => t.vars.filter((v) => v.food.preference === 'love').length;
+    const most = Math.max(0, ...fitting.map(loved));
+    return (fitting.find((t) => loved(t) === most) ?? best).vars;
+  }
+  return (fitting[0] ?? best).vars;
 }
 
 /** One meal: a dish of the meal's group (or holiday food), with the amounts fitted to the meal targets. */
@@ -292,6 +305,8 @@ export interface DayPlanInput {
   avoidKindsBySlot?: Partial<Record<MealSlot, readonly string[]>>;
   /** 'vacation': the day is built from holiday food (pizza, rolls, burgers, beer, wine...). */
   mode?: DietMode;
+  /** Build the meals from the foods the user loves wherever they fit. */
+  favorites?: boolean;
 }
 
 export interface DayPlan {
@@ -422,6 +437,7 @@ function buildDay(input: DayPlanInput): DayPlan {
       garnishId,
       avoidProteinIds: new Set(usedProteins),
       avoidKinds: new Set([...(input.avoidKindsBySlot?.[slot] ?? []), ...(slot === 'dinner' && lunchKind ? [lunchKind] : [])]),
+      favorites: input.favorites,
     });
     // Dinner is another dish than lunch (the garnish stays the same: it is cooked once).
     if (slot === 'lunch') lunchKind = mealDish('lunch', meal.map((l) => l.foodId), input.foods)?.kind;
@@ -457,8 +473,10 @@ export function refitDay(input: { targets: NutritionTargets; foods: readonly Pla
 function pickGarnish(input: DayPlanInput): string | undefined {
   const part = { match: isGarnish, tier: 0 as const };
   const list = input.foods.filter((f) => usable(part, f)).sort((a, b) => (a.id < b.id ? -1 : 1));
-  const fresh = list.filter((f) => !input.avoidFoodIds?.has(f.id));
-  const pool = fresh.length > 0 ? fresh : list;
+  const loved = input.favorites ? list.filter((f) => f.preference === 'love') : [];
+  const base = loved.length > 0 ? loved : list;
+  const fresh = base.filter((f) => !input.avoidFoodIds?.has(f.id));
+  const pool = fresh.length > 0 ? fresh : base;
   return pool.length > 0 ? pool[hash(`${input.seed}|garnish`) % pool.length]?.id : undefined;
 }
 

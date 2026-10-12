@@ -24,6 +24,8 @@ import {
   regenerateDay,
   regenerateMeal,
   removePlannedItem,
+  repairDay,
+  setFoodPreference,
   replacePlannedItem,
   setLogAmount,
   setPlannedAmount,
@@ -31,7 +33,7 @@ import {
   undoLog,
 } from '../actions';
 import { useData } from '../app/DataContext';
-import { eatenOf, foodName, itemsOnDate, logsOnDate, plannedOf, planFoods, SLOT_ORDER, userFoodOf } from '../app/derive';
+import { eatenOf, eatenOften, foodName, itemsOnDate, logsOnDate, plannedOf, planFoods, SLOT_ORDER, takenOverSlots, userFoodOf } from '../app/derive';
 import { fmt, formatDateShort, formatDay, GOAL_LABELS, plural, WEEKDAY_SHORT } from '../app/format';
 import { goalNutritionText } from './GoalExplain';
 import { useCommand } from '../app/useCommand';
@@ -50,6 +52,7 @@ export function Nutrition() {
   const { run, banner, busy } = useCommand();
   const [view, setView] = useState<View>('day');
   const [date, setDate] = useState(s.today);
+  const [favOpen, setFavOpen] = useState(false);
   const targets = s.activeVersion?.nutrition ?? s.targets?.targets;
 
   if (!s.activeVersion || !targets) {
@@ -71,13 +74,75 @@ export function Nutrition() {
 
   return (
     <main className="screen">
-      <ScreenHeader title="Питание" />
+      <ScreenHeader title="Питание" right={<IconButton icon="heart" label="Любимые продукты" className="fav-head" onClick={() => setFavOpen(true)} />} />
       <Segmented<View> label="Период" value={view} onChange={setView} options={[{ value: 'day', label: 'День' }, { value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }]} />
       {banner}
       {view === 'day' && <DayView date={date} setDate={setDate} />}
       {view === 'week' && <WeekView date={date} setDate={setDate} openDay={() => setView('day')} />}
       {view === 'month' && <MonthView />}
+      <FavoritesSheet
+        open={favOpen}
+        onClose={() => setFavOpen(false)}
+        onBuilt={() => {
+          setFavOpen(false);
+          setView('day');
+        }}
+        weekStart={startOfWeek(date < s.today ? s.today : date, s.profile?.weekStartsOn ?? 'monday')}
+      />
     </main>
+  );
+}
+
+// ------------------------------------------------------------------ favourites
+
+/**
+ * The heart in the header: the user marks the foods they love (the ones they often eat are suggested first) and builds the week
+ * from them. Loved foods are taken wherever they fit a dish and the norm; what they cannot cover is filled from the other foods.
+ */
+function FavoritesSheet({ open, onClose, onBuilt, weekStart }: { open: boolean; onClose: () => void; onBuilt: () => void; weekStart: string }) {
+  const { snapshot: s } = useData();
+  const { run, banner, busy } = useCommand();
+  const [q, setQ] = useState('');
+  const alive = useMemo(() => s.foods.filter((f) => f.deletedAt === null), [s.foods]);
+  const prefOf = (id: string) => userFoodOf(s.userFoods, id);
+  const isLoved = (id: string): boolean => prefOf(id)?.preference === 'love';
+  const loved = alive.filter((f) => isLoved(f.id) && !prefOf(f.id)?.excluded).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  const often = useMemo(() => eatenOften(s.foodLogs, s.today), [s.foodLogs, s.today]);
+  const suggested = often
+    .map((x) => ({ food: alive.find((f) => f.id === x.foodId), days: x.days }))
+    .filter((x): x is { food: Food; days: number } => x.food !== undefined && !isLoved(x.food.id) && !prefOf(x.food.id)?.excluded)
+    .slice(0, 12);
+  const needle = q.trim().toLowerCase();
+  const found = needle.length >= 2 ? alive.filter((f) => f.name.toLowerCase().includes(needle)).slice(0, 30) : [];
+  const toggle = (id: string) => void run((d) => setFoodPreference(d, id, { preference: isLoved(id) ? 'ok' : 'love' }));
+  const heart = (on: boolean) => <span className={`fav-mark ${on ? 'on' : ''}`}><Icon name="heart" size={22} fill={on ? 'currentColor' : 'none'} /></span>;
+  const row = (f: Food, sub?: string) => <ListItem key={f.id} icon="nutrition" title={f.name} subtitle={sub ?? `${fmt(f.per100.kcal, 0)} ккал · Б ${fmt(f.per100.proteinG, 0)} Ж ${fmt(f.per100.fatG, 0)} У ${fmt(f.per100.carbG, 0)} на 100 г`} trailing={heart(isLoved(f.id))} disabled={busy} onClick={() => toggle(f.id)} />;
+  return (
+    <Sheet open={open} title="Любимые продукты" onClose={onClose}>
+      <div className="stack">
+        {banner}
+        <p className="t-small">Отметь сердечком, что любишь, — составлю рацион на неделю из этого. Чего не хватит под норму и блюдо, добавлю из остальных продуктов. То, что ты часто ешь, и так попадает в рацион чаще, но новое тоже будет.</p>
+        <Button block icon="heart" disabled={busy || loved.length === 0} onClick={() => void run(async (d) => { await generateWeekPlan(d, weekStart, variation(), { favorites: true }); onBuilt(); })}>
+          Составить рацион из любимых
+        </Button>
+        {loved.length === 0 && <p className="t-small">Сначала отметь хотя бы один продукт.</p>}
+        {loved.length > 0 && (
+          <>
+            <span className="t-caption">Любимые · {loved.length}</span>
+            {loved.map((f) => row(f))}
+          </>
+        )}
+        {suggested.length > 0 && (
+          <>
+            <span className="t-caption">Ты часто ешь</span>
+            {suggested.map((x) => row(x.food, `Ел ${x.days} ${plural(x.days, ['день', 'дня', 'дней'])} за 6 недель`))}
+          </>
+        )}
+        <TextField label="Найти продукт" placeholder="Например, творог" value={q} onChange={(e) => setQ(e.target.value)} />
+        {needle.length >= 2 && found.length === 0 && <p className="t-small">Ничего не нашлось.</p>}
+        {found.map((f) => row(f))}
+      </div>
+    </Sheet>
   );
 }
 
@@ -88,6 +153,7 @@ export function Nutrition() {
  * everything starts collapsed, and a meal the user opened or closed stays that way until the app is restarted.
  */
 const mealOpenState: Record<string, boolean> = {};
+const repairedDays = new Set<string>();
 
 /** Amount of a planned or eaten food: eggs and other foods counted in pieces as "3 шт (150 г)", the rest in grams. */
 function amountText(food: Food | undefined, grams: number): string {
@@ -99,11 +165,22 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
   const targets = (s.activeVersion?.nutrition ?? s.targets?.targets)!;
+  const { act } = useData();
   const items = itemsOnDate(s, date);
   const logs = logsOnDate(s, date);
   const eaten = eatenOf(logs);
-  // The day as it will be: what was really eaten plus what is still planned.
-  const planned = sumMacros([eaten, plannedOf(items.filter((i) => !logs.some((l) => l.plannedItemId === i.id)))]);
+  // Meals where the user logged food of their own: what the plan had there and is not ticked counts as replaced.
+  const taken = takenOverSlots(logs);
+  // The day as it will be: what was really eaten plus what is still planned (not eaten, not replaced).
+  const planned = sumMacros([eaten, plannedOf(items.filter((i) => !taken.has(i.slot) && !logs.some((l) => l.plannedItemId === i.id)))]);
+  // An older version removed the plan of a meal where own food was logged: bring it back once (see repairDay).
+  const needsRepair = date >= s.today && items.length > 0 && [...taken].some((sl) => !items.some((i) => i.slot === sl));
+  const repairKey = `${date}|${logs.length}`;
+  useEffect(() => {
+    if (!needsRepair || repairedDays.has(repairKey)) return;
+    repairedDays.add(repairKey);
+    void act((d) => repairDay(d, date)).catch(() => undefined);
+  }, [needsRepair, repairKey, act, date]);
   const vacation = useVacationMode();
   const manual = useManualTargets();
   const [normOpen, setNormOpen] = useState(false);
@@ -190,6 +267,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         const loose = slotLogs.filter((l) => l.plannedItemId === null || !itemIds.has(l.plannedItemId));
         const plan = sumMacros(slotItems.map((i) => i.plannedMacros));
         const fact = eatenOf(slotLogs);
+        const own = taken.has(slot);
         const allDone = slotDone(slot);
         const has = slotItems.length > 0 || slotLogs.length > 0;
         const key = `${date}:${slot}`;
@@ -204,7 +282,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
                 <span className="t-small">{has ? `${fmt(fact.kcal, 0)} / ${fmt(plan.kcal, 0)} ккал` : 'Пока пусто'}</span>
                 {dish && <span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>{dish.title}</span>}
               </span>
-              {allDone ? <Badge>Готово</Badge> : slotItems.length > 0 ? <Badge tone="neutral">{doneCount}/{slotItems.length}</Badge> : null}
+              {allDone ? <Badge>Готово</Badge> : own ? <Badge tone="neutral">Своё</Badge> : slotItems.length > 0 ? <Badge tone="neutral">{doneCount}/{slotItems.length}</Badge> : null}
               <span className="ex-chev" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
             </button>
             <div className="stack ex-body" hidden={!open}>
@@ -212,6 +290,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
               <div className="macro-strip" aria-label={`БЖУ: ${SLOT_LABEL[slot]}`}>
                 <MacroLine label="План" m={plan} muted />
                 <MacroLine label="Съедено" m={fact} />
+                {(allDone || own) && slotItems.length > 0 && <DiffLine plan={plan} fact={fact} />}
               </div>
             )}
             {slotItems.map((i) => {
@@ -223,7 +302,9 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
                   : log.entryType === 'modified'
                     ? `Съедено ${amountText(foodOf(i.foodId), log.actualAmountG)} вместо ${amountText(foodOf(i.foodId), i.plannedAmountG)}`
                     : `${amountText(foodOf(i.foodId), i.plannedAmountG)} · съедено`
-                : `${amountText(foodOf(i.foodId), i.plannedAmountG)} · Б ${fmt(i.plannedMacros.proteinG, 0)} Ж ${fmt(i.plannedMacros.fatG, 0)} У ${fmt(i.plannedMacros.carbG, 0)}`;
+                : own
+                  ? `По плану ${amountText(foodOf(i.foodId), i.plannedAmountG)} · заменено твоей едой`
+                  : `${amountText(foodOf(i.foodId), i.plannedAmountG)} · Б ${fmt(i.plannedMacros.proteinG, 0)} Ж ${fmt(i.plannedMacros.fatG, 0)} У ${fmt(i.plannedMacros.carbG, 0)}`;
               return (
                 <ListItem
                   key={i.id}
@@ -241,13 +322,14 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
             ))}
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <Button size="sm" variant="secondary" icon="plus" onClick={() => setSlotForAdd({ slot, scan: false })}>Добавить еду</Button>
-              {slotItems.length > 0 && !allDone && <Button size="sm" variant="secondary" icon="check" disabled={busy} onClick={() => void run((d) => logMealAsPlanned(d, date, slot))}>Съел всё</Button>}
+              {slotItems.length > 0 && !allDone && !own && <Button size="sm" variant="secondary" icon="check" disabled={busy} onClick={() => void run((d) => logMealAsPlanned(d, date, slot))}>Съел всё</Button>}
               {slotLogs.length > 0 && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => clearMealLogs(d, date, slot))}>Сбросить отметки</Button>}
-              {!isPast && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => regenerateMeal(d, date, slot, variation()))}>Переделать</Button>}
+              {!isPast && !own && <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => regenerateMeal(d, date, slot, variation()))}>Переделать</Button>}
               {slotLogs.length === 0 && logsOnDate(s, addDays(date, -1)).some((l) => l.slot === slot && l.actualAmountG > 0 && l.entryType !== 'skipped_planned') && <Button size="sm" variant="text" icon="history" disabled={busy} onClick={() => void run((d) => repeatMealFrom(d, { from: addDays(date, -1), to: date, slot }))}>Как вчера</Button>}
               {(slotLogs.length > 0 || slotItems.length > 0) && <Button size="sm" variant="text" icon="plus" onClick={() => setSaveMeal(slot)}>Сохранить как мой приём</Button>}
             </div>
-            {slotLogs.length > 0 && <p className="t-small">«Переделать» не трогает то, что ты уже съел. Нажми на строку, чтобы изменить граммы или убрать отметку.</p>}
+            {own && slotItems.length > 0 && <p className="t-small">Ты записал свою еду: план приёма остался для сравнения, неотмеченное из него считается заменённым, а остальные приёмы подогнаны под остаток нормы. Съел и что-то из плана — нажми на строку.</p>}
+            {slotLogs.length > 0 && !own && <p className="t-small">«Переделать» не трогает то, что ты уже съел. Нажми на строку, чтобы изменить граммы или убрать отметку.</p>}
             </div>
           </Card>
         );
@@ -275,6 +357,26 @@ function MacroLine({ label, m, muted }: { label: string; m: { proteinG: number; 
       <span><i className="dot" style={{ background: '#f59e0b' }} /> Ж {fmt(m.fatG, 0)}</span>
       <span><i className="dot" style={{ background: '#a78bfa' }} /> У {fmt(m.carbG, 0)}</span>
     </div>
+  );
+}
+
+/** Eaten minus planned for a meal: whether the user ate less or more than the plan, in calories and per macro. */
+function DiffLine({ plan, fact }: { plan: { kcal: number; proteinG: number; fatG: number; carbG: number }; fact: { kcal: number; proteinG: number; fatG: number; carbG: number } }) {
+  const d = (k: 'kcal' | 'proteinG' | 'fatG' | 'carbG'): number => Math.round(fact[k] - plan[k]);
+  const sign = (n: number): string => (n > 0 ? `+${fmt(n, 0)}` : n < 0 ? `−${fmt(-n, 0)}` : '0');
+  const kcal = d('kcal');
+  const close = Math.abs(kcal) <= Math.max(25, plan.kcal * 0.05);
+  const verdict = close ? 'По плану' : kcal > 0 ? `Переел +${fmt(kcal, 0)} ккал` : `Недоел ${fmt(-kcal, 0)} ккал`;
+  return (
+    <>
+      <div className="macro-line">
+        <span className="ml-label">Разница</span>
+        <span><i className="dot" style={{ background: '#16a34a' }} /> Б {sign(d('proteinG'))}</span>
+        <span><i className="dot" style={{ background: '#f59e0b' }} /> Ж {sign(d('fatG'))}</span>
+        <span><i className="dot" style={{ background: '#a78bfa' }} /> У {sign(d('carbG'))}</span>
+      </div>
+      <span className={`t-small ${close ? 'tone-good' : 'tone-bad'}`} style={{ fontWeight: 600 }}>{verdict}</span>
+    </>
   );
 }
 

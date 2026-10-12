@@ -1,4 +1,4 @@
-import { buildBodyweightWorkout, sumMacros, type WorkoutTemplate, type Equipment, type Exercise, type Food, type FoodLog, type Macros, type MealSlot, type PainEvent, type PlanFood, type PlannedItem, type SafetyContext, type UserFood } from '@fitapp/domain';
+import { addDays, buildBodyweightWorkout, sumMacros, type WorkoutTemplate, type Equipment, type Exercise, type Food, type FoodLog, type Macros, type MealSlot, type PainEvent, type PlanFood, type PlannedItem, type SafetyContext, type UserFood } from '@fitapp/domain';
 import type { Snapshot } from './snapshot';
 
 export const SLOT_ORDER: readonly MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -7,8 +7,27 @@ export function userFoodOf(userFoods: readonly UserFood[], foodId: string): User
   return userFoods.find((u) => u.foodId === foodId);
 }
 
-/** Foods the generator may use, with the user's preferences applied. */
-export function planFoods(foods: readonly Food[], userFoods: readonly UserFood[]): PlanFood[] {
+/**
+ * Foods the user really eats: eaten on at least two different days of the last 6 weeks, the most frequent first.
+ * The generator offers them more often (as if "like"), but other foods still come up.
+ */
+export function eatenOften(logs: readonly FoodLog[], today: string): Array<{ foodId: string; days: number }> {
+  const from = addDays(today, -42);
+  const days = new Map<string, Set<string>>();
+  for (const l of logs) {
+    if (l.deletedAt !== null || l.entryType === 'skipped_planned' || l.actualAmountG <= 0 || l.date < from || l.date > today) continue;
+    (days.get(l.snapshot.foodId) ?? days.set(l.snapshot.foodId, new Set()).get(l.snapshot.foodId)!).add(l.date);
+  }
+  return [...days.entries()].filter(([, d]) => d.size >= 2).map(([foodId, d]) => ({ foodId, days: d.size })).sort((a, b) => b.days - a.days);
+}
+
+/** Meals where the user logged food of their own (not from the plan): what the plan had there and is not ticked counts as replaced. */
+export function takenOverSlots(logs: readonly FoodLog[]): Set<MealSlot> {
+  return new Set(logs.filter((l) => l.deletedAt === null && l.plannedItemId === null && l.entryType !== 'skipped_planned' && l.actualAmountG > 0).map((l) => l.slot));
+}
+
+/** Foods the generator may use, with the user's preferences applied. Foods from `often` count as "like" unless the user said otherwise. */
+export function planFoods(foods: readonly Food[], userFoods: readonly UserFood[], often?: ReadonlySet<string>): PlanFood[] {
   return foods
     .filter((f) => f.deletedAt === null)
     .map((f) => {
@@ -21,7 +40,7 @@ export function planFoods(foods: readonly Food[], userFoods: readonly UserFood[]
         per100: f.per100,
         unit: f.unit,
         gramsPerPiece: f.gramsPerPiece,
-        preference: u?.preference ?? 'ok',
+        preference: u?.preference && u.preference !== 'ok' ? u.preference : often?.has(f.id) ? 'like' : (u?.preference ?? 'ok'),
         availability: u?.availability ?? 'always',
         excluded: u?.excluded ?? false,
         maxPerDayG: u?.maxPerDayG ?? null,

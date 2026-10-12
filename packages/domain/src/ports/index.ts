@@ -96,6 +96,8 @@ export interface NutritionTargetsRepo extends Repo<NutritionTargetsRecord> {
 export interface MealPlanRepo extends Repo<MealPlan> {
   getByWeek(weekStart: LocalDate): Promise<MealPlan | undefined>;
   listItems(planId: string): Promise<PlannedItem[]>;
+  /** Items that were removed from the plan (soft-deleted): for repairs only. */
+  listDeletedItems(planId: string): Promise<PlannedItem[]>;
   putItems(items: readonly PlannedItem[]): Promise<void>;
 }
 export interface FoodLogRepo extends Repo<FoodLog> {

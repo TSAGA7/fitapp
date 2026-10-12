@@ -24,7 +24,7 @@ import {
   type Preference,
   type Repositories,
 } from '@fitapp/domain';
-import { planFoods } from '../app/derive';
+import { eatenOften, planFoods, takenOverSlots } from '../app/derive';
 import { isVacationMode } from '../app/prefs';
 
 const baseOf = (deps: AppDeps) => createBase(deps.ids.newId(), deps.clock.now(), deps.deviceId);
@@ -37,7 +37,9 @@ async function context(r: Repositories, deps: AppDeps) {
   const version = program?.activeVersionId ? await r.programs.getVersion(program.activeVersionId) : undefined;
   const targets = version?.nutrition ?? (await r.nutritionTargets.activeOn(today))?.targets;
   if (!targets || !version) throw new Error('Сначала создайте программу');
-  const foods = planFoods(await r.foods.listAll(), await r.userFoods.listAll());
+  // What the user really eats is offered more often (but other foods still come up).
+  const often = new Set(eatenOften(await r.foodLogs.listAll(), today).map((x) => x.foodId));
+  const foods = planFoods(await r.foods.listAll(), await r.userFoods.listAll(), often);
   return { profile, today, version, targets, foods, weekStartsOn: profile?.weekStartsOn ?? 'monday' };
 }
 
@@ -74,20 +76,49 @@ async function kindsToAvoid(r: Repositories, c: Awaited<ReturnType<typeof contex
   return out;
 }
 
-async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typeof context>>, date: string, variation: number, slots?: readonly MealSlot[], avoid?: ReadonlySet<string>, mode: 'build' | 'redo' | 'refit' = 'build') {
+/**
+ * Repair for plans broken by an older version: logging own food in a meal used to delete that meal's plan, so the meal showed
+ * "plan 0". The meal's plan is brought back when it was removed by a rebuild (several meals at the same moment) after the user logged
+ * their own food there, and nothing else stands in the meal now.
+ */
+async function restoreReplacedMeals(r: Repositories, planId: string, date: string, items: PlannedItem[], dayLogs: readonly FoodLog[]): Promise<PlannedItem[]> {
+  const restored: PlannedItem[] = [];
+  const taken = takenOverSlots(dayLogs);
+  if (taken.size === 0) return items;
+  let deleted: PlannedItem[] | undefined;
+  for (const slot of taken) {
+    if (items.some((i) => i.slot === slot)) continue;
+    const gone = (deleted ??= (await r.mealPlans.listDeletedItems(planId)).filter((i) => i.date === date));
+    const ownSince = dayLogs.filter((l) => l.slot === slot && l.plannedItemId === null).reduce((a, l) => (l.createdAt < a ? l.createdAt : a), '9999');
+    const rebuildAt = (at: string | null): boolean => at !== null && new Set(gone.filter((i) => i.deletedAt === at).map((i) => i.slot)).size > 1;
+    const inSlot = gone.filter((i) => i.slot === slot && i.deletedAt !== null && i.deletedAt >= ownSince && rebuildAt(i.deletedAt));
+    const first = inSlot.reduce<string | null>((a, i) => (a === null || (i.deletedAt as string) < a ? i.deletedAt : a), null);
+    if (first !== null) restored.push(...inSlot.filter((i) => i.deletedAt === first).map((i) => ({ ...i, deletedAt: null })));
+  }
+  if (restored.length === 0) return items;
+  await r.mealPlans.putItems(restored);
+  return [...items, ...restored];
+}
+
+async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typeof context>>, date: string, variation: number, slots?: readonly MealSlot[], avoid?: ReadonlySet<string>, mode: 'build' | 'redo' | 'refit' = 'build', favorites = false) {
   const weekStart = startOfWeek(date, c.weekStartsOn);
   const plan = await ensurePlan(r, deps, weekStart, c.version.id, String(variation));
-  const items = (await r.mealPlans.listItems(plan.id)).filter((i) => i.date === date && i.deletedAt === null);
   // Eaten (or skipped) items are facts: "redo" never touches them. What was really eaten counts with its REAL amount.
   const dayLogs = (await r.foodLogs.listAll()).filter((l) => l.date === date && l.deletedAt === null);
+  const items = await restoreReplacedMeals(r, plan.id, date, (await r.mealPlans.listItems(plan.id)).filter((i) => i.date === date && i.deletedAt === null), dayLogs);
   const logOfItem = new Map<string, FoodLog>();
   for (const l of dayLogs) if (l.plannedItemId !== null) logOfItem.set(l.plannedItemId, l);
-  const isKept = (i: PlannedItem): boolean => i.locked || logOfItem.has(i.id) || (slots !== undefined && !slots.includes(i.slot));
+  // A meal where the user logged food of their own is theirs: its plan stays as it was (to compare what was eaten with it),
+  // the planned items they did not tick count as replaced, and nothing new is built there.
+  const taken = takenOverSlots(dayLogs);
+  const isReplaced = (i: PlannedItem): boolean => taken.has(i.slot) && !logOfItem.has(i.id);
+  const isKept = (i: PlannedItem): boolean => i.locked || logOfItem.has(i.id) || isReplaced(i) || (slots !== undefined && !slots.includes(i.slot));
   // A meal is fixed only when ALL its items are kept; a meal with some eaten items is rebuilt around them.
   const slotDone = (slot: MealSlot): boolean => items.filter((i) => i.slot === slot).every(isKept);
   const protectedLines: PlanLine[] = [];
   const partialLines: PlanLine[] = [];
   for (const i of items.filter(isKept)) {
+    if (isReplaced(i)) continue;
     const log = logOfItem.get(i.id);
     const line: PlanLine | undefined = log === undefined ? toLine(i) : log.entryType === 'skipped_planned' ? undefined : { slot: i.slot, foodId: i.foodId, grams: log.actualAmountG, macros: log.macros, locked: true };
     if (!line) continue;
@@ -101,7 +132,7 @@ async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typ
   const targets = { ...c.targets, kcal: left(c.targets.kcal, used.kcal), proteinG: left(c.targets.proteinG, used.proteinG), fatG: left(c.targets.fatG, used.fatG), carbG: left(c.targets.carbG, used.carbG), fiberG: left(c.targets.fiberG, used.fiberG) };
   // What already stands in a meal (eaten, skipped, locked) fills its role: the rest of the meal is not built around a second copy of it.
   const coveredBySlot: Partial<Record<MealSlot, string[]>> = {};
-  for (const i of items.filter(isKept)) (coveredBySlot[i.slot] ??= []).push(i.foodId);
+  for (const i of items.filter(isKept)) if (!isReplaced(i)) (coveredBySlot[i.slot] ??= []).push(i.foodId);
   const rebuilt = items.filter((i) => !isKept(i));
   if (mode === 'refit') {
     // Usually only the grams of what is still to eat move and the dishes stay. When that cannot bring the day back
@@ -122,7 +153,8 @@ async function fillDay(r: Repositories, deps: AppDeps, c: Awaited<ReturnType<typ
   const redo = mode === 'redo';
   const avoidFoodIds = redo ? new Set([...(avoid ?? []), ...rebuilt.map((i) => i.foodId)]) : avoid;
   const avoidKindsBySlot = await kindsToAvoid(r, c, date, rebuilt, redo);
-  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, coveredBySlot, slots, avoidFoodIds, avoidKindsBySlot, mode: isVacationMode() ? 'vacation' : 'normal' });
+  const buildSlots = (slots ?? SLOTS).filter((sl) => !taken.has(sl));
+  const result = generateDayPlan({ targets, foods: c.foods, seed: `${date}|${variation}`, locked: protectedLines, keepLines: partialLines, coveredBySlot, slots: buildSlots, avoidFoodIds, avoidKindsBySlot, mode: isVacationMode() ? 'vacation' : 'normal', favorites });
   const keepIds = new Set(items.filter(isKept).map((i) => i.id));
   const fixedLines = [...protectedLines, ...partialLines];
   const now = deps.clock.now();
@@ -145,14 +177,21 @@ async function rebalanceDay(r: Repositories, deps: AppDeps, date: string): Promi
   await fillDay(r, deps, await context(r, deps), date, Number(plan.generatorSeed) || 0, undefined, undefined, 'refit');
 }
 
+/** Brings the day in order after an older version broke it (a meal that lost its plan): see restoreReplacedMeals. */
+export async function repairDay(deps: AppDeps, date: string): Promise<void> {
+  await deps.uow.run(async (r) => rebalanceDay(r, deps, date));
+}
+
 /** Builds (or rebuilds) the meal plan for the days of a week that are not in the past. Locked items are kept. */
-export async function generateWeekPlan(deps: AppDeps, weekStart: string, variation: number): Promise<void> {
+export async function generateWeekPlan(deps: AppDeps, weekStart: string, variation: number, opts: { favorites?: boolean } = {}): Promise<void> {
   await deps.uow.run(async (r) => {
     const c = await context(r, deps);
+    if (opts.favorites && !c.foods.some((f) => f.preference === 'love' && !f.excluded)) throw new Error('Сначала отметь сердечком хотя бы один продукт');
     for (let i = 0; i < 7; i++) {
       const date = addDays(weekStart, i);
       if (date < c.today) continue;
-      await fillDay(r, deps, c, date, variation);
+      // From favourites the whole day is rebuilt (what is eaten or locked stays); otherwise as before.
+      await fillDay(r, deps, c, date, variation, undefined, undefined, opts.favorites ? 'redo' : 'build', opts.favorites === true);
     }
   });
 }
@@ -282,7 +321,8 @@ export async function logPlanned(deps: AppDeps, itemId: string, outcome: { kind:
     }
     const grams = outcome.grams ?? item.plannedAmountG;
     await r.foodLogs.put(makeLog(deps, food, { date: item.date, slot: item.slot, grams, entryType: grams === item.plannedAmountG ? 'as_planned' : 'modified', plannedItemId: item.id }));
-    if (grams !== item.plannedAmountG) await rebalanceDay(r, deps, item.date);
+    const ownFoodInMeal = takenOverSlots((await r.foodLogs.listAll()).filter((l) => l.date === item.date)).has(item.slot);
+    if (grams !== item.plannedAmountG || ownFoodInMeal) await rebalanceDay(r, deps, item.date);
   });
 }
 
@@ -308,7 +348,9 @@ export async function setLogAmount(deps: AppDeps, logId: string, grams: number):
 /** Clears all marks of a meal: planned items become "not eaten yet", unplanned entries are removed. */
 export async function clearMealLogs(deps: AppDeps, date: string, slot: MealSlot): Promise<void> {
   await deps.uow.run(async (r) => {
-    for (const l of (await r.foodLogs.listAll()).filter((x) => x.date === date && x.slot === slot && x.deletedAt === null)) await r.foodLogs.softDelete(l.id);
+    const logs = (await r.foodLogs.listAll()).filter((x) => x.date === date && x.slot === slot && x.deletedAt === null);
+    for (const l of logs) await r.foodLogs.softDelete(l.id);
+    if (logs.length > 0) await rebalanceDay(r, deps, date);
   });
 }
 
@@ -333,6 +375,7 @@ export async function logMealAsPlanned(deps: AppDeps, date: string, slot: MealSl
       const food = await foodById(r, item.foodId);
       await r.foodLogs.put(makeLog(deps, food, { date, slot, grams: item.plannedAmountG, entryType: 'as_planned', plannedItemId: item.id }));
     }
+    if (takenOverSlots((await r.foodLogs.listAll()).filter((l) => l.date === date)).has(slot)) await rebalanceDay(r, deps, date);
   });
 }
 
