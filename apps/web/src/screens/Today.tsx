@@ -9,6 +9,7 @@ import { getDisplayName, setBeerMl, setDrink, useBeerMl, useDrink, useVacationMo
 import { go } from '../app/router';
 import { Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, Sparkline } from '../ui';
 import { useBodyweightMode } from '../app/prefs';
+import { cardioTitle } from './Cardio';
 import { BodyweightCard } from './BodyweightMode';
 import { FeelingCard } from './Cycle';
 import { GoalExplainSheet } from './GoalExplain';
@@ -35,7 +36,7 @@ export function Today() {
   const recommended = weightForWater !== null && s.profile ? recommendedWaterMl(weightForWater, s.profile.sex) : (targets?.waterMl ?? 0);
   // The plan decides, not what is open right now: a workout started on a day off does not turn the day into a training day.
   const trainingDay = !!(todaySession || (s.profile && isTrainingDay(s.profile.trainingSchedule, s.today)));
-  const trainedToday = s.workouts.some((x) => x.date === s.today && x.completed && x.sets > 0);
+  const trainedToday = s.workouts.some((x) => x.date === s.today && x.completed && x.sets > 0) || s.cardioSessions.some((c) => c.date === s.today);
   const female = s.profile?.sex === 'female';
   const status = trainedToday
     ? { cls: 'done', emoji: '🔥', text: `${female ? 'Отлично поработала' : 'Отлично поработал'}, теперь — качественно восстанавливайся!` }
@@ -58,6 +59,9 @@ export function Today() {
   const goalProgress = target !== null && start !== null && w.currentKg !== null && start !== target ? (start - w.currentKg) / (start - target) : null;
 
   const lastWorkout = s.workouts[0];
+  const lastCardio = s.cardioSessions[0];
+  // The newest of the two: a cardio session after the last strength workout is the last training.
+  const cardioIsLast = !!lastCardio && (!lastWorkout || lastCardio.date >= lastWorkout.date);
   const perWeek = s.profile ? trainingDays(s.profile.trainingSchedule).length : 3;
   const level = trainingLevel({ count: s.workouts.filter((x) => x.completed && x.sets > 0 && x.date > addDays(s.today, -28)).length, perWeek });
   const lastMeasure = Object.values(s.series).flatMap((list) => list ?? []).map((p) => p.date).sort().pop();
@@ -147,13 +151,13 @@ export function Today() {
       ) : (
         <ListItem icon="nutrition" title="Питание" subtitle="Рацион и цели по КБЖУ появятся здесь" onClick={() => go('nutrition')} />
       )}
-      {vacation ? null : lastWorkout ? (
+      {vacation ? null : lastWorkout || lastCardio ? (
         <Card onClick={() => go('training')}>
           <div className="row">
             <span className="li-icon lime"><Icon name="training" /></span>
             <div className="grow">
               <div className="li-title">Последняя тренировка</div>
-              <div className="li-sub">{`${formatDay(lastWorkout.date)} · ${lastWorkout.exercises} ${plural(lastWorkout.exercises, ['упражнение', 'упражнения', 'упражнений'])} · ${lastWorkout.sets} ${plural(lastWorkout.sets, ['подход', 'подхода', 'подходов'])}`}</div>
+              <div className="li-sub">{cardioIsLast && lastCardio ? `${formatDay(lastCardio.date)} · кардио · ${cardioTitle(lastCardio)}` : lastWorkout ? `${formatDay(lastWorkout.date)} · ${lastWorkout.exercises} ${plural(lastWorkout.exercises, ['упражнение', 'упражнения', 'упражнений'])} · ${lastWorkout.sets} ${plural(lastWorkout.sets, ['подход', 'подхода', 'подходов'])}` : ''}</div>
             </div>
             <Icon name="chevronRight" size={18} />
           </div>

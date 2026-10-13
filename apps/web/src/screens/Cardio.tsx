@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CARDIO_MACHINES, type CardioMachine } from '@fitapp/domain';
+import { CARDIO_MACHINES, type CardioMachine, type CardioSession } from '@fitapp/domain';
 import { addCardioSession, deleteCardioSession, setCardioEveryWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { fmt, formatDay } from '../app/format';
@@ -28,6 +28,39 @@ export const MACHINES: Record<CardioMachine, MachineInfo> = {
   air_bike: { label: 'Эйр-байк', equipment: 'air_bike', fields: ['distance'], hint: 'Сопротивление растёт вместе с твоим усилием; интервалами легко перестараться.' },
   ski_erg: { label: 'Лыжный эргометр', equipment: 'ski_erg', fields: ['level', 'distance'], levelLabel: 'Демпфер (1–10)', hint: 'Тянущее движение для верха тела и корпуса; с плечом осторожнее.' },
 };
+
+/** "Беговая дорожка · 30 мин" — one line for lists, the calendar and the home screen. */
+export const cardioTitle = (c: CardioSession): string => `${MACHINES[c.machine].label} · ${fmt(c.durationMin, 0)} мин`;
+
+/** The parameters of a cardio session in one line (without the date). */
+export const cardioDetails = (c: CardioSession): string =>
+  [
+    c.distanceKm ? `${fmt(c.distanceKm, 2)} км` : '',
+    c.speedKmh ? `${fmt(c.speedKmh, 1)} км/ч` : '',
+    c.inclinePct ? `наклон ${fmt(c.inclinePct, 1)} %` : '',
+    c.level ? `уровень ${fmt(c.level, 0)}` : '',
+    c.avgHeartRate ? `пульс ${c.avgHeartRate}` : '',
+    c.effort ? `усилие ${c.effort}/10` : '',
+  ].filter(Boolean).join(' · ');
+
+/** A saved cardio session: what was done, with deleting. */
+export function CardioDetailSheet({ session, onClose }: { session: CardioSession | null; onClose: () => void }) {
+  const { ok, banner, busy } = useCommand();
+  const c = session;
+  return (
+    <Sheet open={!!c} title="Кардио" onClose={onClose}>
+      {c && (
+        <div className="stack">
+          {banner}
+          <div className="t-h3">{cardioTitle(c)}</div>
+          <div className="t-small">{formatDay(c.date)}</div>
+          {cardioDetails(c) && <p className="t-body">{cardioDetails(c)}</p>}
+          <Button variant="secondary" icon="trash" disabled={busy} onClick={() => void ok((d) => deleteCardioSession(d, c.id)).then((done) => done && onClose())}>Удалить запись</Button>
+        </div>
+      )}
+    </Sheet>
+  );
+}
 
 const EFFORT_LABEL: Record<number, string> = { 1: 'очень легко', 2: 'легко', 3: 'легко', 4: 'умеренно', 5: 'умеренно', 6: 'умеренно', 7: 'тяжело', 8: 'тяжело', 9: 'очень тяжело', 10: 'предел' };
 
@@ -103,7 +136,7 @@ export function CardioSheet({ open, onClose }: { open: boolean; onClose: () => v
                 <div className="t-caption">Последние</div>
                 <div className="list">
                   {recent.map((c) => (
-                    <ListItem key={c.id} icon="check" title={`${MACHINES[c.machine].label} · ${fmt(c.durationMin, 0)} мин`} subtitle={`${formatDay(c.date)}${c.distanceKm ? ` · ${fmt(c.distanceKm, 2)} км` : ''}${c.speedKmh ? ` · ${fmt(c.speedKmh, 1)} км/ч` : ''}${c.inclinePct ? ` · наклон ${fmt(c.inclinePct, 1)} %` : ''}${c.level ? ` · уровень ${fmt(c.level, 0)}` : ''}`} trailing={<IconDelete id={c.id} />} />
+                    <ListItem key={c.id} icon="check" title={cardioTitle(c)} subtitle={[formatDay(c.date), cardioDetails(c)].filter(Boolean).join(' · ')} trailing={<IconDelete id={c.id} />} />
                   ))}
                 </div>
               </>

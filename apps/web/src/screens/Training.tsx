@@ -1,6 +1,6 @@
 import { CycleTrainingHint } from './Cycle';
 import { useEffect, useMemo, useState } from 'react';
-import { addDays, assessExercise, reentryAdvice, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
+import { addDays, assessExercise, type CardioSession, reentryAdvice, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
 import { createProgram, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
@@ -10,7 +10,7 @@ import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
 import { useBodyweightMode, useVacationMode } from '../app/prefs';
 import { BodyweightCard, PlaceSwitch } from './BodyweightMode';
-import { CardioSheet } from './Cardio';
+import { CardioDetailSheet, cardioDetails, cardioTitle, CardioSheet } from './Cardio';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { AREA_LABELS } from './ProfileMore';
 import { ScreenHeader } from './shared';
@@ -102,6 +102,8 @@ function Week() {
       live = false;
     };
   }, [version.id, s.today, s.openSession?.id]);
+  const weekCardio = s.cardioSessions.filter((c) => c.date >= addDays(s.today, -7) && c.date <= s.today);
+  const [cardio, setCardio] = useState<CardioSession | null>(null);
   const nextPlanned = sessions.find((p) => p.status === 'planned' && p.plannedDate >= addDays(s.today, -1));
 
   const begin = async (id: string, deload = false) => {
@@ -128,6 +130,23 @@ function Week() {
       <CycleTrainingHint busy={busy} onLight={nextPlanned && !open ? () => void begin(nextPlanned.id, true) : undefined} />
       {!open && <ReentryCard busy={busy} onLight={nextPlanned ? () => void begin(nextPlanned.id, true) : undefined} />}
       {advice && !open && <AdviceCard advice={advice} busy={busy} onDeload={nextPlanned ? () => void begin(nextPlanned.id, true) : undefined} />}
+      {weekCardio.length > 0 && (
+        <div className="stack">
+          {weekCardio.map((c) => (
+            <Card key={c.id} flat>
+              <button type="button" className="session-head" aria-label={`Кардио: ${cardioTitle(c)}`} onClick={() => setCardio(c)}>
+                <span className="sh-text">
+                  <span className="t-h3">Кардио · {cardioTitle(c)}</span>
+                  <span className="t-small">{c.date === s.today ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(c.date)]}, ${formatDateShort(c.date)}`}{cardioDetails(c) ? ` · ${cardioDetails(c)}` : ''}</span>
+                </span>
+                <Badge>Выполнено</Badge>
+                <Icon name="chevronRight" size={20} />
+              </button>
+            </Card>
+          ))}
+        </div>
+      )}
+      <CardioDetailSheet session={cardio} onClose={() => setCardio(null)} />
       {sessions.length === 0 && <p className="note">Ближайших тренировок нет. Проверь дни тренировок в профиле.</p>}
       <div className="stack">
         {sessions.map((p) => {
@@ -441,20 +460,34 @@ function SwapSheet({ target, catalog, onClose, onPick }: { target: { workout: Wo
 
 function History() {
   const { snapshot: s } = useData();
+  const [cardio, setCardio] = useState<CardioSession | null>(null);
+  // Strength workouts and cardio in one feed, newest first.
+  const items = useMemo(() => {
+    const list = [
+      ...s.workouts.slice(0, 60).map((w) => ({ kind: 'workout' as const, date: w.date, key: `w${w.id}`, w })),
+      ...s.cardioSessions.slice(0, 60).map((c) => ({ kind: 'cardio' as const, date: c.date, key: `c${c.id}`, c })),
+    ];
+    return list.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).slice(0, 40);
+  }, [s.workouts, s.cardioSessions]);
   return (
     <>
       <div className="section-title"><h2 className="t-h3">История тренировок</h2></div>
-      {s.workouts.length === 0 ? (
+      {items.length === 0 ? (
         <>
-          <p className="note">Тренировок пока нет. Они появятся здесь после первой записанной тренировки.</p>
+          <p className="note">Тренировок пока нет. Они появятся здесь после первой записанной тренировки или кардио.</p>
         </>
       ) : (
         <div className="list">
-          {s.workouts.slice(0, 30).map((w) => (
-            <ListItem key={w.id} icon="history" title={formatDay(w.date)} subtitle={`${w.names.slice(0, 3).join(', ')}${w.names.length > 3 ? ` и ещё ${w.names.length - 3}` : ''}`} trailing={`${w.sets} ${plural(w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${w.id}`)} />
-          ))}
+          {items.map((it) =>
+            it.kind === 'workout' ? (
+              <ListItem key={it.key} icon="history" title={formatDay(it.w.date)} subtitle={`${it.w.names.slice(0, 3).join(', ')}${it.w.names.length > 3 ? ` и ещё ${it.w.names.length - 3}` : ''}`} trailing={`${it.w.sets} ${plural(it.w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${it.w.id}`)} />
+            ) : (
+              <ListItem key={it.key} icon="heart" title={`${formatDay(it.c.date)} · кардио`} subtitle={[cardioTitle(it.c), cardioDetails(it.c)].filter(Boolean).join(' · ')} onClick={() => setCardio(it.c)} />
+            ),
+          )}
         </div>
       )}
+      <CardioDetailSheet session={cardio} onClose={() => setCardio(null)} />
     </>
   );
 }
@@ -474,11 +507,18 @@ function MonthView() {
   const offset = WEEKDAYS.indexOf(weekdayOf(first));
   const cells: (string | null)[] = [...Array(offset).fill(null), ...Array.from({ length: daysIn }, (_, i) => `${ym.y}-${pad2(ym.m)}-${pad2(i + 1)}`)];
   const done = useMemo(() => new Map(s.workouts.map((w) => [w.date, w])), [s.workouts]);
+  const cardioByDate = useMemo(() => {
+    const m = new Map<string, CardioSession[]>();
+    for (const c of s.cardioSessions) m.set(c.date, [...(m.get(c.date) ?? []), c]);
+    return m;
+  }, [s.cardioSessions]);
+  const [cardio, setCardio] = useState<CardioSession | null>(null);
   const planned = useMemo(() => new Map(s.plannedSessions.filter((p) => p.deletedAt === null && p.status === 'planned').map((p) => [p.plannedDate, p])), [s.plannedSessions]);
   const shift = (d: number) => setYm((c) => { const t = c.y * 12 + (c.m - 1) + d; return { y: Math.floor(t / 12), m: (t % 12) + 1 }; });
   const labelOf = (key: string) => version.training.workouts.find((w) => w.key === key)?.label ?? 'Тренировка';
   const day = done.get(picked);
   const plan = planned.get(picked);
+  const dayCardio = cardioByDate.get(picked) ?? [];
   return (
     <>
       <Card>
@@ -492,7 +532,7 @@ function MonthView() {
             {WEEKDAYS.map((w) => <span key={w} className="t-caption cal-head">{WEEKDAY_SHORT[w]}</span>)}
             {cells.map((date, i) =>
               date ? (
-                <button key={date} type="button" className="cal-day" aria-pressed={picked === date} data-today={date === s.today} data-done={done.has(date)} data-planned={planned.has(date)} aria-label={formatDateShort(date)} onClick={() => setPicked(date)}>
+                <button key={date} type="button" className="cal-day" aria-pressed={picked === date} data-today={date === s.today} data-done={done.has(date) || cardioByDate.has(date)} data-planned={planned.has(date)} aria-label={formatDateShort(date)} onClick={() => setPicked(date)}>
                   {Number(date.slice(8))}
                 </button>
               ) : (
@@ -507,10 +547,12 @@ function MonthView() {
         <div className="stack">
           <div className="t-h3">{formatDay(picked)}</div>
           {day && <ListItem icon="history" title="Тренировка выполнена" subtitle={day.names.slice(0, 4).join(', ')} trailing={`${day.sets} подх.`} onClick={() => go(`workout/${day.id}`)} />}
+          {dayCardio.map((c) => <ListItem key={c.id} icon="heart" title={`Кардио: ${cardioTitle(c)}`} subtitle={cardioDetails(c) || 'Выполнено'} onClick={() => setCardio(c)} />)}
           {plan && <ListItem icon="calendar" title={labelOf(plan.workoutKey)} subtitle="Запланировано" onClick={() => go('training')} />}
-          {!day && !plan && <p className="note">В этот день тренировки нет.</p>}
+          {!day && !plan && dayCardio.length === 0 && <p className="note">В этот день тренировки нет.</p>}
         </div>
       </Card>
+      <CardioDetailSheet session={cardio} onClose={() => setCardio(null)} />
     </>
   );
 }
