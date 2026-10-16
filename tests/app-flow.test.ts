@@ -45,6 +45,13 @@ import {
   updateCustomFood,
   setExercisePreference,
   startBodyweightWorkout,
+  saveCustomWorkout,
+  startCustomWorkout,
+  deleteCustomWorkout,
+  addExerciseToSession,
+  removeExerciseFromSession,
+  canRemoveFromSession,
+  saveSessionAsCustomWorkout,
   addCardioSession,
   deleteCardioSession,
   createCustomFood,
@@ -535,6 +542,81 @@ describe('app flow on the real storage', () => {
     const rows = await deps.uow.run((r) => r.plannedSessions.listByDateRange({ from: '2026-09-01', to: '2026-12-31' }));
     expect(rows.some((p) => p.workoutKey === 'bodyweight')).toBe(false);
   });
+  it('own workouts: built from scratch, done outside the program, saved from a session and repeated with the weights of the history', async () => {
+    const { deps, clock } = await setup();
+    await ensureSessions(deps);
+    let s = await loadSnapshot(deps);
+    const programToday = s.plannedSessions.find((p) => p.plannedDate === '2026-10-05')!;
+    expect(programToday).toBeDefined();
+    const [a, b, c] = s.activeVersion!.training.workouts[0]!.exercises.map((e) => e.exerciseId);
+    const id = await saveCustomWorkout(deps, { id: null, name: 'Мои ноги', exercises: [{ exerciseId: a!, sets: 3, repMin: 10, repMax: 12, restSec: 90 }, { exerciseId: b!, sets: 2, repMin: 8, repMax: 8, restSec: 60 }] });
+    await expect(saveCustomWorkout(deps, { id: null, name: 'мои ноги', exercises: [{ exerciseId: a!, sets: 1, repMin: 5, repMax: 5, restSec: 60 }] })).rejects.toThrow(/уже есть/);
+    await expect(saveCustomWorkout(deps, { id: null, name: 'Пусто', exercises: [] })).rejects.toThrow(/хотя бы одно/);
+
+    const sid = await startCustomWorkout(deps, id);
+    await expect(startCustomWorkout(deps, id)).rejects.toThrow(/начатая/);
+    let view = await loadWorkout(deps, sid);
+    expect(view.label).toBe('Мои ноги');
+    expect(view.custom).toBe(true);
+    expect(view.exercises.map((e) => [e.exercise.id, e.plan.length, e.plan[0]!.repMin, e.plan[0]!.repMax])).toEqual([[a, 3, 10, 12], [b, 2, 8, 8]]);
+
+    // the program calendar is untouched: today's program workout stays planned and is not taken over
+    await ensureSessions(deps);
+    s = await loadSnapshot(deps);
+    expect(s.plannedSessions.find((p) => p.id === programToday.id)).toMatchObject({ status: 'planned', workoutKey: programToday.workoutKey });
+    expect(s.plannedSessions.some((p) => p.workoutKey.startsWith('custom'))).toBe(false);
+
+    const ex = view.exercises[0]!;
+    for (const p of ex.plan) await logSet(deps, { sessionExerciseId: ex.se.id, exerciseId: ex.exercise.id, variantKey: ex.se.variantKey, contextKey: p.contextKey, plannedSetId: p.id, setNo: p.setNo, weightKg: 50, reps: 12, rir: 2 });
+
+    // an exercise added by mistake is taken out; another one is added and done
+    const wrong = await addExerciseToSession(deps, { sessionId: sid, exerciseId: c! });
+    view = await loadWorkout(deps, sid);
+    const added = view.exercises.find((e) => e.se.id === wrong)!;
+    expect(added.plan.length).toBeGreaterThan(0);
+    expect(canRemoveFromSession(added, view.custom)).toBe(true);
+    expect(canRemoveFromSession(view.exercises[0]!, view.custom)).toBe(false); // has sets
+    await removeExerciseFromSession(deps, wrong);
+    const extraId = await addExerciseToSession(deps, { sessionId: sid, exerciseId: c! });
+    view = await loadWorkout(deps, sid);
+    expect(view.exercises.map((e) => e.se.id)).not.toContain(wrong);
+    const extra = view.exercises.find((e) => e.se.id === extraId)!;
+    expect(extra.se.position).toBe(3);
+    await logSet(deps, { sessionExerciseId: extra.se.id, exerciseId: c!, variantKey: extra.se.variantKey, contextKey: extra.plan[0]!.contextKey, plannedSetId: extra.plan[0]!.id, setNo: 1, weightKg: 20, reps: 10, rir: 2 });
+    await finishWorkout(deps, sid, null);
+
+    s = await loadSnapshot(deps);
+    expect(s.workouts[0]!.title).toBe('Мои ноги');
+    expect(s.plannedSessions.find((p) => p.id === programToday.id)?.status).toBe('planned');
+    expect(s.customWorkouts.find((w) => w.id === id)).toMatchObject({ useCount: 1, lastUsedOn: '2026-10-05' });
+
+    // what was done (b was not touched) becomes a new own workout
+    const copyId = await saveSessionAsCustomWorkout(deps, { sessionId: sid, name: 'Ноги, как сделал', replaceId: null });
+    s = await loadSnapshot(deps);
+    expect(s.customWorkouts.find((w) => w.id === copyId)!.exercises.map((e) => [e.exerciseId, e.sets, e.repMin, e.repMax])).toEqual([[a, 3, 10, 12], [c, 1, extra.plan[0]!.repMin, extra.plan[0]!.repMax]]);
+
+    // repeated two days later: the weight comes from the history
+    clock.set('2026-10-07T09:00:00+03:00');
+    const again = await startCustomWorkout(deps, id);
+    view = await loadWorkout(deps, again);
+    expect(view.exercises[0]!.plan[0]!.targetWeightKg).toBeGreaterThanOrEqual(50);
+    await abandonWorkout(deps, again);
+
+    // an empty one: exercises are added on the go; abandoned, it leaves nothing in the calendar
+    const empty = await startCustomWorkout(deps, null);
+    view = await loadWorkout(deps, empty);
+    expect(view.label).toBe('Своя тренировка');
+    expect(view.exercises).toHaveLength(0);
+    await abandonWorkout(deps, empty);
+    const rows = await deps.uow.run((r) => r.plannedSessions.listByDateRange({ from: '2026-09-01', to: '2026-12-31' }));
+    expect(rows.filter((p) => p.workoutKey.startsWith('custom') && p.status === 'planned')).toHaveLength(0);
+
+    await deleteCustomWorkout(deps, id);
+    s = await loadSnapshot(deps);
+    expect(s.customWorkouts.map((w) => w.id)).toEqual([copyId]);
+    expect(s.workouts.find((w) => w.id === sid)?.title).toBe('Своя тренировка'); // the history keeps the workout
+  });
+
   it('a mistaken skipped set can be restored, and an extra set can be added', async () => {
     const { deps } = await setup();
     await ensureSessions(deps);

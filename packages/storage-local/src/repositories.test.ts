@@ -17,6 +17,7 @@ describe('generic repository behaviour (every repository built on Repo<T>)', () 
     ['userExercises', (b: ReturnType<typeof builders>) => b.userExercise()],
     ['cardioSessions', (b: ReturnType<typeof builders>) => b.cardioSession()],
     ['mealTemplates', (b: ReturnType<typeof builders>) => b.mealTemplate()],
+    ['customWorkouts', (b: ReturnType<typeof builders>) => b.customWorkout()],
     ['exerciseNotes', (b: ReturnType<typeof builders>) => b.exerciseNote()],
     ['metrics', (b: ReturnType<typeof builders>) => b.metric()],
     ['nutritionTargets', (b: ReturnType<typeof builders>) => b.targets()],

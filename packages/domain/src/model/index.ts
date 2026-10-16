@@ -15,5 +15,6 @@ export * from './mealTemplate';
 export * from './program';
 export * from './proposal';
 export * from './training';
+export * from './customWorkout';
 export * from './misc';
 export * from './registry';

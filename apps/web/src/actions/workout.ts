@@ -37,6 +37,13 @@ import {
   type SkipReason,
   type WorkoutSession,
   type Side,
+  type CustomWorkout,
+  type CustomWorkoutExercise,
+  BODYWEIGHT_WORKOUT_KEY,
+  customWorkoutIdOf,
+  customWorkoutKey,
+  isAdHocWorkoutKey,
+  isCustomWorkoutKey,
 } from '@fitapp/domain';
 import { resolveEquipment, safetyContext } from '../app/derive';
 import { rebuildForPreference } from './program';
@@ -59,7 +66,8 @@ export async function ensureSessions(deps: AppDeps): Promise<void> {
     if (!profile || !version) return;
     const today = deps.clock.today(profile.timezone);
     const horizon = 14;
-    const existing = await r.plannedSessions.listByDateRange({ from: addDays(today, -60), to: addDays(today, horizon + 7) });
+    // Workouts outside the program (at home, my own) never take or free a slot of the calendar.
+    const existing = (await r.plannedSessions.listByDateRange({ from: addDays(today, -60), to: addDays(today, horizon + 7) })).filter((s) => !isAdHocWorkoutKey(s.workoutKey));
     const movedFrom = new Set(existing.filter((s) => s.originalDate !== null).map((s) => s.originalDate as string));
     const slots = scheduleWindow(version.training, profile.trainingSchedule, today, horizon);
     for (const slot of slots) {
@@ -217,7 +225,7 @@ async function prescriptionContext(r: Repositories, deps: AppDeps, version: Prog
   const profile = await r.profile.get();
   const tz = profile?.timezone ?? 'UTC';
   const today = deps.clock.today(tz);
-  const recent = await r.plannedSessions.listByDateRange({ from: addDays(today, -14), to: addDays(today, -1) });
+  const recent = (await r.plannedSessions.listByDateRange({ from: addDays(today, -14), to: addDays(today, -1) })).filter((s) => !isAdHocWorkoutKey(s.workoutKey));
   const adherence = recent.length > 0 ? { planned: recent.length, done: recent.filter((s) => s.status === 'done').length } : null;
   return { tz, today, version, history: await loadHistory(r, excludeSessionId), adherence, equipment: await r.equipment.listAll(), userEquipment: await r.userEquipment.listAll() };
 }
@@ -286,10 +294,14 @@ export interface WorkoutView {
   plannedSession: PlannedSession | undefined;
   version: ProgramVersion | undefined;
   label: string;
+  /** Started from «Свои тренировки» (a saved one or an empty one). */
+  custom: boolean;
+  /** The saved custom workout this session came from, if it still exists. */
+  customWorkoutId: string | null;
   exercises: WorkoutExerciseView[];
 }
 
-const BODYWEIGHT_KEY = 'bodyweight';
+const BODYWEIGHT_KEY = BODYWEIGHT_WORKOUT_KEY;
 const DAY_MS = 86_400_000;
 
 /** Score of a set for comparing sessions: estimated strength for loaded work, reps (or seconds) otherwise. */
@@ -359,7 +371,10 @@ export async function loadWorkout(deps: AppDeps, sessionId: string): Promise<Wor
         ...(await noteAndRestInfo(r, deps, session, se, exercise.id, notes)),
       });
     }
-    return { session, plannedSession: ps, version, label: ps?.workoutKey === BODYWEIGHT_KEY ? 'Дома' : (template?.label ?? 'Тренировка'), exercises };
+    const customId = ps ? customWorkoutIdOf(ps.workoutKey) : null;
+    const custom = customId ? await r.customWorkouts.get(customId) : undefined;
+    const label = ps?.workoutKey === BODYWEIGHT_KEY ? 'Дома' : ps && isCustomWorkoutKey(ps.workoutKey) ? (custom?.name ?? 'Своя тренировка') : (template?.label ?? 'Тренировка');
+    return { session, plannedSession: ps, version, label, custom: ps ? isCustomWorkoutKey(ps.workoutKey) : false, customWorkoutId: custom && custom.deletedAt === null ? custom.id : null, exercises };
   });
 }
 
@@ -659,7 +674,7 @@ export async function abandonWorkout(deps: AppDeps, sessionId: string): Promise<
     if (!session) return;
     await r.workouts.putSession({ ...session, status: 'abandoned', endedAt: deps.clock.now() });
     const ps = session.plannedSessionId ? await r.plannedSessions.get(session.plannedSessionId) : undefined;
-    if (ps && ps.workoutKey === BODYWEIGHT_KEY) await r.plannedSessions.softDelete(ps.id);
+    if (ps && isAdHocWorkoutKey(ps.workoutKey)) await r.plannedSessions.softDelete(ps.id);
   });
 }
 
@@ -807,5 +822,193 @@ export async function loadWorkoutSummary(deps: AppDeps, sessionId: string, bodyW
     }
     const elapsedSec = sessionElapsedSec({ startedAtMs: Date.parse(session.startedAt), completedAtMs: completed, endedAtMs: session.endedAt ? Date.parse(session.endedAt) : null, nowMs: Date.now() });
     return { ...summarizeWorkout({ bodyWeightKg, exercises: inputs, elapsedSec }), startedAt: session.startedAt };
+  });
+}
+
+// ---------------------------------------------------------------- own workouts (the builder)
+
+const RIR_ADAPTATION = { min: 2, max: 3 };
+const RIR_MAIN = { min: 1, max: 2 };
+const clampRest = (sec: number): number => Math.min(600, Math.max(15, Math.round(sec)));
+
+/** An exercise of an own workout in the form the progression engine takes: the weight comes from the history, as in the program. */
+function plannedFromCustom(exercise: Exercise, e: Pick<CustomWorkoutExercise, 'sets' | 'repMin' | 'repMax' | 'restSec'>, key: string, position: number): PlannedExercise {
+  return {
+    key,
+    exerciseId: exercise.id,
+    variantKey: 'default',
+    position,
+    sets: e.sets,
+    repMin: e.repMin,
+    repMax: Math.max(e.repMin, e.repMax),
+    rirAdaptation: RIR_ADAPTATION,
+    rirMain: RIR_MAIN,
+    restSec: clampRest(e.restSec),
+    startWeightKg: null,
+    progression: { type: exercise.progressionType, stepKg: null },
+  };
+}
+
+/** Defaults of the catalog for an exercise added to an own workout. */
+export const customDefaults = (exercise: Pick<Exercise, 'id' | 'defaultSets' | 'defaultRepRange' | 'defaultRestSec'>): CustomWorkoutExercise => ({
+  exerciseId: exercise.id,
+  sets: Math.min(10, Math.max(1, exercise.defaultSets)),
+  repMin: exercise.defaultRepRange.min,
+  repMax: Math.max(exercise.defaultRepRange.min, exercise.defaultRepRange.max),
+  restSec: clampRest(exercise.defaultRestSec),
+});
+
+export interface CustomWorkoutInput {
+  /** null creates a new one. */
+  id: string | null;
+  name: string;
+  exercises: CustomWorkoutExercise[];
+}
+
+async function putCustomWorkout(r: Repositories, deps: AppDeps, input: CustomWorkoutInput): Promise<string> {
+  const name = input.name.trim().slice(0, 60);
+  if (!name) throw new Error('Дай тренировке название');
+  if (input.exercises.length === 0) throw new Error('Добавь хотя бы одно упражнение');
+  if (input.exercises.length > 20) throw new Error('Не больше 20 упражнений в одной тренировке');
+  const exercises = input.exercises.map((e) => ({ ...e, repMax: Math.max(e.repMin, e.repMax), restSec: clampRest(e.restSec) }));
+  const all = (await r.customWorkouts.listAll()).filter((t) => t.deletedAt === null);
+  if (all.some((t) => t.id !== input.id && t.name.toLowerCase() === name.toLowerCase())) throw new Error(`Тренировка «${name}» уже есть. Выбери другое название`);
+  const existing = input.id ? all.find((t) => t.id === input.id) : undefined;
+  if (input.id && !existing) throw new Error('Тренировка не найдена');
+  const row: CustomWorkout = existing ? { ...existing, name, exercises } : { ...baseOf(deps), name, exercises, useCount: 0, lastUsedOn: null };
+  await r.customWorkouts.put(row);
+  return row.id;
+}
+
+/** Creates or changes an own workout. Names are unique, so the list stays readable. */
+export async function saveCustomWorkout(deps: AppDeps, input: CustomWorkoutInput): Promise<string> {
+  return deps.uow.run((r) => putCustomWorkout(r, deps, input));
+}
+
+/** Deletes an own workout. Workouts already done with it stay in the history. */
+export async function deleteCustomWorkout(deps: AppDeps, id: string): Promise<void> {
+  await deps.uow.run((r) => r.customWorkouts.softDelete(id));
+}
+
+/**
+ * Starts an own workout (or an empty one, when id is null: the exercises are added on the go).
+ * It is not a part of the program: the calendar, the rotation and the versions stay untouched,
+ * but the weights are prescribed from the same history, so the progress carries over both ways.
+ */
+export async function startCustomWorkout(deps: AppDeps, id: string | null): Promise<string> {
+  return deps.uow.run(async (r) => {
+    const profile = await r.profile.get();
+    const version = await activeVersion(r);
+    if (!profile || !version) throw new Error('Сначала заполни профиль и создай программу');
+    const open = (await r.workouts.listSessions()).find((s) => s.status === 'in_progress');
+    if (open) throw new Error('Уже есть начатая тренировка: заверши или прерви её');
+    const cw = id ? await r.customWorkouts.get(id) : undefined;
+    if (id && (!cw || cw.deletedAt !== null)) throw new Error('Тренировка не найдена');
+    const today = deps.clock.today(profile.timezone);
+    const ps: PlannedSession = { ...baseOf(deps), versionId: version.id, workoutKey: customWorkoutKey(cw ? cw.id : null), plannedDate: today, status: 'planned', originalDate: null, movedReason: null };
+    await r.plannedSessions.put(ps);
+    const sessionId = deps.ids.newId();
+    await r.workouts.putSession({ ...createBase(sessionId, deps.clock.now(), deps.deviceId), plannedSessionId: ps.id, versionId: version.id, startedAt: deps.clock.now(), endedAt: null, status: 'in_progress', note: null });
+    if (cw) {
+      const pctx = await prescriptionContext(r, deps, version, null);
+      let position = 0;
+      for (const e of cw.exercises) {
+        const exercise = await r.exercises.get(e.exerciseId);
+        if (!exercise || exercise.deletedAt !== null) continue;
+        position++;
+        const pe = plannedFromCustom(exercise, e, `cw_${position}`, position);
+        const p = await prescribe(r, deps, pctx, pe, exercise, false);
+        await r.workouts.putSessionExercise({ ...baseOf(deps), sessionId, exerciseId: exercise.id, variantKey: pe.variantKey, plannedExerciseKey: pe.key, position, replacedFromExerciseId: null, replacementReason: null, status: 'planned', skipReason: null, note: null });
+        await createSets(r, deps, ps.id, pe.key, exercise, pe.variantKey, p, false);
+      }
+      await r.customWorkouts.put({ ...cw, useCount: cw.useCount + 1, lastUsedOn: today });
+    }
+    return sessionId;
+  });
+}
+
+/** Adds an exercise to a running workout (any: program, home or own). The weight is prescribed from its history. */
+export async function addExerciseToSession(deps: AppDeps, input: { sessionId: string; exerciseId: string }): Promise<string> {
+  return deps.uow.run(async (r) => {
+    const session = await r.workouts.getSession(input.sessionId);
+    if (!session || session.status !== 'in_progress' || !session.plannedSessionId) throw new Error('Тренировка уже завершена');
+    const version = await r.programs.getVersion(session.versionId);
+    if (!version) throw new Error('Версия программы не найдена');
+    const exercise = await r.exercises.get(input.exerciseId);
+    if (!exercise || exercise.deletedAt !== null) throw new Error('Упражнение не найдено');
+    const ses = await r.workouts.listSessionExercises(session.id);
+    const planned = await r.plannedSessions.listSets(session.plannedSessionId);
+    const usedKeys = new Set([...planned.map((p) => p.plannedExerciseKey), ...ses.map((e) => e.plannedExerciseKey ?? '')]);
+    const position = ses.reduce((m, e) => Math.max(m, e.position), 0) + 1;
+    let n = position;
+    while (usedKeys.has(`add_${n}`)) n++;
+    const pe = plannedFromCustom(exercise, customDefaults(exercise), `add_${n}`, position);
+    const deload = planned.length > 0 && planned.every((p) => p.reasonCode === 'deload_week');
+    const ctx = await prescriptionContext(r, deps, version, session.id);
+    const p = await prescribe(r, deps, ctx, pe, exercise, deload);
+    const seId = deps.ids.newId();
+    await r.workouts.putSessionExercise({ ...createBase(seId, deps.clock.now(), deps.deviceId), sessionId: session.id, exerciseId: exercise.id, variantKey: pe.variantKey, plannedExerciseKey: pe.key, position, replacedFromExerciseId: null, replacementReason: null, status: 'planned', skipReason: null, note: null });
+    await createSets(r, deps, session.plannedSessionId, pe.key, exercise, pe.variantKey, p, deload);
+    return seId;
+  });
+}
+
+/** Can this exercise be taken out of the running workout: added by hand (or in an own workout) and nothing recorded yet. */
+export const canRemoveFromSession = (ev: Pick<WorkoutExerciseView, 'se' | 'logs'>, custom: boolean): boolean =>
+  ev.logs.length === 0 && ev.se.replacedFromExerciseId === null && (custom || (ev.se.plannedExerciseKey ?? '').startsWith('add_'));
+
+/** Takes an exercise out of the running workout (added by mistake). Only before its first set. */
+export async function removeExerciseFromSession(deps: AppDeps, sessionExerciseId: string): Promise<void> {
+  await deps.uow.run(async (r) => {
+    for (const s of await r.workouts.listSessions()) {
+      if (s.status !== 'in_progress') continue;
+      const se = (await r.workouts.listSessionExercises(s.id)).find((e) => e.id === sessionExerciseId);
+      if (!se) continue;
+      if ((await r.workouts.listSetLogs(se.id)).length > 0) throw new Error('В упражнении уже есть записанные подходы');
+      await r.workouts.softDeleteSessionExercise(se.id);
+      return;
+    }
+    throw new Error('Упражнение не найдено');
+  });
+}
+
+/**
+ * Saves what was done in a workout as an own workout, to repeat it: the exercises with recorded sets,
+ * as many sets as were done, the rep ranges and rests of the plan. With replaceId it updates that one.
+ */
+export async function saveSessionAsCustomWorkout(deps: AppDeps, input: { sessionId: string; name: string; replaceId: string | null }): Promise<string> {
+  return deps.uow.run(async (r) => {
+    const session = await r.workouts.getSession(input.sessionId);
+    if (!session) throw new Error('Тренировка не найдена');
+    const ps = session.plannedSessionId ? await r.plannedSessions.get(session.plannedSessionId) : undefined;
+    const planned = ps ? await r.plannedSessions.listSets(ps.id) : [];
+    const sourceId = ps ? customWorkoutIdOf(ps.workoutKey) : null;
+    const source = sourceId ? await r.customWorkouts.get(sourceId) : undefined;
+    const rows: Array<{ e: CustomWorkoutExercise; done: number }> = [];
+    for (const se of await r.workouts.listSessionExercises(session.id)) {
+      const exercise = await r.exercises.get(se.exerciseId);
+      if (!exercise) continue;
+      const logs = await r.workouts.listSetLogs(se.id);
+      const done = logs.filter((l) => l.status === 'done' && l.setType === 'working').length;
+      const plan = planned.filter((p) => p.plannedExerciseKey === se.plannedExerciseKey && p.exerciseId === se.exerciseId);
+      if (done === 0 && se.status === 'skipped') continue;
+      const fromSource = source?.exercises.find((x) => x.exerciseId === exercise.id);
+      const def = customDefaults(exercise);
+      rows.push({
+        done,
+        e: {
+          exerciseId: exercise.id,
+          sets: Math.min(10, Math.max(1, done || plan.length || def.sets)),
+          repMin: fromSource?.repMin ?? plan[0]?.repMin ?? def.repMin,
+          repMax: fromSource?.repMax ?? plan[0]?.repMax ?? def.repMax,
+          restSec: fromSource?.restSec ?? clampRest(plan[0]?.restSec ?? def.restSec),
+        },
+      });
+    }
+    const withWork = rows.some((x) => x.done > 0) ? rows.filter((x) => x.done > 0) : rows;
+    const id = await putCustomWorkout(r, deps, { id: input.replaceId, name: input.name, exercises: withWork.map((x) => x.e).slice(0, 20) });
+    // An empty or own workout is now "this" saved one: its name shows in the workout and the history.
+    if (ps && isCustomWorkoutKey(ps.workoutKey) && (sourceId === null || sourceId === input.replaceId)) await r.plannedSessions.put({ ...ps, workoutKey: customWorkoutKey(id) });
+    return id;
   });
 }

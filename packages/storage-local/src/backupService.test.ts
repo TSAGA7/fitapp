@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '@fitapp/domain';
 import { describe, expect, it, vi } from 'vitest';
 import { loadSeedCatalog } from '@fitapp/seed';
 import { META_KEYS } from './constants';
@@ -48,7 +49,7 @@ describe('export', () => {
     const { a } = await pair();
     await populate(a.s);
     const file = JSON.parse(await a.s.backup.exportJson());
-    expect(file).toMatchObject({ format: 'fitapp-backup', formatVersion: 1, schemaVersion: 4, deviceId: a.s.deviceId });
+    expect(file).toMatchObject({ format: 'fitapp-backup', formatVersion: 1, schemaVersion: SCHEMA_VERSION, deviceId: a.s.deviceId });
     expect(file.stores.bodyMetrics).toHaveLength(3);
     expect(file.stores.bodyMetrics.filter((m: { deletedAt: string | null }) => m.deletedAt !== null)).toHaveLength(1);
     expect(file.stores.exercises).toHaveLength(1);
@@ -57,7 +58,7 @@ describe('export', () => {
     expect(file.stores.foods).toEqual([]);
     expect(file.stores.setLogs).toHaveLength(1);
     expect(file.stores.programVersions).toHaveLength(1);
-    expect(Object.keys(file.stores)).toHaveLength(30);
+    expect(Object.keys(file.stores)).toHaveLength(31); // customWorkouts are in the backup too
     expect(await getMeta(a.s.db, META_KEYS.lastBackupAt)).toBe(file.createdAt);
   });
   it('a cancelled save does not count as a backup until it is recorded', async () => {
@@ -178,7 +179,7 @@ describe('bad files', () => {
     expect((await b.s.backup.previewImport('{"hello":1}')).validation.errors[0]).toContain('не файл резервной копии');
     const { a } = await pair();
     const file = JSON.parse(await a.s.backup.exportJson());
-    const newer = await b.s.backup.previewImport(JSON.stringify({ ...file, schemaVersion: 5 }));
+    const newer = await b.s.backup.previewImport(JSON.stringify({ ...file, schemaVersion: SCHEMA_VERSION + 1 }));
     expect(newer.validation.ok).toBe(false);
     await expect(b.s.backup.applyImport(newer, confirm)).rejects.toBeInstanceOf(InvalidBackupError);
   });

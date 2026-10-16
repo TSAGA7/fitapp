@@ -60,11 +60,16 @@ export const STORES_V4: Record<string, string> = {
   mealTemplates: 'id, updatedAt',
 };
 
+export const STORES_V5: Record<string, string> = {
+  customWorkouts: 'id, updatedAt',
+};
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, description: 'Initial schema', stores: STORES_V1 },
   { version: 2, description: 'Exercise likes and notes', stores: STORES_V2 },
   { version: 3, description: 'Cardio sessions', stores: STORES_V3 },
   { version: 4, description: 'Saved meals (my usual breakfast, lunch, snack)', stores: STORES_V4 },
+  { version: 5, description: 'Own workouts built in the workout builder', stores: STORES_V5 },
 ];
 
 export const LATEST_VERSION = (MIGRATIONS[MIGRATIONS.length - 1] as Migration).version;

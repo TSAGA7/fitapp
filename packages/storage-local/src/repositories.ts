@@ -205,6 +205,10 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
       const row = await setLogs.get(id);
       if (row && row.deletedAt === null) await setLogs.put(stamp(ENTITY_SCHEMAS.setLogs, 'setLogs', now, { ...row, deletedAt: now() }));
     },
+    async softDeleteSessionExercise(id: string) {
+      const row = await sessionExercises.get(id);
+      if (row && row.deletedAt === null) await sessionExercises.put(stamp(ENTITY_SCHEMAS.sessionExercises, 'sessionExercises', now, { ...row, deletedAt: now() }));
+    },
     async listSetLogs(sessionExerciseId: string) {
       return alive(await setLogs.where('sessionExerciseId').equals(sessionExerciseId).toArray()).sort((a, b) => a.setNo - b.setNo);
     },
@@ -278,6 +282,7 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
     proposals: new ProposalRepo(db.proposals as never, 'proposals', now),
     plannedSessions: new PlannedSessionRepo(db.plannedSessions as never, db.plannedSets as never),
     workouts,
+    customWorkouts: core('customWorkouts') as never,
     summaries: new SummaryRepo(db.weeklySummaries as never, 'weeklySummaries', now),
   };
 }

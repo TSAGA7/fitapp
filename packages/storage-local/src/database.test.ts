@@ -7,7 +7,7 @@ import { META_KEYS } from './constants';
 import { openAppDatabase } from './database';
 import { StorageTooNewError } from './errors';
 import { getMeta, setMeta } from './meta';
-import { LATEST_VERSION, MIGRATIONS, STORES_V1, STORES_V2, STORES_V3, STORES_V4 } from './schema';
+import { LATEST_VERSION, MIGRATIONS, STORES_V1, STORES_V2, STORES_V3, STORES_V4, STORES_V5 } from './schema';
 import { builders, makeStorage } from './testkit';
 import { createLocalStorage } from './storage';
 import { deterministicIds } from './testkit';
@@ -23,7 +23,7 @@ describe('schema', () => {
     }
     expect(names).toEqual(expect.arrayContaining(['appMeta', 'syncState']));
     expect(names).toHaveLength(STORE_NAMES.length + 2);
-    expect(Object.keys({ ...STORES_V1, ...STORES_V2, ...STORES_V3, ...STORES_V4 })).toHaveLength(STORE_NAMES.length + 2);
+    expect(Object.keys({ ...STORES_V1, ...STORES_V2, ...STORES_V3, ...STORES_V4, ...STORES_V5 })).toHaveLength(STORE_NAMES.length + 2);
   });
   it('the last migration matches the domain schema version', () => {
     expect(LATEST_VERSION).toBe(SCHEMA_VERSION);
@@ -58,7 +58,7 @@ describe('meta', () => {
 
 describe('migrations', () => {
   const v2 = {
-    version: 5,
+    version: LATEST_VERSION + 1,
     description: 'Index on goals.priority and a data fix',
     stores: { goals: 'id, status, priority, updatedAt' },
     upgrade: async (tx: import('dexie').Transaction) => {
@@ -80,14 +80,27 @@ describe('migrations', () => {
     expect(row.id).toBe(g.id);
     expect(row.migrated).toBe(true);
     expect(db.goals.schema.idxByName.priority).toBeDefined();
-    expect(db.verno).toBe(5);
+    expect(db.verno).toBe(LATEST_VERSION + 1);
+    db.close();
+  });
+  it('a phone on schema v4 (before own workouts) opens on the latest one without losing data', async () => {
+    const factory = new IDBFactory();
+    const opts = { name: 'v4', indexedDB: factory, IDBKeyRange };
+    const old = await openAppDatabase({ ...opts, migrations: MIGRATIONS.filter((m) => m.version <= 4) });
+    expect(old.tables.map((t) => t.name)).not.toContain('customWorkouts');
+    await old.table('mealTemplates').put({ id: 'm1', updatedAt: '2026-10-01T08:00:00.000Z', name: 'Завтрак' });
+    old.close();
+    const db = await openAppDatabase({ ...opts });
+    expect(db.verno).toBe(LATEST_VERSION);
+    expect(((await db.table('mealTemplates').get('m1')) as { name: string }).name).toBe('Завтрак');
+    expect(await db.table('customWorkouts').count()).toBe(0);
     db.close();
   });
   it('refuses a database written by a newer app instead of damaging it', async () => {
     const factory = new IDBFactory();
     const opts = { name: 'newer', indexedDB: factory, IDBKeyRange };
     const newer = await openAppDatabase({ ...opts, migrations: [...MIGRATIONS, v2] });
-    await setMeta(newer, META_KEYS.schemaVersion, 5);
+    await setMeta(newer, META_KEYS.schemaVersion, LATEST_VERSION + 1);
     newer.close();
     await expect(openAppDatabase({ ...opts })).rejects.toBeInstanceOf(StorageTooNewError);
   });

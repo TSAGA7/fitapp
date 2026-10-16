@@ -21,6 +21,10 @@ import {
   type Injury,
   type MealPlan,
   type MealTemplate,
+  type CustomWorkout,
+  customWorkoutIdOf,
+  isAdHocWorkoutKey,
+  isCustomWorkoutKey,
   type NutritionTargetsRecord,
   type PainEvent,
   type PlanChange,
@@ -54,6 +58,8 @@ export interface WorkoutSummary {
   completed: boolean;
   /** Sum of weight x reps of the done working sets, kg. */
   tonnageKg: number;
+  /** Name of the own workout it was (from «Свои тренировки»), otherwise null. */
+  title: string | null;
 }
 export interface FoodDay {
   date: LocalDate;
@@ -94,6 +100,8 @@ export interface Snapshot {
   userExercises: UserExercise[];
   cardioSessions: CardioSession[];
   mealTemplates: MealTemplate[];
+  /** Own workouts from the builder, most used first. */
+  customWorkouts: CustomWorkout[];
   exerciseNotes: ExerciseNote[];
   foodLogs: FoodLog[];
   program: Program | undefined;
@@ -124,6 +132,17 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
     const exerciseNames = Object.fromEntries(exercises.map((e) => [e.id, e.name]));
     const muscleMap = new Map(exercises.map((e) => [e.id, e]));
 
+    const customWorkouts = (await r.customWorkouts.listAll()).filter((t) => t.deletedAt === null).sort((a, b) => (b.lastUsedOn ?? '').localeCompare(a.lastUsedOn ?? '') || b.useCount - a.useCount || a.name.localeCompare(b.name, 'ru'));
+    const customNames = new Map((await r.customWorkouts.listAll()).map((t) => [t.id, t.name]));
+    const customSessions = new Map(
+      (await r.plannedSessions.listByDateRange({ from: '2000-01-01', to: addDays(today, 60) })).filter((p) => isCustomWorkoutKey(p.workoutKey)).map((p) => [p.id, p.workoutKey]),
+    );
+    const titleOf = (plannedSessionId: string | null): string | null => {
+      const key = plannedSessionId ? customSessions.get(plannedSessionId) : undefined;
+      if (key === undefined) return null;
+      const id = customWorkoutIdOf(key);
+      return (id && customNames.get(id)) || 'Своя тренировка';
+    };
     const sessions = (await r.workouts.listSessions()).sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)).slice(0, 400);
     const rows: StrengthRow[] = [];
     const workouts: WorkoutSummary[] = [];
@@ -141,7 +160,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
         }
       }
       if (workouts.length < 120) {
-        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed', tonnageKg: Math.round(tonnage) });
+        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed', tonnageKg: Math.round(tonnage), title: titleOf(s.plannedSessionId) });
       }
     }
 
@@ -196,6 +215,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       foods: await r.foods.listAll(),
       userFoods: await r.userFoods.listAll(),
       userExercises: await r.userExercises.listAll(),
+      customWorkouts,
       mealTemplates: (await r.mealTemplates.listAll()).filter((t) => t.deletedAt === null).sort((a, b) => b.useCount - a.useCount || a.name.localeCompare(b.name)),
       cardioSessions: (await r.cardioSessions.listAll()).filter((c) => c.deletedAt === null).sort((a, b) => (a.date === b.date ? (a.createdAt < b.createdAt ? 1 : -1) : a.date < b.date ? 1 : -1)),
       exerciseNotes: await r.exerciseNotes.listAll(),
@@ -206,7 +226,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       changes: (await r.programs.listChanges()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
       targets: await r.nutritionTargets.activeOn(today),
       mealWeeks,
-      plannedSessions: (await r.plannedSessions.listByDateRange({ from: addDays(today, -30), to: addDays(today, 28) })).filter((p) => p.workoutKey !== 'bodyweight'),
+      plannedSessions: (await r.plannedSessions.listByDateRange({ from: addDays(today, -30), to: addDays(today, 28) })).filter((p) => !isAdHocWorkoutKey(p.workoutKey)),
       openSession: allSessions.find((x) => x.status === 'in_progress'),
     };
   });

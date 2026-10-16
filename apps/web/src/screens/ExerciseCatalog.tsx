@@ -9,8 +9,8 @@ import { ScreenHeader } from './shared';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { useCommand } from '../app/useCommand';
 
-type Filter = 'all' | 'like' | 'dislike' | 'core' | 'legs' | 'chest' | 'back' | 'shoulders' | 'arms' | 'bodyweight' | 'band';
-const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
+export type Filter = 'all' | 'like' | 'dislike' | 'core' | 'legs' | 'chest' | 'back' | 'shoulders' | 'arms' | 'bodyweight' | 'band';
+export const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
   { value: 'all', label: 'Все' },
   { value: 'like', label: 'Нравятся' },
   { value: 'dislike', label: 'Не нравятся' },
@@ -23,7 +23,7 @@ const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
   { value: 'bodyweight', label: 'Без оборудования' },
   { value: 'band', label: 'С резинкой' },
 ];
-const GROUPS: Record<Exclude<Filter, 'all' | 'like' | 'dislike' | 'bodyweight' | 'band'>, readonly MuscleGroup[]> = {
+export const GROUPS: Record<Exclude<Filter, 'all' | 'like' | 'dislike' | 'bodyweight' | 'band'>, readonly MuscleGroup[]> = {
   core: ['abs', 'obliques'],
   legs: ['quads', 'hamstrings', 'glutes', 'adductors', 'calves'],
   chest: ['chest'],
@@ -32,10 +32,10 @@ const GROUPS: Record<Exclude<Filter, 'all' | 'like' | 'dislike' | 'bodyweight' |
   arms: ['biceps', 'triceps', 'forearms'],
 };
 
-const norm = (t: string): string => t.toLowerCase().replace(/ё/g, 'е');
-const tokens = (q: string): string[] => norm(q).split(/[^a-zа-я0-9]+/).filter(Boolean);
+export const norm = (t: string): string => t.toLowerCase().replace(/ё/g, 'е');
+export const tokens = (q: string): string[] => norm(q).split(/[^a-zа-я0-9]+/).filter(Boolean);
 /** Every word of the query must start some word of the name, by its stem: «жим ногами» finds «Жим платформы ногами». */
-const matchesQuery = (name: string, q: readonly string[]): boolean => {
+export const matchesQuery = (name: string, q: readonly string[]): boolean => {
   if (q.length === 0) return true;
   const words = norm(name).split(/[^a-zа-я0-9]+/).filter(Boolean);
   const stem = (w: string): string => (w.length > 5 ? w.slice(0, w.length - 2) : w.length > 3 ? w.slice(0, w.length - 1) : w);

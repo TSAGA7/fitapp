@@ -39,6 +39,7 @@ const PATHS = {
   clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
   heart: 'M12 20.5C7 17 2.5 13.4 2.5 9.1 2.5 6.3 4.7 4 7.4 4c1.9 0 3.6 1 4.6 2.6C13 5 14.7 4 16.6 4c2.7 0 4.9 2.3 4.9 5.1 0 4.3-4.5 7.9-9.5 11.4z',
   arrowUp: 'M12 19V5M6 11l6-6 6 6',
+  arrowDown: 'M12 5v14M6 13l6 6 6-6',
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -1,7 +1,7 @@
 import { CycleTrainingHint } from './Cycle';
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, assessExercise, type CardioSession, reentryAdvice, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
-import { createProgram, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
+import { createProgram, deleteCustomWorkout, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startCustomWorkout, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
@@ -14,17 +14,20 @@ import { CardioDetailSheet, cardioDetails, cardioTitle, CardioSheet } from './Ca
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { AREA_LABELS } from './ProfileMore';
 import { ScreenHeader } from './shared';
+import { WorkoutBuilder } from './WorkoutBuilder';
+import type { CustomWorkout } from '@fitapp/domain';
 
 type View = 'week' | 'month' | 'program' | 'history';
 
 const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
-export function Training() {
+export function Training({ route = [] }: { route?: string[] }) {
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
   const [view, setView] = useState<View>('week');
   const bodyweight = useBodyweightMode();
   const [cardioOpen, setCardioOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
   const vacation = useVacationMode();
 
   // The calendar is derived from the active version: keep the next two weeks created.
@@ -32,6 +35,7 @@ export function Training() {
     if (s.activeVersion) void run((d) => ensureSessions(d));
   }, [s.activeVersion?.id, s.profile?.updatedAt, s.today]);
 
+  if (route[1] === 'builder' && s.activeVersion && !vacation) return <WorkoutBuilder key={route[2] ?? 'new'} id={route[2] ?? null} />;
   if (vacation) {
     return (
       <main className="screen vac-screen">
@@ -64,8 +68,9 @@ export function Training() {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
-      <div className="row between"><div className="grow"><PlaceSwitch /></div><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
+      <div className="row between"><div className="grow"><PlaceSwitch /></div><Chip pressed={false} onClick={() => setOwnOpen(true)}>Свои</Chip><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
       <CardioSheet open={cardioOpen} onClose={() => setCardioOpen(false)} />
+      <OwnWorkoutsSheet open={ownOpen} onClose={() => setOwnOpen(false)} />
       <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}
       {view === 'week' && (bodyweight ? <BodyweightCard /> : <Week />)}
@@ -73,6 +78,112 @@ export function Training() {
       {view === 'program' && <ProgramView />}
       {view === 'history' && <History />}
     </main>
+  );
+}
+
+// ------------------------------------------------------------------ own workouts
+
+const restClock = (sec: number): string => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+/** «Свои тренировки»: workouts built by the user, started outside the program and repeated in one tap. */
+function OwnWorkoutsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { snapshot: s } = useData();
+  const { run, ok, banner, busy } = useCommand();
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [info, setInfo] = useState<Exercise | null>(null);
+  useEffect(() => {
+    if (!open) {
+      setPickedId(null);
+      setConfirmDelete(false);
+    }
+  }, [open]);
+  if (!open) return null;
+  const picked: CustomWorkout | undefined = pickedId ? s.customWorkouts.find((w) => w.id === pickedId) : undefined;
+  const openSession = s.openSession;
+  const start = async (id: string | null) => {
+    const sessionId = await run((d) => startCustomWorkout(d, id));
+    if (sessionId) {
+      onClose();
+      go(`workout/${sessionId}`);
+    }
+  };
+  const busyNote = openSession && (
+    <Card flat>
+      <div className="stack">
+        <p className="t-small">Сейчас идёт начатая тренировка. Новую можно начать после того, как эту завершишь или прервёшь.</p>
+        <Button size="sm" icon="play" onClick={() => { onClose(); go(`workout/${openSession.id}`); }}>Продолжить начатую</Button>
+      </div>
+    </Card>
+  );
+
+  if (picked) {
+    return (
+      <Sheet open title={picked.name} onClose={onClose}>
+        <div className="stack">
+          <p className="t-small">{picked.exercises.length} {plural(picked.exercises.length, ['упражнение', 'упражнения', 'упражнений'])}{picked.lastUsedOn ? ` · последний раз ${formatDateShort(picked.lastUsedOn)}` : ' · ещё не делал'}</p>
+          <div className="list">
+            {picked.exercises.map((e, i) => {
+              const ex = s.exercises.find((x) => x.id === e.exerciseId);
+              const timed = ex?.loadUnit === 'seconds' || ex?.progressionType === 'time';
+              return (
+                <ListItem
+                  key={`${e.exerciseId}-${i}`}
+                  icon="training"
+                  title={`${i + 1}. ${ex?.name ?? 'Упражнение удалено из каталога'}`}
+                  subtitle={`${e.sets} × ${e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}${timed ? ' с' : ''} · отдых ${restClock(e.restSec)}`}
+                  trailing={ex ? <button type="button" className="icon-btn" aria-label={`Техника: ${ex.name}`} onClick={() => setInfo(ex as Exercise)}><Icon name="info" size={18} /></button> : undefined}
+                />
+              );
+            })}
+          </div>
+          {banner}
+          {busyNote}
+          <Button block icon="play" disabled={busy || !!openSession} onClick={() => void start(picked.id)}>Начать</Button>
+          <Button block variant="secondary" icon="edit" onClick={() => { onClose(); go(`training/builder/${picked.id}`); }}>Изменить</Button>
+          {confirmDelete ? (
+            <div className="row">
+              <Button block variant="danger" icon="trash" disabled={busy} onClick={async () => { if (await ok((d) => deleteCustomWorkout(d, picked.id))) { setPickedId(null); setConfirmDelete(false); } }}>Да, удалить</Button>
+              <Button block variant="secondary" onClick={() => setConfirmDelete(false)}>Отмена</Button>
+            </div>
+          ) : (
+            <Button block variant="text" icon="trash" onClick={() => setConfirmDelete(true)}>Удалить</Button>
+          )}
+          <p className="t-small">Сделанные тренировки останутся в истории, даже если удалить эту.</p>
+          <Button block variant="text" icon="chevronLeft" onClick={() => { setPickedId(null); setConfirmDelete(false); }}>Все свои тренировки</Button>
+        </div>
+        <ExerciseInfoSheet exercise={info} onClose={() => setInfo(null)} />
+      </Sheet>
+    );
+  }
+
+  return (
+    <Sheet open title="Свои тренировки" onClose={onClose}>
+      <div className="stack">
+        <p className="t-small">Для тренировок не по программе: собери свою, запиши и повторяй. Программа и календарь не меняются, а веса считаются по той же истории упражнений.</p>
+        {banner}
+        {busyNote}
+        {s.customWorkouts.length > 0 ? (
+          <div className="list">
+            {s.customWorkouts.map((w) => (
+              <ListItem
+                key={w.id}
+                icon="training"
+                title={w.name}
+                subtitle={`${w.exercises.length} ${plural(w.exercises.length, ['упражнение', 'упражнения', 'упражнений'])} · ${w.lastUsedOn ? `последний раз ${formatDateShort(w.lastUsedOn)}` : 'ещё не делал'}`}
+                trailing={<Icon name="chevronRight" size={20} />}
+                onClick={() => setPickedId(w.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="note">Своих тренировок пока нет.</p>
+        )}
+        <Button block icon="plus" onClick={() => { onClose(); go('training/builder'); }}>Собрать тренировку</Button>
+        <Button block variant="secondary" icon="play" disabled={busy || !!openSession} onClick={() => void start(null)}>Пустая: добавлю упражнения по ходу</Button>
+        <p className="t-small">Любую сделанную тренировку можно сохранить как свою: кнопка «Сохранить как свою» внизу экрана тренировки.</p>
+      </div>
+    </Sheet>
   );
 }
 
@@ -480,7 +591,7 @@ function History() {
         <div className="list">
           {items.map((it) =>
             it.kind === 'workout' ? (
-              <ListItem key={it.key} icon="history" title={formatDay(it.w.date)} subtitle={`${it.w.names.slice(0, 3).join(', ')}${it.w.names.length > 3 ? ` и ещё ${it.w.names.length - 3}` : ''}`} trailing={`${it.w.sets} ${plural(it.w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${it.w.id}`)} />
+              <ListItem key={it.key} icon="history" title={it.w.title ? `${formatDay(it.w.date)} · ${it.w.title}` : formatDay(it.w.date)} subtitle={`${it.w.names.slice(0, 3).join(', ')}${it.w.names.length > 3 ? ` и ещё ${it.w.names.length - 3}` : ''}`} trailing={`${it.w.sets} ${plural(it.w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${it.w.id}`)} />
             ) : (
               <ListItem key={it.key} icon="heart" title={`${formatDay(it.c.date)} · кардио`} subtitle={[cardioTitle(it.c), cardioDetails(it.c)].filter(Boolean).join(' · ')} onClick={() => setCardio(it.c)} />
             ),
@@ -546,7 +657,7 @@ function MonthView() {
       <Card flat>
         <div className="stack">
           <div className="t-h3">{formatDay(picked)}</div>
-          {day && <ListItem icon="history" title="Тренировка выполнена" subtitle={day.names.slice(0, 4).join(', ')} trailing={`${day.sets} подх.`} onClick={() => go(`workout/${day.id}`)} />}
+          {day && <ListItem icon="history" title={day.title ? `Своя: ${day.title}` : 'Тренировка выполнена'} subtitle={day.names.slice(0, 4).join(', ')} trailing={`${day.sets} подх.`} onClick={() => go(`workout/${day.id}`)} />}
           {dayCardio.map((c) => <ListItem key={c.id} icon="heart" title={`Кардио: ${cardioTitle(c)}`} subtitle={cardioDetails(c) || 'Выполнено'} onClick={() => setCardio(c)} />)}
           {plan && <ListItem icon="calendar" title={labelOf(plan.workoutKey)} subtitle="Запланировано" onClick={() => go('training')} />}
           {!day && !plan && dayCardio.length === 0 && <p className="note">В этот день тренировки нет.</p>}

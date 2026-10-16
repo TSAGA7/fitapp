@@ -32,6 +32,7 @@ import type {
   UserExercise,
   CardioSession,
   MealTemplate,
+  CustomWorkout,
   ExerciseNote,
   WeeklySummary,
   WorkoutSession,
@@ -89,6 +90,7 @@ export type UserFoodRepo = Repo<UserFood>;
 export type UserExerciseRepo = Repo<UserExercise>;
 export type CardioSessionRepo = Repo<CardioSession>;
 export type MealTemplateRepo = Repo<MealTemplate>;
+export type CustomWorkoutRepo = Repo<CustomWorkout>;
 export type ExerciseNoteRepo = Repo<ExerciseNote>;
 export interface NutritionTargetsRepo extends Repo<NutritionTargetsRecord> {
   activeOn(date: LocalDate): Promise<NutritionTargetsRecord | undefined>;
@@ -135,6 +137,8 @@ export interface WorkoutRepo {
   listSetLogs(sessionExerciseId: string): Promise<SetLog[]>;
   /** Removes a set record entered by mistake (soft delete). */
   softDeleteSetLog(id: string): Promise<void>;
+  /** Removes an exercise added to a running workout by mistake (soft delete). */
+  softDeleteSessionExercise(id: string): Promise<void>;
   /** History for progression: all fact sets of one prescription context, oldest first. */
   listSetLogsByContext(contextKey: string): Promise<SetLog[]>;
   listSetLogsByExercise(exerciseId: string): Promise<SetLog[]>;
@@ -167,6 +171,7 @@ export interface Repositories {
   proposals: ProposalRepo;
   plannedSessions: PlannedSessionRepo;
   workouts: WorkoutRepo;
+  customWorkouts: CustomWorkoutRepo;
   summaries: SummaryRepo;
 }
 

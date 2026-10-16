@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, addSetToExercise, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, addExerciseToSession, addSetToExercise, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt, fromLift, liftUnit, toLift } from '../app/format';
 import { getRestTimer, getWeightUnit, setWeightUnit, useWeightUnit, type WeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, Icon, IconButton, ListItem, ProgressBar, Sheet, TextField } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, TextField } from '../ui';
 import { ExerciseInfoSheet } from './ExerciseInfo';
+import { ExercisePickerSheet } from './ExercisePicker';
 import { TvaGuideBody } from './TvaGuide';
 import { parseDecimal } from './shared';
 import { ActivityBar, WorkoutSummaryCard } from './WorkoutActivity';
@@ -38,6 +39,8 @@ export function Workout({ sessionId }: { sessionId: string }) {
   const [rest, setRest] = useState<RestState | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
   const barOn = useActivityBar();
   // Exercise blocks: any number can be open at once. The first unfinished one is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
@@ -94,7 +97,9 @@ export function Workout({ sessionId }: { sessionId: string }) {
       <main className="screen workout">
         <WorkoutSummaryCard sessionId={sessionId} title={REST_FINISH_MESSAGE} />
         <p className="t-body" style={{ textAlign: 'center' }}>Записано: {doneSets} из {totalSets} подходов.</p>
+        {doneSets > 0 && <Button block variant="secondary" icon="history" onClick={() => setSaveOpen(true)}>{view.customWorkoutId ? 'Обновить или сохранить как свою' : 'Сохранить как свою, чтобы повторять'}</Button>}
         <Button block onClick={() => go('training')}>К тренировкам</Button>
+        <SaveOwnSheet open={saveOpen} view={view} onClose={() => setSaveOpen(false)} />
       </main>
     );
   }
@@ -113,17 +118,37 @@ export function Workout({ sessionId }: { sessionId: string }) {
       {readOnly && view.session.status === 'completed' && <WorkoutSummaryCard sessionId={sessionId} />}
       {banner}
 
+      {view.exercises.length === 0 && (
+        <Card flat><EmptyState icon="training" title={readOnly ? 'Упражнений не было' : 'Добавь первое упражнение'} text={readOnly ? undefined : 'Выбирай упражнения по ходу тренировки: вес подставится из истории, подходы и повторения можно поменять.'} /></Card>
+      )}
       {view.exercises.map((ev, idx) => (
-        <ExerciseCard key={ev.se.id} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} />
+        <ExerciseCard key={ev.se.id} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} />
       ))}
 
+      {!readOnly && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
       {!readOnly && (
         <div className="stack">
           <Button block icon="check" onClick={() => setFinishing(true)}>Завершить тренировку</Button>
           <Button block variant="text" disabled={busy} onClick={async () => { if (await ok((d) => abandonWorkout(d, sessionId))) go('training'); }}>Прервать без сохранения итогов</Button>
         </div>
       )}
+      {readOnly && view.session.status === 'completed' && doneSets > 0 && <Button block variant="secondary" icon="history" onClick={() => setSaveOpen(true)}>Сохранить как свою, чтобы повторять</Button>}
       {readOnly && <Button block variant="secondary" onClick={() => go('training')}>К тренировкам</Button>}
+      <SaveOwnSheet open={saveOpen} view={view} onClose={() => setSaveOpen(false)} />
+      <ExercisePickerSheet
+        open={picking}
+        title="Добавить в тренировку"
+        added={new Map(view.exercises.map((e) => [e.exercise.id, view.exercises.filter((x) => x.exercise.id === e.exercise.id).length]))}
+        onPick={async (e) => {
+          if (busy) return;
+          const id = await run((d) => addExerciseToSession(d, { sessionId, exerciseId: e.id }));
+          if (id) {
+            await reload();
+            setOpenIds((cur) => new Set([...cur, id]));
+          }
+        }}
+        onClose={() => setPicking(false)}
+      />
       {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
       <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} />
     </main>
@@ -264,6 +289,8 @@ interface CardProps {
   reload: () => Promise<void>;
   open: boolean;
   onToggle: () => void;
+  /** Added by hand (or in an own workout) and nothing recorded yet: can be taken out. */
+  removable?: boolean;
 }
 
 /** A short ramp of lighter sets before the first working set. Logged as warm-ups: they never count as work or move the progression. */
@@ -303,7 +330,7 @@ function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutEx
 /** Sets of the plan that are settled (done or skipped): the exercise is finished when all of them are. */
 export const settledSets = (ev: WorkoutExerciseView): number => ev.plan.filter((p) => ev.logs.some((l) => l.setType === 'working' && l.setNo === p.setNo)).length;
 
-function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onToggle }: CardProps) {
+function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable }: CardProps) {
   const { snapshot: s } = useData();
   const { se, exercise, plan, logs } = ev;
   const working = logs.filter((l) => l.setType === 'working');
@@ -484,6 +511,7 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
               <Button size="sm" variant="text" icon="edit" onClick={() => setNoteOpen(true)}>Заметка</Button>
               <Button size="sm" variant="text" icon="info" onClick={() => setInfoOpen(true)}>Техника</Button>
               {VACUUM_KEYS.has(exercise.key) && <Button size="sm" variant="text" icon="info" onClick={() => setGuideOpen(true)}>Как это работает</Button>}
+              {removable && <Button size="sm" variant="text" icon="trash" disabled={busy} onClick={() => void mutate((d) => removeExerciseFromSession(d, se.id))}>Убрать</Button>}
             </div>
           </div>
         )}
@@ -519,6 +547,45 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
         onPick={async (newExerciseId, reason) => { setSwapOpen(false); await mutate((d) => replaceExerciseInSession(d, { sessionExerciseId: se.id, newExerciseId, reason })); }}
       />
     </Card>
+  );
+}
+
+/** Saves what was done as an own workout (or updates the one it was started from), to repeat it later. */
+function SaveOwnSheet({ open, view, onClose }: { open: boolean; view: WorkoutView; onClose: () => void }) {
+  const { snapshot: s } = useData();
+  const { run, banner, busy } = useCommand();
+  const source = view.customWorkoutId ? s.customWorkouts.find((w) => w.id === view.customWorkoutId) : undefined;
+  const [name, setName] = useState('');
+  const [savedAs, setSavedAs] = useState<string | null>(null);
+  useEffect(() => {
+    if (open) {
+      setName(source ? `${source.name} (2)` : view.custom ? '' : view.label);
+      setSavedAs(null);
+    }
+  }, [open]);
+  const save = async (replaceId: string | null, as: string) => {
+    const id = await run((d) => saveSessionAsCustomWorkout(d, { sessionId: view.session.id, name: as, replaceId }));
+    if (id) setSavedAs(as.trim());
+  };
+  return (
+    <Sheet open={open} title="Своя тренировка" onClose={onClose}>
+      <div className="stack">
+        {savedAs ? (
+          <>
+            <p className="t-body">Сохранено: «{savedAs}». Её можно начать в «Тренировки → Свои».</p>
+            <Button block onClick={onClose}>Готово</Button>
+          </>
+        ) : (
+          <>
+            <p className="t-small">Сохранятся упражнения с записанными подходами: столько подходов, сколько сделано, с теми же повторениями и отдыхом. Потом её можно повторять и менять в конструкторе.</p>
+            {banner}
+            {source && <Button block icon="check" disabled={busy} onClick={() => void save(source.id, source.name)}>Обновить «{source.name}»</Button>}
+            <TextField label={source ? 'Или сохранить как новую' : 'Название'} placeholder="Например: Ноги и ягодицы" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+            <Button block variant={source ? 'secondary' : 'primary'} icon="plus" disabled={busy || !name.trim()} onClick={() => void save(null, name)}>Сохранить как новую</Button>
+          </>
+        )}
+      </div>
+    </Sheet>
   );
 }
 

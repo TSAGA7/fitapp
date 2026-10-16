@@ -71,7 +71,7 @@ function Gate() {
       <BirthdayGreeting birthDate={snapshot.profile.birthDate} />
       {tab === 'today' && <Today />}
       {tab === 'nutrition' && <Nutrition />}
-      {tab === 'training' && <Training />}
+      {tab === 'training' && <Training route={route} />}
       {tab === 'progress' && <Progress route={route} />}
       {tab === 'profile' && <Profile route={route} />}
       <ScrollTop key={tab} />
