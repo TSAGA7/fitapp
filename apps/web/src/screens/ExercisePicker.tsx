@@ -54,7 +54,7 @@ export function ExercisePickerSheet({ open, title, added, onPick, onClose }: { o
                   {warn && <span className="li-sub" style={{ color: a.status === 'avoid' ? 'var(--danger)' : '#b45309' }}>{warn}</span>}
                 </button>
                 <button type="button" className="icon-btn" aria-label={`Техника: ${e.name}`} onClick={() => setInfo(e)}><Icon name="info" size={18} /></button>
-                {n > 0 ? <span className="pick-count" aria-label={`Добавлено ${n}`}>✓{n > 1 ? ` ${n}` : ''}</span> : <span className="pick-add" aria-hidden="true"><Icon name="plus" size={20} /></span>}
+                <button type="button" className={n > 0 ? 'pick-count' : 'pick-add'} aria-label={n > 0 ? `Добавлено ${n}. Добавить ещё: ${e.name}` : `Добавить: ${e.name}`} onClick={() => onPick(e)}>{n > 0 ? `✓${n > 1 ? ` ${n}` : ''}` : <Icon name="plus" size={20} />}</button>
               </div>
             );
           })}
