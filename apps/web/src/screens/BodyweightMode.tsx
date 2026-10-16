@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { startBodyweightWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { bodyweightPlan, exerciseName } from '../app/derive';
-import { setBodyweightMode, setHomeEquipment, useBodyweightMode, useHomeEquipment } from '../app/prefs';
+import { setBodyweightMode, setHomeEquipment, setOwnMode, useBodyweightMode, useHomeEquipment, useOwnMode } from '../app/prefs';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Button, Card, Chip, Segmented } from '../ui';
@@ -11,10 +11,22 @@ import { Button, Card, Chip, Segmented } from '../ui';
 const HOME_CHOICES = ['dumbbells', 'kettlebell', 'resistance_band', 'pullup_bar', 'flat_bench', 'adjustable_bench', 'barbell', 'dip_station'] as const;
 const HOME_LABEL: Record<string, string> = { dumbbells: 'Гантели', kettlebell: 'Гиря', resistance_band: 'Резинки', pullup_bar: 'Турник', flat_bench: 'Скамья', adjustable_bench: 'Скамья регулируемая', barbell: 'Штанга', dip_station: 'Брусья' };
 
-/** Where the person trains today: «Зал» (the program) or «Дом» (a workout made from what is at home). The program itself is never changed. */
+/**
+ * How the person trains now: «Зал» (the program), «Дом» (a workout made from what is at home)
+ * or «Своя» (a plain journal: exercises and sets are added by hand). The program itself is never changed.
+ */
 export function PlaceSwitch() {
   const home = useBodyweightMode();
-  return <Segmented<'gym' | 'home'> label="Где тренируешься" value={home ? 'home' : 'gym'} onChange={(v) => setBodyweightMode(v === 'home')} options={[{ value: 'gym', label: 'Зал' }, { value: 'home', label: 'Дом' }]} />;
+  const own = useOwnMode();
+  const pick = (v: 'gym' | 'home' | 'own') => {
+    if (v === 'own') setOwnMode(true);
+    else if (v === 'home') setBodyweightMode(true);
+    else {
+      setOwnMode(false);
+      setBodyweightMode(false);
+    }
+  };
+  return <Segmented<'gym' | 'home' | 'own'> label="Как тренируешься" value={own ? 'own' : home ? 'home' : 'gym'} onChange={pick} options={[{ value: 'gym', label: 'Зал' }, { value: 'home', label: 'Дом' }, { value: 'own', label: 'Своя' }]} />;
 }
 
 /** The workout of the day at home: replaces the program workout while «Дом» is on. */

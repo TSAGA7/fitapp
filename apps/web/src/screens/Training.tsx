@@ -8,7 +8,8 @@ import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
-import { useBodyweightMode, useVacationMode } from '../app/prefs';
+import { useBodyweightMode, useOwnMode, useVacationMode } from '../app/prefs';
+import { JournalCard } from './Journal';
 import { BodyweightCard, PlaceSwitch } from './BodyweightMode';
 import { CardioDetailSheet, cardioDetails, cardioTitle, CardioSheet } from './Cardio';
 import { ExerciseInfoSheet } from './ExerciseInfo';
@@ -26,6 +27,7 @@ export function Training({ route = [] }: { route?: string[] }) {
   const { run, banner, busy } = useCommand();
   const [view, setView] = useState<View>('week');
   const bodyweight = useBodyweightMode();
+  const own = useOwnMode();
   const [cardioOpen, setCardioOpen] = useState(false);
   const [ownOpen, setOwnOpen] = useState(false);
   const vacation = useVacationMode();
@@ -68,12 +70,12 @@ export function Training({ route = [] }: { route?: string[] }) {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
-      <div className="row between"><div className="grow"><PlaceSwitch /></div><Chip pressed={false} onClick={() => setOwnOpen(true)}>Свои</Chip><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
+      <div className="row between"><div className="grow"><PlaceSwitch /></div><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
       <CardioSheet open={cardioOpen} onClose={() => setCardioOpen(false)} />
       <OwnWorkoutsSheet open={ownOpen} onClose={() => setOwnOpen(false)} />
       <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}
-      {view === 'week' && (bodyweight ? <BodyweightCard /> : <Week />)}
+      {view === 'week' && (own ? <JournalCard onOwnList={() => setOwnOpen(true)} /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
       {view === 'month' && <MonthView />}
       {view === 'program' && <ProgramView />}
       {view === 'history' && <History />}
@@ -189,7 +191,7 @@ function OwnWorkoutsSheet({ open, onClose }: { open: boolean; onClose: () => voi
 
 // ------------------------------------------------------------------ week
 
-function Week() {
+function Week({ onOwnList }: { onOwnList: () => void }) {
   const { snapshot: s } = useData();
   const { run, ok, banner, busy } = useCommand();
   const version = s.activeVersion!;
@@ -291,6 +293,7 @@ function Week() {
           );
         })}
       </div>
+      <Button block variant="text" icon="training" onClick={onOwnList}>Свои тренировки и конструктор</Button>
       <PreviewSheet session={preview} label={preview ? labelOf(preview.workoutKey) : ''} onClose={() => setPreview(null)} onStart={preview && preview.status === 'planned' ? () => { const id = preview.id; setPreview(null); void begin(id); } : undefined} />
       <MoveSheet session={moving} onClose={() => setMoving(null)} onMove={async (date, reason) => { if (moving && (await ok((d) => movePlannedSession(d, moving.id, date, reason)))) setMoving(null); }} />
     </>

@@ -32,6 +32,7 @@ function readBw(): boolean {
   }
 }
 export function setBodyweightMode(on: boolean): void {
+  if (on && (ownCache ?? readOwn())) setOwnMode(false);
   bwCache = on;
   try {
     if (on) window.localStorage.setItem(BW_KEY, '1');
@@ -48,6 +49,37 @@ export function useBodyweightMode(): boolean {
       return () => listeners.delete(cb);
     },
     () => bwCache ?? readBw(),
+  );
+}
+
+// ---- «Своя программа»: the training tab works as a plain workout journal (the program is on pause, never changed).
+const OWN_KEY = 'fitapp.ownMode';
+let ownCache: boolean | null = null;
+function readOwn(): boolean {
+  try {
+    return window.localStorage.getItem(OWN_KEY) === '1';
+  } catch {
+    return ownCache ?? false;
+  }
+}
+export function setOwnMode(on: boolean): void {
+  if (on && (bwCache ?? readBw())) setBodyweightMode(false);
+  ownCache = on;
+  try {
+    if (on) window.localStorage.setItem(OWN_KEY, '1');
+    else window.localStorage.removeItem(OWN_KEY);
+  } catch {
+    /* storage unavailable: the mode lives until the page is closed */
+  }
+  listeners.forEach((l) => l());
+}
+export function useOwnMode(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    () => ownCache ?? readOwn(),
   );
 }
 

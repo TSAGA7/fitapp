@@ -31,7 +31,7 @@ const SIDE_LABELS: Record<Side, string> = { left: 'Слева', right: 'Спра
 const REASON_LABELS: Record<ReplacementReason, string> = { machine_busy: 'Тренажёр занят', equipment_unavailable: 'Нет оборудования', discomfort: 'Дискомфорт', preference: 'Хочу другое' };
 const RIR_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [{ value: 0, label: '0' }, { value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 4, label: '4+' }];
 
-export function Workout({ sessionId }: { sessionId: string }) {
+export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise to open first (just added from the journal). */ focus?: string }) {
   const { act } = useData();
   const { run, ok, banner, busy } = useCommand();
   const [view, setView] = useState<WorkoutView | null>(null);
@@ -47,11 +47,17 @@ export function Workout({ sessionId }: { sessionId: string }) {
   const settledRef = useRef<Map<string, boolean> | null>(null);
   useEffect(() => {
     if (!view) return;
-    const finished = new Map(view.exercises.map((e) => [e.se.id, e.plan.length > 0 && settledSets(e) >= e.plan.length]));
+    // In a journal (own workout) an exercise is never "finished": more sets can always be added, so nothing folds by itself.
+    const finished = new Map(view.exercises.map((e) => [e.se.id, !view.custom && e.plan.length > 0 && settledSets(e) >= e.plan.length]));
     const prev = settledRef.current;
     settledRef.current = finished;
     if (prev === null) {
-      const first = view.exercises.find((e) => !finished.get(e.se.id));
+      if (focus && view.exercises.some((e) => e.se.id === focus)) {
+        setOpenIds(new Set([focus]));
+        setTimeout(() => document.getElementById(`ex-${focus}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
+        return;
+      }
+      const first = view.custom ? view.exercises[view.exercises.length - 1] : view.exercises.find((e) => !finished.get(e.se.id));
       if (first) setOpenIds(new Set([first.se.id]));
       return;
     }
@@ -122,7 +128,7 @@ export function Workout({ sessionId }: { sessionId: string }) {
         <Card flat><EmptyState icon="training" title={readOnly ? 'Упражнений не было' : 'Добавь первое упражнение'} text={readOnly ? undefined : 'Выбирай упражнения по ходу тренировки: вес подставится из истории, подходы и повторения можно поменять.'} /></Card>
       )}
       {view.exercises.map((ev, idx) => (
-        <ExerciseCard key={ev.se.id} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} />
+        <ExerciseCard key={ev.se.id} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} />
       ))}
 
       {!readOnly && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
@@ -141,10 +147,14 @@ export function Workout({ sessionId }: { sessionId: string }) {
         added={new Map(view.exercises.map((e) => [e.exercise.id, view.exercises.filter((x) => x.exercise.id === e.exercise.id).length]))}
         onPick={async (e) => {
           if (busy) return;
-          const id = await run((d) => addExerciseToSession(d, { sessionId, exerciseId: e.id }));
+          const id = await run((d) => addExerciseToSession(d, { sessionId, exerciseId: e.id, sets: view.custom ? 1 : undefined }));
           if (id) {
             await reload();
             setOpenIds((cur) => new Set([...cur, id]));
+            if (view.custom) {
+              setPicking(false);
+              setTimeout(() => document.getElementById(`ex-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 80);
+            }
           }
         }}
         onClose={() => setPicking(false)}
@@ -291,6 +301,8 @@ interface CardProps {
   onToggle: () => void;
   /** Added by hand (or in an own workout) and nothing recorded yet: can be taken out. */
   removable?: boolean;
+  /** Journal style (own workout): sets are added by hand, logging after the last one adds a new one. */
+  journal?: boolean;
 }
 
 /** A short ramp of lighter sets before the first working set. Logged as warm-ups: they never count as work or move the progression. */
@@ -330,7 +342,7 @@ function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutEx
 /** Sets of the plan that are settled (done or skipped): the exercise is finished when all of them are. */
 export const settledSets = (ev: WorkoutExerciseView): number => ev.plan.filter((p) => ev.logs.some((l) => l.setType === 'working' && l.setNo === p.setNo)).length;
 
-function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable }: CardProps) {
+function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable, journal }: CardProps) {
   const { snapshot: s } = useData();
   const { se, exercise, plan, logs } = ev;
   const working = logs.filter((l) => l.setType === 'working');
@@ -377,6 +389,12 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
   const canLog = !readOnly && !busy && rir !== null && Number.isFinite(r) && r >= 1 && (weight.trim() === '' || (w !== null && Number.isFinite(w) && w >= 0));
   const base = { sessionExerciseId: se.id, exerciseId: exercise.id, variantKey: se.variantKey, contextKey, plannedSetId: target?.id ?? null };
 
+  /** Records the set; in a journal a set after the last planned one first becomes a planned set of its own. */
+  const record = async (d: Parameters<Parameters<CardProps['mutate']>[0]>[0], rest: number | null) => {
+    const extra = journal === true && nextNo > plan.length;
+    if (extra) await addSetToExercise(d, se.id);
+    await logSet(d, { ...base, plannedSetId: extra ? null : base.plannedSetId, setNo: nextNo, weightKg: w, reps: r, rir, restSec: rest });
+  };
   const [restOverride, setRestOverride] = useState<number | null>(null);
   useEffect(() => setRestOverride(null), [nextNo]);
   const timed = exercise.progressionType === 'time';
@@ -402,18 +420,21 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
   const unit = timed ? ' с' : '';
   const settled = settledSets(ev);
   const allSettled = plan.length > 0 && settled >= plan.length;
-  const headline = allSettled
+  const doneCount = working.filter((l) => l.status === 'done').length;
+  const headline = journal && allSettled
+    ? `Записано ${doneCount} ${doneCount === 1 ? 'подход' : doneCount < 5 ? 'подхода' : 'подходов'} · можно ещё`
+    : allSettled
     ? 'Все подходы выполнены'
     : `${se.replacedFromExerciseId ? 'Замена · ' : ''}Подход ${nextNo}: ${target ? (target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(target.targetWeightKg), 2)} ${liftUnit()}`) : ''} × ${target ? (target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`) : ''}${unit}`;
 
   return (
-    <Card className={`ex-acc ${open ? 'open' : ''}`}>
+    <Card id={`ex-${se.id}`} className={`ex-acc ${open ? 'open' : ''}`}>
       <button type="button" className="ex-head" aria-expanded={open} onClick={onToggle}>
         <span className="ex-title">
           <span className="t-h3">{exercise.name}</span>
           <span className="t-small">{headline}</span>
         </span>
-        {allSettled ? <Badge>Готово</Badge> : <Badge tone="neutral">{settled}/{plan.length}</Badge>}
+        {journal ? <Badge tone={doneCount > 0 ? 'default' : 'neutral'}>{doneCount} подх.</Badge> : allSettled ? <Badge>Готово</Badge> : <Badge tone="neutral">{settled}/{plan.length}</Badge>}
         <span className="ex-chev" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
       </button>
       <div className="stack ex-body" hidden={!open}>
@@ -448,7 +469,8 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
             return (
               <div key={p.id} className="set-row" aria-current={current ? 'step' : undefined}>
                 <span className="t-caption">Подход {p.setNo}</span>
-                <span className="t-small">{p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(p.targetWeightKg), 2)} ${liftUnit()}`} × {p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}{unit}, запас {p.targetRir.min}–{p.targetRir.max}</span>
+                {/* In a journal a recorded set shows only what was done: the suggestion is noise there. */}
+                {journal && l ? <span /> : <span className="t-small">{p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(p.targetWeightKg), 2)} ${liftUnit()}`} × {p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}{unit}, запас {p.targetRir.min}–{p.targetRir.max}</span>}
                 {l && l.status === 'done' && (
                   <span className="row">
                     <b className="t-body">{l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}{l.actualReps}{unit} · RIR {l.actualRir}</b>
@@ -471,7 +493,7 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
 
         {!readOnly && (
           <div className="stack">
-            <div className="t-caption">{nextNo <= plan.length ? `Подход ${nextNo}` : 'Дополнительный подход'}</div>
+            <div className="t-caption">{nextNo <= plan.length || journal ? `Подход ${nextNo}` : 'Дополнительный подход'}</div>
             {exercise.loadUnit !== 'seconds' && (
               <div className="row" style={{ alignItems: 'flex-end' }}>
                 <IconButton icon="minus" label="Меньше веса" onClick={() => bump(-step)} />
@@ -501,8 +523,8 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
                 <IconButton icon="plus" label="Больше отдыха" tone="ghost" onClick={() => setRestOverride(Math.min(600, restSec + 15))} />
               </span>
             </div>
-            <Button block icon="clock" disabled={!canLog} onClick={() => void mutate((d) => logSet(d, { ...base, setNo: nextNo, weightKg: w, reps: r, rir, restSec }), restSec, restOverride === null ? suggestion.reason : 'вручную')}>Перерыв · {clock(restSec)}</Button>
-            <Button block variant="text" disabled={!canLog} onClick={() => void mutate((d) => logSet(d, { ...base, setNo: nextNo, weightKg: w, reps: r, rir, restSec: null }))}>Записать без перерыва</Button>
+            <Button block icon="clock" disabled={!canLog} onClick={() => void mutate((d) => record(d, restSec), restSec, restOverride === null ? suggestion.reason : 'вручную')}>Перерыв · {clock(restSec)}</Button>
+            <Button block variant="text" disabled={!canLog} onClick={() => void mutate((d) => record(d, null))}>Записать без перерыва</Button>
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <Button size="sm" variant="text" icon="skip" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}>Пропустить подход</Button>
               <Button size="sm" variant="text" icon="alert" onClick={() => setPainOpen(true)}>Боль</Button>

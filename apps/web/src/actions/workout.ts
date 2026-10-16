@@ -928,7 +928,7 @@ export async function startCustomWorkout(deps: AppDeps, id: string | null): Prom
 }
 
 /** Adds an exercise to a running workout (any: program, home or own). The weight is prescribed from its history. */
-export async function addExerciseToSession(deps: AppDeps, input: { sessionId: string; exerciseId: string }): Promise<string> {
+export async function addExerciseToSession(deps: AppDeps, input: { sessionId: string; exerciseId: string; /** Journal style: start with this many sets and add more by hand. */ sets?: number }): Promise<string> {
   return deps.uow.run(async (r) => {
     const session = await r.workouts.getSession(input.sessionId);
     if (!session || session.status !== 'in_progress' || !session.plannedSessionId) throw new Error('Тренировка уже завершена');
@@ -942,7 +942,8 @@ export async function addExerciseToSession(deps: AppDeps, input: { sessionId: st
     const position = ses.reduce((m, e) => Math.max(m, e.position), 0) + 1;
     let n = position;
     while (usedKeys.has(`add_${n}`)) n++;
-    const pe = plannedFromCustom(exercise, customDefaults(exercise), `add_${n}`, position);
+    const def = customDefaults(exercise);
+    const pe = plannedFromCustom(exercise, { ...def, sets: input.sets ? Math.min(10, Math.max(1, Math.round(input.sets))) : def.sets }, `add_${n}`, position);
     const deload = planned.length > 0 && planned.every((p) => p.reasonCode === 'deload_week');
     const ctx = await prescriptionContext(r, deps, version, session.id);
     const p = await prescribe(r, deps, ctx, pe, exercise, deload);
@@ -1011,4 +1012,15 @@ export async function saveSessionAsCustomWorkout(deps: AppDeps, input: { session
     if (ps && isCustomWorkoutKey(ps.workoutKey) && (sourceId === null || sourceId === input.replaceId)) await r.plannedSessions.put({ ...ps, workoutKey: customWorkoutKey(id) });
     return id;
   });
+}
+
+/**
+ * «Своя программа» (journal mode): the exercise goes into the workout in progress, or into a new
+ * own workout started for it. It starts with one set; more are added by hand as they are done.
+ */
+export async function addToJournal(deps: AppDeps, exerciseId: string): Promise<{ sessionId: string; sessionExerciseId: string }> {
+  const open = await deps.uow.run(async (r) => (await r.workouts.listSessions()).find((s) => s.status === 'in_progress'));
+  const sessionId = open ? open.id : await startCustomWorkout(deps, null);
+  const sessionExerciseId = await addExerciseToSession(deps, { sessionId, exerciseId, sets: 1 });
+  return { sessionId, sessionExerciseId };
 }

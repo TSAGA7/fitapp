@@ -64,7 +64,7 @@ function Gate() {
   const route = useRoute();
   if (route[0] === 'design') return <DesignSystem />;
   if (!snapshot.profile) return <Onboarding />;
-  if (route[0] === 'workout' && route[1]) return <Workout key={route[1]} sessionId={route[1]} />;
+  if (route[0] === 'workout' && route[1]) return <Workout key={route[1]} sessionId={route[1]} focus={route[2]} />;
   const tab = ['today', 'nutrition', 'training', 'progress', 'profile'].includes(route[0] as string) ? (route[0] as string) : 'today';
   return (
     <>

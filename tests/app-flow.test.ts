@@ -52,6 +52,7 @@ import {
   removeExerciseFromSession,
   canRemoveFromSession,
   saveSessionAsCustomWorkout,
+  addToJournal,
   addCardioSession,
   deleteCardioSession,
   createCustomFood,
@@ -615,6 +616,28 @@ describe('app flow on the real storage', () => {
     s = await loadSnapshot(deps);
     expect(s.customWorkouts.map((w) => w.id)).toEqual([copyId]);
     expect(s.workouts.find((w) => w.id === sid)?.title).toBe('Своя тренировка'); // the history keeps the workout
+  });
+
+  it('journal mode: an exercise starts today\'s own workout with one set, the next ones join it, sets are added by hand', async () => {
+    const { deps } = await setup();
+    const s = await loadSnapshot(deps);
+    const [a, b] = s.activeVersion!.training.workouts[0]!.exercises.map((e) => e.exerciseId);
+    const first = await addToJournal(deps, a!);
+    const second = await addToJournal(deps, b!);
+    expect(second.sessionId).toBe(first.sessionId);
+    let view = await loadWorkout(deps, first.sessionId);
+    expect(view.custom).toBe(true);
+    expect(view.exercises.map((e) => [e.exercise.id, e.plan.length])).toEqual([[a, 1], [b, 1]]);
+    const ex = view.exercises[0]!;
+    await logSet(deps, { sessionExerciseId: ex.se.id, exerciseId: a!, variantKey: ex.se.variantKey, contextKey: ex.plan[0]!.contextKey, plannedSetId: ex.plan[0]!.id, setNo: 1, weightKg: 40, reps: 10, rir: 2 });
+    await addSetToExercise(deps, ex.se.id);
+    await logSet(deps, { sessionExerciseId: ex.se.id, exerciseId: a!, variantKey: ex.se.variantKey, contextKey: ex.plan[0]!.contextKey, plannedSetId: null, setNo: 2, weightKg: 42.5, reps: 8, rir: 1 });
+    view = await loadWorkout(deps, first.sessionId);
+    expect(view.exercises[0]!.plan).toHaveLength(2);
+    expect(view.exercises[0]!.logs.map((l) => l.actualWeightKg)).toEqual([40, 42.5]);
+    await finishWorkout(deps, first.sessionId, null);
+    const after = await loadSnapshot(deps);
+    expect(after.workouts[0]).toMatchObject({ title: 'Своя тренировка', sets: 2, completed: true });
   });
 
   it('a mistaken skipped set can be restored, and an extra set can be added', async () => {
