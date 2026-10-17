@@ -76,3 +76,9 @@
 [data-theme='dark'] .pick-add, [data-theme='dark'] .bld-no { background: rgba(163, 230, 53, .14); color: var(--accent); }
 
 .pick-add:active, .pick-count:active { transform: scale(.92); }
+
+.sheet-footer { position: sticky; bottom: calc(-24px - var(--safe-b)); margin: 0 -20px calc(-24px - var(--safe-b)); padding: 12px 20px calc(16px + var(--safe-b)); background: #fff; border-top: 1px solid var(--border); display: grid; gap: 8px; z-index: 2; }
+[data-theme='dark'] .sheet-footer { background: rgb(21, 28, 27); border-color: rgba(255, 255, 255, .08); }
+
+.own-new { outline: 2px solid var(--accent); }
+.own-row .pick-add:disabled, .own-row .pick-main:disabled { opacity: .5; }

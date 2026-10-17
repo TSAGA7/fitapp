@@ -416,3 +416,16 @@ describe('home workout with equipment', () => {
     expect(none.exercises.map((e) => catalog.find((c) => c.id === e.exerciseId)?.key).some((k) => k?.startsWith('band_'))).toBe(false);
   });
 });
+
+import { autoWorkoutName, uniqueName } from './customName';
+describe('own workout names', () => {
+  it('one exercise is named after it, several after the body areas, most worked first', () => {
+    expect(autoWorkoutName([{ name: 'Жим платформы ногами', primaryMuscles: ['quads'] }])).toBe('Жим платформы ногами');
+    expect(autoWorkoutName([{ name: 'a', primaryMuscles: ['abs'] }, { name: 'b', primaryMuscles: ['quads'] }, { name: 'c', primaryMuscles: ['glutes'] }])).toBe('Ноги + Пресс');
+    expect(autoWorkoutName([])).toBe('Своя тренировка');
+  });
+  it('a taken name gets a number', () => {
+    expect(uniqueName('Ноги', ['ноги', 'Ноги 2'])).toBe('Ноги 3');
+    expect(uniqueName('Грудь', ['Ноги'])).toBe('Грудь');
+  });
+});

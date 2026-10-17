@@ -8,10 +8,9 @@ import { fmt, formatDay, GOAL_LABELS, initials, kg, plural, signedKg, wnum, wUni
 import { getDisplayName, setBeerMl, setDrink, useBeerMl, useDrink, useVacationMode, type Drink } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, Sparkline } from '../ui';
-import { useBodyweightMode, useOwnMode } from '../app/prefs';
+import { useBodyweightMode } from '../app/prefs';
 import { cardioTitle } from './Cardio';
 import { BodyweightCard } from './BodyweightMode';
-import { JournalCard } from './Journal';
 import { FeelingCard } from './Cycle';
 import { GoalExplainSheet } from './GoalExplain';
 import { AddMeasurementSheet, AddWeightSheet, parseDecimal } from './shared';
@@ -26,7 +25,6 @@ export function Today() {
   const [explainOpen, setExplainOpen] = useState(false);
   const name = getDisplayName();
   const bodyweight = useBodyweightMode();
-  const own = useOwnMode();
   const w = s.weight;
   const { run, banner } = useCommand();
   useEffect(() => {
@@ -121,7 +119,6 @@ export function Today() {
 
       {banner}
       {bodyweight && s.activeVersion && <BodyweightCard />}
-      {own && s.activeVersion && !vacation && <JournalCard />}
       {vacation && (
         <div className="day-status vacation">
           <span className="ds-emoji" aria-hidden="true">🥂</span>

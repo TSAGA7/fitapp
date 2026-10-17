@@ -23,6 +23,7 @@ import {
   type MealTemplate,
   type CustomWorkout,
   customWorkoutIdOf,
+  autoWorkoutName,
   isAdHocWorkoutKey,
   isCustomWorkoutKey,
   type NutritionTargetsRecord,
@@ -60,6 +61,10 @@ export interface WorkoutSummary {
   tonnageKg: number;
   /** Name of the own workout it was (from «Свои тренировки»), otherwise null. */
   title: string | null;
+  /** The saved own workout it was started from, if it still exists. */
+  customWorkoutId: string | null;
+  /** Started and not finished yet. */
+  inProgress: boolean;
 }
 export interface FoodDay {
   date: LocalDate;
@@ -137,11 +142,15 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
     const customSessions = new Map(
       (await r.plannedSessions.listByDateRange({ from: '2000-01-01', to: addDays(today, 60) })).filter((p) => isCustomWorkoutKey(p.workoutKey)).map((p) => [p.id, p.workoutKey]),
     );
-    const titleOf = (plannedSessionId: string | null): string | null => {
+    /** Own workout behind a session: its saved id and its name (an unsaved one is named after its exercises). */
+    const ownOf = (plannedSessionId: string | null, exerciseIds: readonly string[]): { title: string | null; customWorkoutId: string | null } => {
       const key = plannedSessionId ? customSessions.get(plannedSessionId) : undefined;
-      if (key === undefined) return null;
+      if (key === undefined) return { title: null, customWorkoutId: null };
       const id = customWorkoutIdOf(key);
-      return (id && customNames.get(id)) || 'Своя тренировка';
+      const saved = id ? customNames.get(id) : undefined;
+      if (saved) return { title: saved, customWorkoutId: id };
+      const list = exerciseIds.map((x) => muscleMap.get(x)).filter((e): e is Exercise => !!e).map((e) => ({ name: e.name, primaryMuscles: e.primaryMuscles }));
+      return { title: autoWorkoutName(list), customWorkoutId: null };
     };
     const sessions = (await r.workouts.listSessions()).sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)).slice(0, 400);
     const rows: StrengthRow[] = [];
@@ -160,7 +169,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
         }
       }
       if (workouts.length < 120) {
-        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed', tonnageKg: Math.round(tonnage), title: titleOf(s.plannedSessionId) });
+        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed', inProgress: s.status === 'in_progress', tonnageKg: Math.round(tonnage), ...ownOf(s.plannedSessionId, ses.map((e) => e.exerciseId)) });
       }
     }
 

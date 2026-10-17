@@ -581,7 +581,7 @@ function SaveOwnSheet({ open, view, onClose }: { open: boolean; view: WorkoutVie
   const [savedAs, setSavedAs] = useState<string | null>(null);
   useEffect(() => {
     if (open) {
-      setName(source ? `${source.name} (2)` : view.custom ? '' : view.label);
+      setName(source || view.custom ? '' : view.label);
       setSavedAs(null);
     }
   }, [open]);
@@ -592,9 +592,9 @@ function SaveOwnSheet({ open, view, onClose }: { open: boolean; view: WorkoutVie
   return (
     <Sheet open={open} title="Своя тренировка" onClose={onClose}>
       <div className="stack">
-        {savedAs ? (
+        {savedAs !== null ? (
           <>
-            <p className="t-body">Сохранено: «{savedAs}». Её можно начать в «Тренировки → Свои».</p>
+            <p className="t-body">Сохранено{savedAs ? `: «${savedAs}»` : ''}. Она в «Тренировки → Своя» и в «Свои тренировки».</p>
             <Button block onClick={onClose}>Готово</Button>
           </>
         ) : (
@@ -602,8 +602,8 @@ function SaveOwnSheet({ open, view, onClose }: { open: boolean; view: WorkoutVie
             <p className="t-small">Сохранятся упражнения с записанными подходами: столько подходов, сколько сделано, с теми же повторениями и отдыхом. Потом её можно повторять и менять в конструкторе.</p>
             {banner}
             {source && <Button block icon="check" disabled={busy} onClick={() => void save(source.id, source.name)}>Обновить «{source.name}»</Button>}
-            <TextField label={source ? 'Или сохранить как новую' : 'Название'} placeholder="Например: Ноги и ягодицы" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
-            <Button block variant={source ? 'secondary' : 'primary'} icon="plus" disabled={busy || !name.trim()} onClick={() => void save(null, name)}>Сохранить как новую</Button>
+            <TextField label={source ? 'Или сохранить как новую (название необязательно)' : 'Название (необязательно)'} placeholder="Придумается само по упражнениям" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+            <Button block variant={source ? 'secondary' : 'primary'} icon="plus" disabled={busy} onClick={() => void save(null, name)}>Сохранить как новую</Button>
           </>
         )}
       </div>

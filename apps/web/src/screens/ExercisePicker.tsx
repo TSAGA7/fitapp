@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { assessExercise, isBodyweightOnly, type Exercise } from '@fitapp/domain';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
@@ -11,7 +11,18 @@ import { ExerciseInfoSheet } from './ExerciseInfo';
  * do not suit the user's limits (they can still be taken: it is his own workout, the mark is a warning).
  * The sheet stays open after a pick, so several exercises can be added in a row; `added` counts them.
  */
-export function ExercisePickerSheet({ open, title, added, onPick, onClose }: { open: boolean; title: string; added?: ReadonlyMap<string, number>; onPick: (exercise: Exercise) => void; onClose: () => void }) {
+export function ExercisePickerSheet({ open, title, added, onPick, onRemove, onClose, header, footer }: {
+  open: boolean;
+  title: string;
+  added?: ReadonlyMap<string, number>;
+  onPick: (exercise: Exercise) => void;
+  /** Cart mode: tapping the tick takes the exercise out again. */
+  onRemove?: (exercise: Exercise) => void;
+  onClose: () => void;
+  header?: ReactNode;
+  /** Stays at the bottom of the sheet (the «Готово» of the cart). */
+  footer?: ReactNode;
+}) {
   const { snapshot: s } = useData();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
@@ -38,6 +49,7 @@ export function ExercisePickerSheet({ open, title, added, onPick, onClose }: { o
   return (
     <Sheet open title={title} onClose={onClose}>
       <div className="stack">
+        {header}
         <TextField label="Поиск" value={query} onChange={(e) => setQuery(e.target.value)} />
         <div className="chips" role="group" aria-label="Фильтр">
           {FILTERS.map((f) => <Chip key={f.value} pressed={filter === f.value} onClick={() => setFilter(f.value)}>{f.label}</Chip>)}
@@ -48,18 +60,19 @@ export function ExercisePickerSheet({ open, title, added, onPick, onClose }: { o
             const warn = a.status === 'avoid' ? 'Не подходит твоим ограничениям: только если уверен' : a.status === 'caution' ? 'Осторожно: следи за техникой' : a.status === 'unavailable' ? 'Нет оборудования в профиле' : '';
             return (
               <div key={e.id} className="list-item pick-row">
-                <button type="button" className="pick-main" aria-label={`Добавить: ${e.name}`} onClick={() => onPick(e)}>
+                <button type="button" className="pick-main" aria-label={n > 0 && onRemove ? `Убрать: ${e.name}` : `Добавить: ${e.name}`} onClick={() => (n > 0 && onRemove ? onRemove(e) : onPick(e))}>
                   <span className="li-title">{e.name}</span>
                   <span className="li-sub">{e.defaultSets}×{e.defaultRepRange.min}–{e.defaultRepRange.max}{e.loadUnit === 'seconds' ? ' с' : ''}{pref.get(e.id) === 'like' ? ' · ❤️' : ''}</span>
                   {warn && <span className="li-sub" style={{ color: a.status === 'avoid' ? 'var(--danger)' : '#b45309' }}>{warn}</span>}
                 </button>
                 <button type="button" className="icon-btn" aria-label={`Техника: ${e.name}`} onClick={() => setInfo(e)}><Icon name="info" size={18} /></button>
-                <button type="button" className={n > 0 ? 'pick-count' : 'pick-add'} aria-label={n > 0 ? `Добавлено ${n}. Добавить ещё: ${e.name}` : `Добавить: ${e.name}`} onClick={() => onPick(e)}>{n > 0 ? `✓${n > 1 ? ` ${n}` : ''}` : <Icon name="plus" size={20} />}</button>
+                <button type="button" className={n > 0 ? 'pick-count' : 'pick-add'} aria-label={n > 0 ? (onRemove ? `Убрать: ${e.name}` : `Добавлено ${n}. Добавить ещё: ${e.name}`) : `Добавить: ${e.name}`} onClick={() => (n > 0 && onRemove ? onRemove(e) : onPick(e))}>{n > 0 ? `✓${n > 1 ? ` ${n}` : ''}` : <Icon name="plus" size={20} />}</button>
               </div>
             );
           })}
           {items.length === 0 && <div className="empty-hint"><span className="eh-ic" aria-hidden="true">🔍</span><span className="eh-t">Ничего не найдено</span><span className="eh-s">Попробуй другой фильтр или поиск</span></div>}
         </div>
+        {footer && <div className="sheet-footer">{footer}</div>}
       </div>
       <ExerciseInfoSheet exercise={info} onClose={() => setInfo(null)} />
     </Sheet>

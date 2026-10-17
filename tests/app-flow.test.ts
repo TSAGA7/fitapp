@@ -52,13 +52,12 @@ import {
   removeExerciseFromSession,
   canRemoveFromSession,
   saveSessionAsCustomWorkout,
-  addToJournal,
   addCardioSession,
   deleteCardioSession,
   createCustomFood,
   setEquipmentLimits,
 } from '../apps/web/src/actions';
-import { mealDish } from '../packages/domain/src';
+import { isReplacedByOwn, mealDish } from '../packages/domain/src';
 import { planFoods } from '../apps/web/src/app/derive';
 import { lookupBarcode } from '../apps/web/src/app/openFoodFacts';
 
@@ -551,11 +550,18 @@ describe('app flow on the real storage', () => {
     expect(programToday).toBeDefined();
     const [a, b, c] = s.activeVersion!.training.workouts[0]!.exercises.map((e) => e.exerciseId);
     const id = await saveCustomWorkout(deps, { id: null, name: 'Мои ноги', exercises: [{ exerciseId: a!, sets: 3, repMin: 10, repMax: 12, restSec: 90 }, { exerciseId: b!, sets: 2, repMin: 8, repMax: 8, restSec: 60 }] });
-    await expect(saveCustomWorkout(deps, { id: null, name: 'мои ноги', exercises: [{ exerciseId: a!, sets: 1, repMin: 5, repMax: 5, restSec: 60 }] })).rejects.toThrow(/уже есть/);
+    // names are optional and unique: a taken one gets a number, an empty one is made from the exercises
+    const dup = await saveCustomWorkout(deps, { id: null, name: 'мои ноги', exercises: [{ exerciseId: a!, sets: 1, repMin: 5, repMax: 5, restSec: 60 }] });
+    const unnamed = await saveCustomWorkout(deps, { id: null, name: '', exercises: [{ exerciseId: a!, sets: 1, repMin: 5, repMax: 5, restSec: 60 }] });
+    const names = new Map((await loadSnapshot(deps)).customWorkouts.map((w) => [w.id, w.name]));
+    expect(names.get(dup)).toBe('мои ноги 2');
+    expect(names.get(unnamed)).toBe(s.exercises.find((e) => e.id === a)!.name);
+    await deleteCustomWorkout(deps, dup);
+    await deleteCustomWorkout(deps, unnamed);
     await expect(saveCustomWorkout(deps, { id: null, name: 'Пусто', exercises: [] })).rejects.toThrow(/хотя бы одно/);
 
     const sid = await startCustomWorkout(deps, id);
-    await expect(startCustomWorkout(deps, id)).rejects.toThrow(/начатая/);
+    expect(await startCustomWorkout(deps, id)).toBe(sid); // the same own workout is resumed
     let view = await loadWorkout(deps, sid);
     expect(view.label).toBe('Мои ноги');
     expect(view.custom).toBe(true);
@@ -615,29 +621,33 @@ describe('app flow on the real storage', () => {
     await deleteCustomWorkout(deps, id);
     s = await loadSnapshot(deps);
     expect(s.customWorkouts.map((w) => w.id)).toEqual([copyId]);
-    expect(s.workouts.find((w) => w.id === sid)?.title).toBe('Своя тренировка'); // the history keeps the workout
+    expect(s.workouts.find((w) => w.id === sid)?.title).toBe('Ноги + Грудь + Спина'); // the history keeps the workout, named after its exercises
   });
 
-  it('journal mode: an exercise starts today\'s own workout with one set, the next ones join it, sets are added by hand', async () => {
+  it('an own workout can be started while a program one is going, and can take the place of the program workout of the day', async () => {
     const { deps } = await setup();
-    const s = await loadSnapshot(deps);
-    const [a, b] = s.activeVersion!.training.workouts[0]!.exercises.map((e) => e.exerciseId);
-    const first = await addToJournal(deps, a!);
-    const second = await addToJournal(deps, b!);
-    expect(second.sessionId).toBe(first.sessionId);
-    let view = await loadWorkout(deps, first.sessionId);
-    expect(view.custom).toBe(true);
-    expect(view.exercises.map((e) => [e.exercise.id, e.plan.length])).toEqual([[a, 1], [b, 1]]);
+    await ensureSessions(deps);
+    let s = await loadSnapshot(deps);
+    const today = s.plannedSessions.find((p) => p.plannedDate === '2026-10-05')!;
+    const programSid = await startWorkout(deps, today.id);
+    const [a] = s.activeVersion!.training.workouts[0]!.exercises.map((e) => e.exerciseId);
+    const id = await saveCustomWorkout(deps, { id: null, name: '', exercises: [{ exerciseId: a!, sets: 2, repMin: 8, repMax: 10, restSec: 90 }] });
+    const ownSid = await startCustomWorkout(deps, id); // no "finish the other one first"
+    expect(ownSid).not.toBe(programSid);
+    await abandonWorkout(deps, ownSid);
+    await abandonWorkout(deps, programSid);
+
+    const replacing = await startCustomWorkout(deps, id, { replaces: today.id });
+    const view = await loadWorkout(deps, replacing);
     const ex = view.exercises[0]!;
-    await logSet(deps, { sessionExerciseId: ex.se.id, exerciseId: a!, variantKey: ex.se.variantKey, contextKey: ex.plan[0]!.contextKey, plannedSetId: ex.plan[0]!.id, setNo: 1, weightKg: 40, reps: 10, rir: 2 });
-    await addSetToExercise(deps, ex.se.id);
-    await logSet(deps, { sessionExerciseId: ex.se.id, exerciseId: a!, variantKey: ex.se.variantKey, contextKey: ex.plan[0]!.contextKey, plannedSetId: null, setNo: 2, weightKg: 42.5, reps: 8, rir: 1 });
-    view = await loadWorkout(deps, first.sessionId);
-    expect(view.exercises[0]!.plan).toHaveLength(2);
-    expect(view.exercises[0]!.logs.map((l) => l.actualWeightKg)).toEqual([40, 42.5]);
-    await finishWorkout(deps, first.sessionId, null);
-    const after = await loadSnapshot(deps);
-    expect(after.workouts[0]).toMatchObject({ title: 'Своя тренировка', sets: 2, completed: true });
+    await logSet(deps, { sessionExerciseId: ex.se.id, exerciseId: a!, variantKey: ex.se.variantKey, contextKey: ex.plan[0]!.contextKey, plannedSetId: ex.plan[0]!.id, setNo: 1, weightKg: 30, reps: 10, rir: 2 });
+    await finishWorkout(deps, replacing, null);
+    s = await loadSnapshot(deps);
+    const replaced = s.plannedSessions.find((p) => p.id === today.id)!;
+    expect(replaced.status).toBe('done');
+    expect(isReplacedByOwn(replaced.movedReason)).toBe(true);
+    expect(replaced.movedReason).toContain(s.customWorkouts[0]!.name);
+    await expect(startCustomWorkout(deps, id, { replaces: today.id })).rejects.toThrow(/нельзя заменить/);
   });
 
   it('a mistaken skipped set can be restored, and an extra set can be added', async () => {

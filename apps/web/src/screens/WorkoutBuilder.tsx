@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { CustomWorkoutExercise, Exercise } from '@fitapp/domain';
-import { customDefaults, saveCustomWorkout, startCustomWorkout } from '../actions';
+import { autoWorkoutName, type CustomWorkoutExercise, type Exercise } from '@fitapp/domain';
+import { customDefaults, deleteCustomWorkout, saveCustomWorkout, startCustomWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { plural } from '../app/format';
 import { go } from '../app/router';
@@ -50,6 +50,7 @@ export function WorkoutBuilder({ id }: { id: string | null }) {
   const [picking, setPicking] = useState(false);
   const [info, setInfo] = useState<Exercise | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const byId = useMemo(() => new Map(s.exercises.map((e) => [e.id, e])), [s.exercises]);
   const added = useMemo(() => {
     const m = new Map<string, number>();
@@ -89,7 +90,6 @@ export function WorkoutBuilder({ id }: { id: string | null }) {
 
   const save = async (andStart: boolean) => {
     const { exercises, problem: p } = toExercises(rows, nameOf);
-    if (!name.trim()) return setProblem('Дай тренировке название, например «Ноги и ягодицы»');
     if (exercises.length === 0 && !p) return setProblem('Добавь хотя бы одно упражнение');
     if (p) return setProblem(p);
     setProblem(null);
@@ -108,7 +108,7 @@ export function WorkoutBuilder({ id }: { id: string | null }) {
     <main className="screen">
       <ScreenHeader title={existing ? 'Изменить тренировку' : 'Конструктор тренировки'} back="training" />
       <p className="t-small">Собери тренировку как тебе нужно и сохрани: потом её можно повторять в один тап. Программа и календарь не меняются, а веса подставятся из истории каждого упражнения.</p>
-      <TextField label="Название" placeholder="Например: Ноги и ягодицы" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+      <TextField label="Название (необязательно)" placeholder={rows.length ? autoWorkoutName(rows.map((r) => byId.get(r.exerciseId)).filter((e): e is Exercise => !!e).map((e) => ({ name: e.name, primaryMuscles: e.primaryMuscles }))) : 'Придумается само по упражнениям'} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
 
       {rows.length === 0 ? (
         <Card flat><EmptyState icon="training" title="Пока пусто" text="Добавь упражнения из каталога: подходы, повторения и отдых подставятся сами, их можно поменять." /></Card>
@@ -167,6 +167,15 @@ export function WorkoutBuilder({ id }: { id: string | null }) {
       {banner}
       <Button block icon="play" disabled={busy} onClick={() => void save(true)}>Сохранить и начать</Button>
       <Button block variant="secondary" icon="check" disabled={busy} onClick={() => void save(false)}>Сохранить</Button>
+      {existing && (confirmDelete ? (
+        <div className="row">
+          <Button block variant="danger" icon="trash" disabled={busy} onClick={async () => { if (await run((d) => deleteCustomWorkout(d, existing.id).then(() => true))) go('training'); }}>Да, удалить</Button>
+          <Button block variant="secondary" onClick={() => setConfirmDelete(false)}>Отмена</Button>
+        </div>
+      ) : (
+        <Button block variant="text" icon="trash" onClick={() => setConfirmDelete(true)}>Удалить тренировку</Button>
+      ))}
+      {existing && <p className="t-small">Сделанные по ней тренировки останутся в истории.</p>}
 
       <ExercisePickerSheet open={picking} title="Добавить упражнение" added={added} onPick={add} onClose={() => setPicking(false)} />
       <ExerciseInfoSheet exercise={info} onClose={() => setInfo(null)} />

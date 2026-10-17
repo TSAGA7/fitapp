@@ -44,6 +44,9 @@ import {
   customWorkoutKey,
   isAdHocWorkoutKey,
   isCustomWorkoutKey,
+  autoWorkoutName,
+  uniqueName,
+  REPLACED_BY_OWN,
 } from '@fitapp/domain';
 import { resolveEquipment, safetyContext } from '../app/derive';
 import { rebuildForPreference } from './program';
@@ -664,6 +667,15 @@ export async function finishWorkout(deps: AppDeps, sessionId: string, note: stri
     if (session.plannedSessionId) {
       const ps = await r.plannedSessions.get(session.plannedSessionId);
       if (ps) await r.plannedSessions.put({ ...ps, status: 'done' });
+      // An own workout done instead of the program one: the program one counts as done, with a note.
+      if (ps && (ps.movedReason ?? '').startsWith(REPLACES_KEY)) {
+        const target = await r.plannedSessions.get((ps.movedReason as string).slice(REPLACES_KEY.length));
+        if (target && target.status === 'planned') {
+          const cwId = customWorkoutIdOf(ps.workoutKey);
+          const cw = cwId ? await r.customWorkouts.get(cwId) : undefined;
+          await r.plannedSessions.put({ ...target, status: 'done', movedReason: `${REPLACED_BY_OWN}${cw?.name ?? 'своя тренировка'}`.slice(0, 300) });
+        }
+      }
     }
   });
 }
@@ -827,6 +839,9 @@ export async function loadWorkoutSummary(deps: AppDeps, sessionId: string, bodyW
 
 // ---------------------------------------------------------------- own workouts (the builder)
 
+/** movedReason of an own workout's session that replaces a program workout: links to that one. */
+const REPLACES_KEY = 'replaces:';
+
 const RIR_ADAPTATION = { min: 2, max: 3 };
 const RIR_MAIN = { min: 1, max: 2 };
 const clampRest = (sec: number): number => Math.min(600, Math.max(15, Math.round(sec)));
@@ -866,21 +881,29 @@ export interface CustomWorkoutInput {
 }
 
 async function putCustomWorkout(r: Repositories, deps: AppDeps, input: CustomWorkoutInput): Promise<string> {
-  const name = input.name.trim().slice(0, 60);
-  if (!name) throw new Error('Дай тренировке название');
   if (input.exercises.length === 0) throw new Error('Добавь хотя бы одно упражнение');
   if (input.exercises.length > 20) throw new Error('Не больше 20 упражнений в одной тренировке');
   const exercises = input.exercises.map((e) => ({ ...e, repMax: Math.max(e.repMin, e.repMax), restSec: clampRest(e.restSec) }));
   const all = (await r.customWorkouts.listAll()).filter((t) => t.deletedAt === null);
-  if (all.some((t) => t.id !== input.id && t.name.toLowerCase() === name.toLowerCase())) throw new Error(`Тренировка «${name}» уже есть. Выбери другое название`);
   const existing = input.id ? all.find((t) => t.id === input.id) : undefined;
   if (input.id && !existing) throw new Error('Тренировка не найдена');
+  // The name is optional: without one it is made from the exercises; a taken name gets a number.
+  let base = input.name.trim().slice(0, 60);
+  if (!base) {
+    const list: Array<{ name: string; primaryMuscles: Exercise['primaryMuscles'] }> = [];
+    for (const e of exercises) {
+      const ex = await r.exercises.get(e.exerciseId);
+      if (ex) list.push({ name: ex.name, primaryMuscles: ex.primaryMuscles });
+    }
+    base = autoWorkoutName(list);
+  }
+  const name = uniqueName(base, all.filter((t) => t.id !== input.id).map((t) => t.name));
   const row: CustomWorkout = existing ? { ...existing, name, exercises } : { ...baseOf(deps), name, exercises, useCount: 0, lastUsedOn: null };
   await r.customWorkouts.put(row);
   return row.id;
 }
 
-/** Creates or changes an own workout. Names are unique, so the list stays readable. */
+/** Creates or changes an own workout. The name is optional and unique (a number is added), so the list stays readable. */
 export async function saveCustomWorkout(deps: AppDeps, input: CustomWorkoutInput): Promise<string> {
   return deps.uow.run((r) => putCustomWorkout(r, deps, input));
 }
@@ -895,17 +918,28 @@ export async function deleteCustomWorkout(deps: AppDeps, id: string): Promise<vo
  * It is not a part of the program: the calendar, the rotation and the versions stay untouched,
  * but the weights are prescribed from the same history, so the progress carries over both ways.
  */
-export async function startCustomWorkout(deps: AppDeps, id: string | null): Promise<string> {
+export async function startCustomWorkout(deps: AppDeps, id: string | null, options: { /** The program workout of the day it replaces: marked done with a note when this one is finished. */ replaces?: string } = {}): Promise<string> {
   return deps.uow.run(async (r) => {
     const profile = await r.profile.get();
     const version = await activeVersion(r);
     if (!profile || !version) throw new Error('Сначала заполни профиль и создай программу');
-    const open = (await r.workouts.listSessions()).find((s) => s.status === 'in_progress');
-    if (open) throw new Error('Уже есть начатая тренировка: заверши или прерви её');
     const cw = id ? await r.customWorkouts.get(id) : undefined;
     if (id && (!cw || cw.deletedAt !== null)) throw new Error('Тренировка не найдена');
+    // Another workout in progress does not block this one. The same own workout already started is resumed.
+    if (cw) {
+      for (const s of (await r.workouts.listSessions()).filter((x) => x.status === 'in_progress' && x.plannedSessionId)) {
+        const ps = await r.plannedSessions.get(s.plannedSessionId as string);
+        if (ps && ps.workoutKey === customWorkoutKey(cw.id)) return s.id;
+      }
+    }
+    let replacesNote: string | null = null;
+    if (options.replaces) {
+      const target = await r.plannedSessions.get(options.replaces);
+      if (!target || target.status !== 'planned' || isAdHocWorkoutKey(target.workoutKey)) throw new Error('Эту тренировку программы уже нельзя заменить');
+      replacesNote = `${REPLACES_KEY}${target.id}`;
+    }
     const today = deps.clock.today(profile.timezone);
-    const ps: PlannedSession = { ...baseOf(deps), versionId: version.id, workoutKey: customWorkoutKey(cw ? cw.id : null), plannedDate: today, status: 'planned', originalDate: null, movedReason: null };
+    const ps: PlannedSession = { ...baseOf(deps), versionId: version.id, workoutKey: customWorkoutKey(cw ? cw.id : null), plannedDate: today, status: 'planned', originalDate: null, movedReason: replacesNote };
     await r.plannedSessions.put(ps);
     const sessionId = deps.ids.newId();
     await r.workouts.putSession({ ...createBase(sessionId, deps.clock.now(), deps.deviceId), plannedSessionId: ps.id, versionId: version.id, startedAt: deps.clock.now(), endedAt: null, status: 'in_progress', note: null });
@@ -1012,15 +1046,4 @@ export async function saveSessionAsCustomWorkout(deps: AppDeps, input: { session
     if (ps && isCustomWorkoutKey(ps.workoutKey) && (sourceId === null || sourceId === input.replaceId)) await r.plannedSessions.put({ ...ps, workoutKey: customWorkoutKey(id) });
     return id;
   });
-}
-
-/**
- * «Своя программа» (journal mode): the exercise goes into the workout in progress, or into a new
- * own workout started for it. It starts with one set; more are added by hand as they are done.
- */
-export async function addToJournal(deps: AppDeps, exerciseId: string): Promise<{ sessionId: string; sessionExerciseId: string }> {
-  const open = await deps.uow.run(async (r) => (await r.workouts.listSessions()).find((s) => s.status === 'in_progress'));
-  const sessionId = open ? open.id : await startCustomWorkout(deps, null);
-  const sessionExerciseId = await addExerciseToSession(deps, { sessionId, exerciseId, sets: 1 });
-  return { sessionId, sessionExerciseId };
 }

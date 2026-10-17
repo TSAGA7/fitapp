@@ -1,7 +1,7 @@
 import { CycleTrainingHint } from './Cycle';
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, assessExercise, type CardioSession, reentryAdvice, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
-import { createProgram, deleteCustomWorkout, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startCustomWorkout, startWorkout } from '../actions';
+import { createProgram, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
@@ -9,14 +9,14 @@ import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
 import { useBodyweightMode, useOwnMode, useVacationMode } from '../app/prefs';
-import { JournalCard } from './Journal';
+import { OwnModeView, OwnWorkoutsSheet } from './OwnMode';
 import { BodyweightCard, PlaceSwitch } from './BodyweightMode';
 import { CardioDetailSheet, cardioDetails, cardioTitle, CardioSheet } from './Cardio';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { AREA_LABELS } from './ProfileMore';
 import { ScreenHeader } from './shared';
 import { WorkoutBuilder } from './WorkoutBuilder';
-import type { CustomWorkout } from '@fitapp/domain';
+import { isReplacedByOwn, REPLACED_BY_OWN } from '@fitapp/domain';
 
 type View = 'week' | 'month' | 'program' | 'history';
 
@@ -75,117 +75,11 @@ export function Training({ route = [] }: { route?: string[] }) {
       <OwnWorkoutsSheet open={ownOpen} onClose={() => setOwnOpen(false)} />
       <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}
-      {view === 'week' && (own ? <JournalCard onOwnList={() => setOwnOpen(true)} /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
+      {view === 'week' && (own ? <OwnModeView /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
       {view === 'month' && <MonthView />}
       {view === 'program' && <ProgramView />}
       {view === 'history' && <History />}
     </main>
-  );
-}
-
-// ------------------------------------------------------------------ own workouts
-
-const restClock = (sec: number): string => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-
-/** «Свои тренировки»: workouts built by the user, started outside the program and repeated in one tap. */
-function OwnWorkoutsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { snapshot: s } = useData();
-  const { run, ok, banner, busy } = useCommand();
-  const [pickedId, setPickedId] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [info, setInfo] = useState<Exercise | null>(null);
-  useEffect(() => {
-    if (!open) {
-      setPickedId(null);
-      setConfirmDelete(false);
-    }
-  }, [open]);
-  if (!open) return null;
-  const picked: CustomWorkout | undefined = pickedId ? s.customWorkouts.find((w) => w.id === pickedId) : undefined;
-  const openSession = s.openSession;
-  const start = async (id: string | null) => {
-    const sessionId = await run((d) => startCustomWorkout(d, id));
-    if (sessionId) {
-      onClose();
-      go(`workout/${sessionId}`);
-    }
-  };
-  const busyNote = openSession && (
-    <Card flat>
-      <div className="stack">
-        <p className="t-small">Сейчас идёт начатая тренировка. Новую можно начать после того, как эту завершишь или прервёшь.</p>
-        <Button size="sm" icon="play" onClick={() => { onClose(); go(`workout/${openSession.id}`); }}>Продолжить начатую</Button>
-      </div>
-    </Card>
-  );
-
-  if (picked) {
-    return (
-      <Sheet open title={picked.name} onClose={onClose}>
-        <div className="stack">
-          <p className="t-small">{picked.exercises.length} {plural(picked.exercises.length, ['упражнение', 'упражнения', 'упражнений'])}{picked.lastUsedOn ? ` · последний раз ${formatDateShort(picked.lastUsedOn)}` : ' · ещё не делал'}</p>
-          <div className="list">
-            {picked.exercises.map((e, i) => {
-              const ex = s.exercises.find((x) => x.id === e.exerciseId);
-              const timed = ex?.loadUnit === 'seconds' || ex?.progressionType === 'time';
-              return (
-                <ListItem
-                  key={`${e.exerciseId}-${i}`}
-                  icon="training"
-                  title={`${i + 1}. ${ex?.name ?? 'Упражнение удалено из каталога'}`}
-                  subtitle={`${e.sets} × ${e.repMin === e.repMax ? e.repMin : `${e.repMin}–${e.repMax}`}${timed ? ' с' : ''} · отдых ${restClock(e.restSec)}`}
-                  trailing={ex ? <button type="button" className="icon-btn" aria-label={`Техника: ${ex.name}`} onClick={() => setInfo(ex as Exercise)}><Icon name="info" size={18} /></button> : undefined}
-                />
-              );
-            })}
-          </div>
-          {banner}
-          {busyNote}
-          <Button block icon="play" disabled={busy || !!openSession} onClick={() => void start(picked.id)}>Начать</Button>
-          <Button block variant="secondary" icon="edit" onClick={() => { onClose(); go(`training/builder/${picked.id}`); }}>Изменить</Button>
-          {confirmDelete ? (
-            <div className="row">
-              <Button block variant="danger" icon="trash" disabled={busy} onClick={async () => { if (await ok((d) => deleteCustomWorkout(d, picked.id))) { setPickedId(null); setConfirmDelete(false); } }}>Да, удалить</Button>
-              <Button block variant="secondary" onClick={() => setConfirmDelete(false)}>Отмена</Button>
-            </div>
-          ) : (
-            <Button block variant="text" icon="trash" onClick={() => setConfirmDelete(true)}>Удалить</Button>
-          )}
-          <p className="t-small">Сделанные тренировки останутся в истории, даже если удалить эту.</p>
-          <Button block variant="text" icon="chevronLeft" onClick={() => { setPickedId(null); setConfirmDelete(false); }}>Все свои тренировки</Button>
-        </div>
-        <ExerciseInfoSheet exercise={info} onClose={() => setInfo(null)} />
-      </Sheet>
-    );
-  }
-
-  return (
-    <Sheet open title="Свои тренировки" onClose={onClose}>
-      <div className="stack">
-        <p className="t-small">Для тренировок не по программе: собери свою, запиши и повторяй. Программа и календарь не меняются, а веса считаются по той же истории упражнений.</p>
-        {banner}
-        {busyNote}
-        {s.customWorkouts.length > 0 ? (
-          <div className="list">
-            {s.customWorkouts.map((w) => (
-              <ListItem
-                key={w.id}
-                icon="training"
-                title={w.name}
-                subtitle={`${w.exercises.length} ${plural(w.exercises.length, ['упражнение', 'упражнения', 'упражнений'])} · ${w.lastUsedOn ? `последний раз ${formatDateShort(w.lastUsedOn)}` : 'ещё не делал'}`}
-                trailing={<Icon name="chevronRight" size={20} />}
-                onClick={() => setPickedId(w.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="note">Своих тренировок пока нет.</p>
-        )}
-        <Button block icon="plus" onClick={() => { onClose(); go('training/builder'); }}>Собрать тренировку</Button>
-        <Button block variant="secondary" icon="play" disabled={busy || !!openSession} onClick={() => void start(null)}>Пустая: добавлю упражнения по ходу</Button>
-        <p className="t-small">Любую сделанную тренировку можно сохранить как свою: кнопка «Сохранить как свою» внизу экрана тренировки.</p>
-      </div>
-    </Sheet>
   );
 }
 
@@ -197,6 +91,7 @@ function Week({ onOwnList }: { onOwnList: () => void }) {
   const version = s.activeVersion!;
   const [moving, setMoving] = useState<PlannedSession | null>(null);
   const [preview, setPreview] = useState<PlannedSession | null>(null);
+  const [replacing, setReplacing] = useState<PlannedSession | null>(null);
   const sessions = useMemo(
     () => s.plannedSessions.filter((p) => p.deletedAt === null && p.plannedDate >= addDays(s.today, -7) && p.status !== 'moved').sort((a, b) => (a.plannedDate < b.plannedDate ? -1 : 1)),
     [s.plannedSessions, s.today],
@@ -272,9 +167,9 @@ function Week({ onOwnList }: { onOwnList: () => void }) {
                 <button type="button" className="session-head" aria-label={`${labelOf(p.workoutKey)}: что в тренировке`} onClick={() => setPreview(p)}>
                   <span className="sh-text">
                     <span className="t-h3">{labelOf(p.workoutKey)}</span>
-                    <span className="t-small">{isToday ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(p.plannedDate)]}, ${formatDateShort(p.plannedDate)}`}{p.originalDate ? ` · перенесено с ${formatDateShort(p.originalDate)}` : ''}</span>
+                    <span className="t-small">{isToday ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(p.plannedDate)]}, ${formatDateShort(p.plannedDate)}`}{p.originalDate ? ` · перенесено с ${formatDateShort(p.originalDate)}` : ''}{p.status === 'done' && isReplacedByOwn(p.movedReason) ? ` · вместо неё: ${(p.movedReason ?? '').slice(REPLACED_BY_OWN.length)}` : ''}</span>
                   </span>
-                  {p.status === 'done' && <Badge>Выполнено</Badge>}
+                  {p.status === 'done' && (isReplacedByOwn(p.movedReason) ? <Badge>Своя</Badge> : <Badge>Выполнено</Badge>)}
                   {p.status === 'skipped' && <Badge tone="neutral">Пропущено</Badge>}
                   {missed && <Badge tone="warning">Пропущено?</Badge>}
                   <Icon name="chevronRight" size={20} />
@@ -284,6 +179,7 @@ function Week({ onOwnList }: { onOwnList: () => void }) {
                     {(isToday || missed || started) && <Button size="sm" icon="play" disabled={busy} onClick={() => void begin(p.id)}>{started ? 'Продолжить' : 'Начать'}</Button>}
                     {!isToday && !missed && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void begin(p.id)}>Начать сегодня</Button>}
                     <Button size="sm" variant="secondary" icon="calendar" onClick={() => setMoving(p)}>Перенести</Button>
+                    <Button size="sm" variant="secondary" icon="swap" onClick={() => setReplacing(p)}>Своя вместо</Button>
                     {(isToday || missed) && <Button size="sm" variant="text" disabled={busy} onClick={() => void begin(p.id, true)}>Лёгкая</Button>}
                     <Button size="sm" variant="text" disabled={busy} onClick={() => void run((d) => skipPlannedSession(d, p.id))}>Пропустить</Button>
                   </div>
@@ -294,6 +190,7 @@ function Week({ onOwnList }: { onOwnList: () => void }) {
         })}
       </div>
       <Button block variant="text" icon="training" onClick={onOwnList}>Свои тренировки и конструктор</Button>
+      <OwnWorkoutsSheet open={replacing !== null} replaces={replacing} label={replacing ? labelOf(replacing.workoutKey) : undefined} onClose={() => setReplacing(null)} />
       <PreviewSheet session={preview} label={preview ? labelOf(preview.workoutKey) : ''} onClose={() => setPreview(null)} onStart={preview && preview.status === 'planned' ? () => { const id = preview.id; setPreview(null); void begin(id); } : undefined} />
       <MoveSheet session={moving} onClose={() => setMoving(null)} onMove={async (date, reason) => { if (moving && (await ok((d) => movePlannedSession(d, moving.id, date, reason)))) setMoving(null); }} />
     </>
