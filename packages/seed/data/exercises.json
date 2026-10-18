@@ -143,7 +143,8 @@
     ],
     "curatedSubstituteKeys": [
       "leg_press",
-      "goblet_squat_db"
+      "goblet_squat_db",
+      "smith_front_squat"
     ],
     "variants": [
       {
@@ -2671,7 +2672,8 @@
     ],
     "curatedSubstituteKeys": [
       "chest_press_machine_seated",
-      "db_neutral_grip_press"
+      "db_neutral_grip_press",
+      "smith_incline_press"
     ],
     "variants": [
       {
@@ -13990,6 +13992,1377 @@
       ],
       "focus": [
         "Широчайшие."
+      ]
+    }
+  },
+  {
+    "key": "smith_incline_press",
+    "name": "Жим в Смите на наклонной скамье",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "front_delts",
+      "triceps"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Наклон выше 45° смещает нагрузку на плечи; гриф опускай к верху груди, не к шее"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine",
+        "adjustable_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Скамья 30°",
+      "Гриф к верху груди",
+      "Лопатки сведены"
+    ],
+    "curatedSubstituteKeys": [
+      "incline_barbell_press",
+      "db_incline_press_30",
+      "smith_bench_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Скамья 30°",
+        "note": null
+      },
+      {
+        "key": "incline_45",
+        "label": "Скамья 45°",
+        "note": "Больше передней дельты, меньше груди"
+      },
+      {
+        "key": "incline_15",
+        "label": "Скамья 15°",
+        "note": "Почти горизонтальный жим, мягче для плеч"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь скамью 30° под гриф так, чтобы он опускался на верх груди, чуть ниже ключиц.",
+        "Ляг, сведи и опусти лопатки, стопы упри в пол. Хват чуть шире плеч.",
+        "Сними гриф поворотом кистей, опусти его подконтрольно к верху груди, локти около 45–60° к корпусу.",
+        "Выжми гриф до почти прямых рук и в конце подхода поверни кисти, чтобы зацепить крючки."
+      ],
+      "nuances": [
+        "Вдох на опускании, выдох на жиме. Темп: 2–3 с вниз, 1–2 с вверх.",
+        "30° — основной вариант для верха груди; 45° — больше плеч; 15° — ближе к обычному жиму лёжа.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Скамья стоит так, что гриф идёт на шею или середину груди. Подвинь скамью до первого подхода.",
+        "Поясница сильно прогнута, таз отрывается. Таз на скамье, прогиб умеренный.",
+        "Локти разведены в стороны под 90°. Держи их ближе к корпусу."
+      ],
+      "focus": [
+        "Выставь страховочные упоры чуть ниже уровня груди.",
+        "Фиксированная траектория не прощает неправильной установки скамьи — проверь пустым грифом."
+      ]
+    }
+  },
+  {
+    "key": "smith_decline_press",
+    "name": "Жим в Смите на скамье с обратным наклоном",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "chest"
+    ],
+    "secondaryMuscles": [
+      "triceps",
+      "front_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 1,
+      "elbow": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Обычно щадящий для плеч вариант; не опускай гриф ниже груди"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine",
+        "adjustable_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Наклон головой вниз 15–20°",
+      "Гриф к низу груди",
+      "Ноги зафиксированы"
+    ],
+    "curatedSubstituteKeys": [
+      "smith_bench_press",
+      "barbell_bench_press",
+      "dips_chest"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Обратный наклон 15–20°",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь скамью с обратным наклоном 15–20° и зафиксируй ноги в валиках.",
+        "Ляг так, чтобы гриф опускался на низ груди. Хват чуть шире плеч, лопатки сведены.",
+        "Сними гриф, опусти его к низу груди подконтрольно.",
+        "Выжми вверх до почти прямых рук."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх. Амплитуда короче, чем в обычном жиме, — это нормально.",
+        "Акцент на нижнюю часть груди, плечи нагружены меньше.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Гриф уходит к животу. Сдвинь скамью.",
+        "Резкий подъём головы после подхода — кровь прилила к голове. Вставай медленно."
+      ],
+      "focus": [
+        "Если кружится голова в наклоне — уменьши угол или замени на обычный жим лёжа.",
+        "Ноги обязательно зафиксируй."
+      ]
+    }
+  },
+  {
+    "key": "smith_close_grip_press",
+    "name": "Жим узким хватом в Смите",
+    "movementPattern": "horizontal_push",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "chest",
+      "front_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "elbow": 2,
+      "wrist": 1,
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "elbow",
+        "note": "Большая нагрузка на локти — начинай с лёгкого веса"
+      },
+      {
+        "area": "wrist",
+        "note": "Хват на ширине плеч, не уже: слишком узкий хват выворачивает запястья"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine",
+        "flat_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Хват на ширине плеч",
+      "Локти вдоль корпуса"
+    ],
+    "curatedSubstituteKeys": [
+      "smith_bench_press",
+      "barbell_bench_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Хват на ширине плеч",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Ляг на горизонтальную скамью под гриф, гриф над низом груди.",
+        "Возьми гриф хватом на ширине плеч, лопатки сведены.",
+        "Опусти гриф к низу груди, держа локти близко к корпусу.",
+        "Выжми вверх за счёт трицепсов до почти прямых рук."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх.",
+        "Чем ближе локти к корпусу, тем больше работает трицепс.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Хват уже ширины плеч — болят запястья. Расширь хват.",
+        "Локти разлетаются в стороны — работает грудь, а не трицепс."
+      ],
+      "focus": [
+        "Страховочные упоры чуть ниже груди."
+      ]
+    }
+  },
+  {
+    "key": "smith_seated_shoulder_press",
+    "name": "Жим сидя в Смите (на плечи)",
+    "movementPattern": "vertical_push",
+    "primaryMuscles": [
+      "front_delts"
+    ],
+    "secondaryMuscles": [
+      "side_delts",
+      "triceps"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "elbow": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 1,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Гриф перед лицом, опускай до подбородка или верха груди; за голову не опускай"
+      },
+      {
+        "area": "lower_back",
+        "note": "Прижми поясницу к спинке, не прогибайся"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine",
+        "adjustable_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Спинка 80–90°",
+      "Гриф перед лицом",
+      "Пресс напряжён"
+    ],
+    "curatedSubstituteKeys": [
+      "ohp_barbell",
+      "db_shoulder_press_neutral",
+      "shoulder_press_machine_ex"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Спинка 90°",
+        "note": null
+      },
+      {
+        "key": "back_75",
+        "label": "Спинка 75°",
+        "note": "Мягче для плеч, чуть больше груди"
+      },
+      {
+        "key": "back_60",
+        "label": "Спинка 60°",
+        "note": "Между жимом на плечи и жимом на наклонной: больше верха груди"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь скамью со спинкой 80–90° так, чтобы гриф проходил перед лицом, а не над макушкой.",
+        "Сядь, прижми поясницу и лопатки к спинке, стопы в пол. Хват чуть шире плеч.",
+        "Сними гриф и опусти его до уровня подбородка или верха груди.",
+        "Выжми вверх до почти прямых рук, не запрокидывая голову."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх. Темп: 2 с вниз, 1–2 с вверх.",
+        "Наклон спинки меняет акцент: 90° — плечи, 75° — плечи и немного грудь, 60° — ближе к жиму на наклонной.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Опускание за голову. Держи гриф впереди.",
+        "Сильный прогиб в пояснице, жим «грудью вверх». Спина прижата.",
+        "Неполная амплитуда из-за слишком большого веса."
+      ],
+      "focus": [
+        "Упоры на уровне подбородка.",
+        "Если плечо ноет — уменьши глубину или наклони спинку до 75°."
+      ]
+    }
+  },
+  {
+    "key": "smith_standing_press",
+    "name": "Жим стоя в Смите",
+    "movementPattern": "vertical_push",
+    "primaryMuscles": [
+      "front_delts"
+    ],
+    "secondaryMuscles": [
+      "side_delts",
+      "triceps",
+      "abs"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "elbow": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Гриф перед лицом, не за голову"
+      },
+      {
+        "area": "lower_back",
+        "note": "Ягодицы и пресс напряжены, без прогиба"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Пресс и ягодицы напряжены",
+      "Гриф перед лицом"
+    ],
+    "curatedSubstituteKeys": [
+      "ohp_barbell",
+      "smith_seated_shoulder_press",
+      "db_shoulder_press_neutral"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Выставь гриф на уровне верха груди. Встань под него, стопы на ширине бёдер, чуть позади линии грифа.",
+        "Хват чуть шире плеч, напряги пресс и ягодицы.",
+        "Сними гриф и выжми его вверх до почти прямых рук.",
+        "Опусти к верху груди подконтрольно."
+      ],
+      "nuances": [
+        "Вдох внизу, выдох при жиме.",
+        "Положение стоп относительно грифа подбери так, чтобы не приходилось откидываться назад.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Отклонение корпуса назад и прогиб в пояснице. Уменьши вес.",
+        "Помощь ногами. Колени не сгибай."
+      ],
+      "focus": [
+        "Если поясница устаёт раньше плеч — делай жим сидя."
+      ]
+    }
+  },
+  {
+    "key": "smith_lunge",
+    "name": "Выпады в Смите (сплит-присед на месте)",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 2,
+      "hip": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено передней ноги по линии носка, не заваливай внутрь"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Шаг широкий",
+      "Корпус вертикально",
+      "Колено задней ноги к полу"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_lunge_db",
+      "bulgarian_split_squat_db",
+      "smith_squat"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный шаг",
+        "note": null
+      },
+      {
+        "key": "long_step",
+        "label": "Длинный шаг",
+        "note": "Больше ягодиц"
+      },
+      {
+        "key": "short_step",
+        "label": "Короткий шаг",
+        "note": "Больше квадрицепса"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь гриф на уровень плеч, поднырни под него, гриф на верх трапеций.",
+        "Сними гриф и сделай широкий шаг: одна нога вперёд, другая назад на носок.",
+        "Опускайся вертикально вниз, пока колено задней ноги почти не коснётся пола.",
+        "Поднимись толчком передней ноги. Сделай все повторы на одну ногу, затем смени."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх.",
+        "Смит держит баланс, поэтому можно сосредоточиться на ноге и взять больше веса, чем с гантелями.",
+        "Длинный шаг — больше ягодиц, короткий — больше квадрицепса.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Шаг слишком короткий, колено сильно уходит за носок, пятка отрывается. Расширь шаг.",
+        "Колено передней ноги заваливается внутрь.",
+        "Отталкивание задней ногой. Работает передняя."
+      ],
+      "focus": [
+        "Упоры чуть ниже нижней точки.",
+        "Вес в выпадах указывается на одну сторону подхода — делай одинаково на обе ноги."
+      ]
+    }
+  },
+  {
+    "key": "smith_reverse_lunge",
+    "name": "Обратные выпады в Смите",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "glutes",
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Обратный выпад мягче для колен, чем прямой"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Шаг назад",
+      "Вес на передней пятке"
+    ],
+    "curatedSubstituteKeys": [
+      "reverse_lunge_db",
+      "smith_lunge",
+      "bulgarian_split_squat_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Гриф на трапециях, стопы под грифом на ширине бёдер.",
+        "Шагни одной ногой назад и опустись, пока колено задней ноги почти не коснётся пола.",
+        "Вес держи на пятке передней ноги.",
+        "Вернись в исходное, толкаясь передней ногой. Чередуй ноги или делай по очереди."
+      ],
+      "nuances": [
+        "Вдох при шаге назад, выдох при подъёме.",
+        "Так как траектория фиксированная, ставь стопы так, чтобы при шаге не приходилось тянуться.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Корпус сильно наклоняется. Держи грудь вверх.",
+        "Передняя пятка отрывается."
+      ],
+      "focus": [
+        "Если неудобно шагать в фиксированной траектории — делай сплит-присед на месте."
+      ]
+    }
+  },
+  {
+    "key": "smith_bulgarian_split_squat",
+    "name": "Болгарский сплит-присед в Смите",
+    "movementPattern": "lunge",
+    "primaryMuscles": [
+      "quads",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 2,
+      "hip": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Колено по линии носка, глубину подбирай без боли"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine",
+        "flat_bench"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Задняя нога на скамье",
+      "Опускайся вертикально"
+    ],
+    "curatedSubstituteKeys": [
+      "bulgarian_split_squat_db",
+      "smith_lunge",
+      "reverse_lunge_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь скамью позади Смита. Гриф на трапециях, носок задней ноги положи на скамью.",
+        "Передняя нога стоит так, чтобы в нижней точке голень была примерно вертикальна.",
+        "Опустись вниз, пока бедро передней ноги не станет почти параллельно полу.",
+        "Поднимись толчком передней ноги. Сделай все повторы, затем смени ногу."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх.",
+        "Смит снимает вопрос баланса — удобно для тяжёлой работы на одну ногу.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Передняя нога стоит слишком близко — колено далеко за носком.",
+        "Таз перекашивается."
+      ],
+      "focus": [
+        "Упоры чуть ниже нижней точки."
+      ]
+    }
+  },
+  {
+    "key": "smith_front_squat",
+    "name": "Фронтальный присед в Смите",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "abs"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 2,
+      "hip": 1,
+      "lower_back": 1,
+      "wrist": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "full",
+    "painSensitiveAreas": [
+      {
+        "area": "knee",
+        "note": "Глубину подбирай без боли"
+      },
+      {
+        "area": "wrist",
+        "note": "Можно скрестить руки на грифе вместо классического хвата"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 10
+    },
+    "defaultRestSec": 150,
+    "cues": [
+      "Гриф на передних дельтах",
+      "Локти вверх",
+      "Корпус вертикально"
+    ],
+    "curatedSubstituteKeys": [
+      "front_squat_barbell",
+      "smith_squat",
+      "goblet_squat_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Хват крест-накрест",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь гриф на уровень плеч. Положи его на передние дельты у основания шеи.",
+        "Скрести руки на грифе или держи его пальцами, локти подняты вперёд.",
+        "Стопы на ширине плеч, чуть впереди линии грифа. Сними гриф.",
+        "Присядь до комфортной глубины с вертикальным корпусом и встань."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх.",
+        "Больше квадрицепса и меньше нагрузки на поясницу, чем в приседе с грифом на спине.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Локти опускаются — гриф скатывается. Держи локти высоко.",
+        "Пятки отрываются. Поставь стопы чуть дальше вперёд."
+      ],
+      "focus": [
+        "Упоры чуть ниже нижней точки."
+      ]
+    }
+  },
+  {
+    "key": "smith_sumo_squat",
+    "name": "Присед сумо в Смите",
+    "movementPattern": "squat",
+    "primaryMuscles": [
+      "glutes",
+      "adductors"
+    ],
+    "secondaryMuscles": [
+      "quads"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "knee": 1,
+      "hip": 2,
+      "lower_back": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "hip",
+        "note": "Широкая постановка нагружает тазобедренные суставы — не форсируй ширину"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Стопы широко, носки наружу",
+      "Колени по линии носков"
+    ],
+    "curatedSubstituteKeys": [
+      "smith_squat",
+      "goblet_squat_db",
+      "leg_press"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Гриф на трапециях. Стопы шире плеч, носки развёрнуты наружу на 30–45°.",
+        "Сними гриф, напряги пресс.",
+        "Присядь, разводя колени по линии носков, пока бёдра не станут параллельны полу.",
+        "Встань, толкаясь всей стопой."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх.",
+        "Больше приводящих и ягодиц, меньше квадрицепса.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Колени сводятся внутрь.",
+        "Корпус сильно наклоняется вперёд."
+      ],
+      "focus": [
+        "Упоры чуть ниже нижней точки."
+      ]
+    }
+  },
+  {
+    "key": "smith_rdl",
+    "name": "Румынская тяга в Смите",
+    "movementPattern": "hinge",
+    "primaryMuscles": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "lower_back"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "lower_back": 2,
+      "hip": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Спина прямая, амплитуда — пока не начнёт округляться поясница"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Таз назад",
+      "Спина прямая",
+      "Гриф скользит по ногам"
+    ],
+    "curatedSubstituteKeys": [
+      "rdl_barbell",
+      "rdl_db",
+      "good_morning"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Выставь гриф на уровне середины бедра. Встань вплотную, хват на ширине плеч.",
+        "Сними гриф, стоя прямо, колени чуть согнуты.",
+        "Отводи таз назад, опуская гриф вдоль ног до середины голени или до натяжения задней поверхности бедра.",
+        "Вернись в исходное, толкая таз вперёд."
+      ],
+      "nuances": [
+        "Вдох вниз, выдох вверх.",
+        "В Смите траектория вертикальная, поэтому стопы ставь прямо под грифом.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Округление поясницы внизу. Сократи амплитуду.",
+        "Приседание вместо наклона — колени сгибаются слишком сильно."
+      ],
+      "focus": [
+        "Нижние упоры выставь на уровне, ниже которого ты не опускаешься."
+      ]
+    }
+  },
+  {
+    "key": "smith_hip_thrust",
+    "name": "Ягодичный мост в Смите",
+    "movementPattern": "hip_extension",
+    "primaryMuscles": [
+      "glutes"
+    ],
+    "secondaryMuscles": [
+      "hamstrings"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "hip": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "В верхней точке не прогибайся в пояснице, подкрути таз"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine",
+        "flat_bench"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Лопатки на скамье",
+      "Подбородок к груди",
+      "Пауза наверху"
+    ],
+    "curatedSubstituteKeys": [
+      "hip_thrust_barbell",
+      "hip_thrust_bw",
+      "glute_bridge_bw"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь скамью поперёк Смита. Сядь на пол спиной к скамье, гриф с мягкой накладкой над тазом.",
+        "Лопатки на край скамьи, стопы в пол на ширине плеч.",
+        "Подними таз, разгибая бёдра, пока корпус не станет параллелен полу. Задержись на 1 с.",
+        "Опусти таз подконтрольно."
+      ],
+      "nuances": [
+        "Выдох при подъёме.",
+        "Смит удобен тем, что гриф не катается — проще поставить и снять вес.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Прогиб в пояснице наверху вместо разгибания в бёдрах.",
+        "Колени разваливаются."
+      ],
+      "focus": [
+        "Используй накладку на гриф."
+      ]
+    }
+  },
+  {
+    "key": "smith_bent_over_row",
+    "name": "Тяга в наклоне в Смите",
+    "movementPattern": "horizontal_pull",
+    "primaryMuscles": [
+      "upper_back",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "rear_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "lower_back": 2,
+      "elbow": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "lower_back",
+        "note": "Спина прямая; при усталости поясницы — переходи на тягу с упором"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 120,
+    "cues": [
+      "Наклон 30–45°",
+      "Тяни к животу",
+      "Лопатки сводятся"
+    ],
+    "curatedSubstituteKeys": [
+      "barbell_row",
+      "chest_supported_row_machine",
+      "one_arm_db_row_bench"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Выставь гриф чуть ниже колен. Встань вплотную, хват чуть шире плеч.",
+        "Сними гриф и наклонись вперёд на 30–45° с прямой спиной, колени чуть согнуты.",
+        "Тяни гриф к низу живота, сводя лопатки.",
+        "Опусти гриф подконтрольно до прямых рук."
+      ],
+      "nuances": [
+        "Выдох при тяге.",
+        "Корпус не меняет угол наклона во время подхода.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Рывки корпусом. Сбавь вес.",
+        "Тяга руками без сведения лопаток."
+      ],
+      "focus": [
+        "Если поясница устаёт — делай тягу с упором в грудь."
+      ]
+    }
+  },
+  {
+    "key": "smith_inverted_row",
+    "name": "Обратная тяга в Смите (гриф как перекладина)",
+    "movementPattern": "horizontal_pull",
+    "primaryMuscles": [
+      "upper_back",
+      "lats"
+    ],
+    "secondaryMuscles": [
+      "biceps",
+      "rear_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "elbow": 1,
+      "shoulder": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "medium",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Тяни к низу груди, плечи опущены"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "bodyweight",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 8,
+      "max": 12
+    },
+    "defaultRestSec": 90,
+    "cues": [
+      "Тело прямое",
+      "Грудь к грифу"
+    ],
+    "curatedSubstituteKeys": [
+      "inverted_row_table",
+      "chest_supported_row_machine",
+      "smith_bent_over_row"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Ноги согнуты",
+        "note": null
+      },
+      {
+        "key": "legs_straight",
+        "label": "Ноги прямые",
+        "note": "Тяжелее"
+      },
+      {
+        "key": "feet_elevated",
+        "label": "Ноги на скамье",
+        "note": "Ещё тяжелее"
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Зафиксируй гриф Смита на уровне пояса. Ляг под него и возьмись хватом чуть шире плеч.",
+        "Пятки на полу, тело прямое от плеч до колен.",
+        "Подтянись грудью к грифу, сводя лопатки.",
+        "Опустись до прямых рук."
+      ],
+      "nuances": [
+        "Чем ниже гриф и прямее ноги — тем тяжелее.",
+        "Прогрессия: больше повторов, затем ниже гриф."
+      ],
+      "mistakes": [
+        "Таз провисает.",
+        "Тяга подбородком к грифу, плечи поднимаются."
+      ],
+      "focus": [
+        "Проверь, что гриф надёжно зацеплен за крючки."
+      ]
+    }
+  },
+  {
+    "key": "smith_shrug",
+    "name": "Шраги в Смите",
+    "movementPattern": "vertical_pull",
+    "primaryMuscles": [
+      "upper_back"
+    ],
+    "secondaryMuscles": [
+      "forearms"
+    ],
+    "isCompound": false,
+    "jointStress": {
+      "shoulder": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Только вверх-вниз, без вращения плечами"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Плечи к ушам",
+      "Пауза наверху"
+    ],
+    "curatedSubstituteKeys": [
+      "db_shrug",
+      "upright_row"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Выставь гриф на уровне середины бедра. Встань вплотную, хват на ширине плеч.",
+        "Сними гриф, руки прямые.",
+        "Подними плечи вертикально к ушам, задержись на 1 с.",
+        "Опусти плечи подконтрольно."
+      ],
+      "nuances": [
+        "Выдох при подъёме.",
+        "Руки не сгибай — работают только трапеции.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Вращение плечами по кругу.",
+        "Рывки корпусом."
+      ],
+      "focus": [
+        "Можно использовать лямки, если хват устаёт раньше трапеций."
+      ]
+    }
+  },
+  {
+    "key": "smith_upright_row",
+    "name": "Тяга к подбородку в Смите (широким хватом)",
+    "movementPattern": "vertical_pull",
+    "primaryMuscles": [
+      "side_delts"
+    ],
+    "secondaryMuscles": [
+      "upper_back",
+      "front_delts"
+    ],
+    "isCompound": true,
+    "jointStress": {
+      "shoulder": 2,
+      "wrist": 1
+    },
+    "axialLoad": 0,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [
+      {
+        "area": "shoulder",
+        "note": "Тяни только до уровня нижней части груди; при щелчках или боли в плече — замени на махи"
+      }
+    ],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 2,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 75,
+    "cues": [
+      "Хват шире плеч",
+      "Локти ведут",
+      "До нижней части груди"
+    ],
+    "curatedSubstituteKeys": [
+      "upright_row",
+      "lateral_raise_db"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Хват шире плеч",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Выставь гриф на уровне середины бедра. Хват шире плеч.",
+        "Сними гриф, руки прямые.",
+        "Подними гриф вдоль корпуса до нижней части груди, локти выше кистей.",
+        "Опусти подконтрольно."
+      ],
+      "nuances": [
+        "Выдох при подъёме.",
+        "Широкий хват и неполная высота — безопаснее для плеч.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Узкий хват и подъём до подбородка — частая причина боли в плече.",
+        "Раскачка корпусом."
+      ],
+      "focus": [
+        "Если плечо реагирует — лучше махи в стороны."
+      ]
+    }
+  },
+  {
+    "key": "smith_calf_raise",
+    "name": "Подъёмы на носки стоя в Смите",
+    "movementPattern": "calf_raise",
+    "primaryMuscles": [
+      "calves"
+    ],
+    "secondaryMuscles": [],
+    "isCompound": false,
+    "jointStress": {
+      "ankle": 1,
+      "lower_back": 1
+    },
+    "axialLoad": 2,
+    "stabilityRequirement": 0,
+    "rangeOfMotion": "short",
+    "painSensitiveAreas": [],
+    "equipmentRequirements": [
+      [
+        "smith_machine"
+      ]
+    ],
+    "skillLevel": 1,
+    "progressionType": "double",
+    "loadUnit": "kg_total",
+    "defaultSets": 3,
+    "defaultRepRange": {
+      "min": 10,
+      "max": 15
+    },
+    "defaultRestSec": 60,
+    "cues": [
+      "Носки на платформе",
+      "Пауза внизу и вверху"
+    ],
+    "curatedSubstituteKeys": [
+      "standing_calf_raise_machine",
+      "leg_press_calf_raise",
+      "bodyweight_calf_raise"
+    ],
+    "variants": [
+      {
+        "key": "default",
+        "label": "Стандартный вариант",
+        "note": null
+      }
+    ],
+    "technique": {
+      "steps": [
+        "Поставь степ-платформу или блин под гриф. Гриф на трапециях.",
+        "Встань носками на край платформы, пятки свисают.",
+        "Опусти пятки ниже уровня платформы до растяжения икр.",
+        "Поднимись на носки максимально высоко, задержись на 1 с."
+      ],
+      "nuances": [
+        "Темп медленный, без пружинящих отскоков.",
+        "Вес — блины на грифе Смита; сам гриф обычно легче олимпийского (часто 15–25 кг с противовесом), запиши, как считаешь, и держись одного способа."
+      ],
+      "mistakes": [
+        "Короткая амплитуда.",
+        "Сгибание коленей."
+      ],
+      "focus": [
+        "Упоры выставь на безопасном уровне."
       ]
     }
   }

@@ -39,7 +39,7 @@ import { goalNutritionText } from './GoalExplain';
 import { useCommand } from '../app/useCommand';
 import { setManualTargets, useManualTargets, useVacationMode } from '../app/prefs';
 import type { FoodLog } from '@fitapp/domain';
-import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, Switch, TextField, type ChartSeries } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, LineChart, ListItem, ProgressBar, ProgressRing, Segmented, SelectField, Sheet, Switch, SwipeToDelete, TextField, type ChartSeries } from '../ui';
 import { isBarcode, lookupBarcode } from '../app/openFoodFacts';
 import { BarcodeScanner } from './BarcodeScan';
 import { parseDecimal, ScreenHeader } from './shared';
@@ -319,8 +319,8 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
                   ? `По плану ${amountText(foodOf(i.foodId), i.plannedAmountG)} · заменено твоей едой`
                   : `${amountText(foodOf(i.foodId), i.plannedAmountG)} · Б ${fmt(i.plannedMacros.proteinG, 0)} Ж ${fmt(i.plannedMacros.fatG, 0)} У ${fmt(i.plannedMacros.carbG, 0)}`;
               return (
+                <SwipeToDelete key={i.id} label={`Удалить: ${name}`} disabled={busy} onDelete={() => void run(async (d) => { if (log) await undoLog(d, log.id); await removePlannedItem(d, i.id); })}>
                 <ListItem
-                  key={i.id}
                   icon={log ? (log.entryType === 'skipped_planned' ? 'close' : 'check') : i.locked ? 'shield' : 'nutrition'}
                   lime={!!log && log.entryType !== 'skipped_planned'}
                   title={name}
@@ -328,10 +328,13 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
                   trailing={<span className="t-small">{fmt(log && log.entryType !== 'skipped_planned' ? log.macros.kcal : i.plannedMacros.kcal, 0)}</span>}
                   onClick={() => setItemSheet(i)}
                 />
+                </SwipeToDelete>
               );
             })}
             {loose.map((l) => (
-              <ListItem key={l.id} icon="check" lime title={l.snapshot.foodName} subtitle={`${l.plannedItemId === null ? 'Съедено не по плану' : 'Из прежнего плана'} · ${fmt(l.actualAmountG, 0)} г · Б ${fmt(l.macros.proteinG, 0)} Ж ${fmt(l.macros.fatG, 0)} У ${fmt(l.macros.carbG, 0)}`} trailing={<span className="t-small">{fmt(l.macros.kcal, 0)}</span>} onClick={() => setLogSheet(l)} />
+              <SwipeToDelete key={l.id} label={`Удалить: ${l.snapshot.foodName}`} disabled={busy} onDelete={() => void run((d) => undoLog(d, l.id))}>
+              <ListItem icon="check" lime title={l.snapshot.foodName} subtitle={`${l.plannedItemId === null ? 'Съедено не по плану' : 'Из прежнего плана'} · ${fmt(l.actualAmountG, 0)} г · Б ${fmt(l.macros.proteinG, 0)} Ж ${fmt(l.macros.fatG, 0)} У ${fmt(l.macros.carbG, 0)}`} trailing={<span className="t-small">{fmt(l.macros.kcal, 0)}</span>} onClick={() => setLogSheet(l)} />
+              </SwipeToDelete>
             ))}
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <Button size="sm" variant="secondary" icon="plus" onClick={() => setSlotForAdd({ slot, scan: false })}>Добавить еду</Button>
