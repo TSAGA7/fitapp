@@ -267,9 +267,8 @@ function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: 
   const ss = String(left % 60).padStart(2, '0');
   return (
     <div className={`rest-float wk-rest ${left === 0 ? 'over' : ''} ${paused ? 'paused' : ''}`} role="timer" aria-live="off">
-      <div className="wk-rest-cap">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</div>
-      <div className="wk-rest-next">{left === 0 ? 'Пора!' : rest.next ? `Дальше: ${rest.next}` : 'Отдыхай'}</div>
-      <DotClock text={`${mm}:${ss}`} label={`Осталось ${clock(left)}`} />
+      <div className="wk-rest-cap">Таймер</div>
+      <div className="wk-rest-time" aria-label={`Осталось ${clock(left)}`}>{mm}:{ss}</div>
       <div className="rest-cue" role="status" aria-live="polite">{cue ?? '\u00a0'}</div>
       <div className="wk-rest-ctrl">
         <button type="button" className="wk-rc" aria-label="Свернуть" onClick={() => setMini(true)}><Icon name="chevronDown" size={20} /></button>
@@ -279,40 +278,6 @@ function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: 
         <button type="button" className="wk-rc ok" aria-label="Завершить перерыв" onClick={onDone}><Icon name="check" size={20} strokeWidth={2.6} /></button>
       </div>
     </div>
-  );
-}
-
-// 5 × 7 dot font for the rest clock (like a dot-matrix display)
-const DOT_FONT: Record<string, readonly string[]> = {
-  '0': ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
-  '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
-  '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
-  '3': ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
-  '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
-  '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
-  '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
-  '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
-  '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
-  '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
-  ':': ['0', '0', '1', '0', '1', '0', '0'],
-};
-
-/** Big dotted digits of the rest timer. */
-function DotClock({ text, label }: { text: string; label: string }) {
-  const STEP = 9;
-  const dots: Array<{ x: number; y: number }> = [];
-  let col = 0;
-  for (const ch of text) {
-    const g = DOT_FONT[ch];
-    if (!g) continue;
-    g.forEach((row, y) => [...row].forEach((bit, x) => { if (bit === '1') dots.push({ x: col + x, y }); }));
-    col += (g[0] as string).length + 1;
-  }
-  const w = (col - 1) * STEP;
-  return (
-    <svg className="wk-dots" viewBox={`-5 -5 ${w + 10} ${6 * STEP + 10}`} role="img" aria-label={label}>
-      {dots.map((d) => <circle key={`${d.x}-${d.y}`} cx={d.x * STEP} cy={d.y * STEP} r={2.7} />)}
-    </svg>
   );
 }
 
