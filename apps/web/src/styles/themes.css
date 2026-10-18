@@ -1,0 +1,124 @@
+/* Themes: design tokens per theme. Loaded after glass.css, so these values win.
+   Every screen reads only tokens (var(--…)), so a theme is one block here plus its entry in src/app/themes.ts. */
+
+/* ---- defaults shared by all themes */
+:root {
+  --solid: var(--primary);          /* filled buttons, pressed chips, the hero card */
+  --on-solid: #fff;
+  --sheet: rgba(255, 255, 255, 0.97);
+  --nav-glass: rgba(255, 255, 255, 0.14);
+  --glass-soft: rgba(255, 255, 255, 0.30);
+  --row: rgba(255, 255, 255, 0.55);  /* set rows, inner panels */
+  --row-strong: rgba(255, 255, 255, 0.78);
+  --ok: #16a34a;                     /* a done set */
+  --ok-soft: color-mix(in srgb, var(--ok) 16%, transparent);
+  --active-edge: color-mix(in srgb, var(--primary) 45%, transparent);
+  --active-fill: color-mix(in srgb, var(--primary) 7%, var(--row));
+}
+:root[data-tone='dark'] {
+  --solid: #0b7a5a;
+  --sheet: rgba(21, 28, 27, 0.98);
+  --nav-glass: rgba(24, 32, 30, 0.45);
+  --glass-soft: rgba(30, 40, 38, 0.35);
+  --row: rgba(255, 255, 255, 0.05);
+  --row-strong: rgba(255, 255, 255, 0.09);
+  --ok: #4ade80;
+  --active-fill: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+/* ---- Classic Light: calm slate-sage, nearly opaque surfaces (little blur) */
+:root[data-theme='classic'] {
+  --primary: #456a63; --primary-700: #2f4c47; --primary-500: #5d8179; --primary-100: #d9e6e2; --primary-50: #eef4f2;
+  --accent: #8db3a3; --accent-soft: #e2ede8;
+  --bg: #eef2f3; --surface: #ffffff; --text: #1c292c; --muted: #637377; --muted-2: #93a0a3; --border: #dde4e6;
+  --glass: rgba(255, 255, 255, 0.84); --glass-strong: rgba(255, 255, 255, 0.92); --glass-border: rgba(255, 255, 255, 0.9); --glass-line: rgba(28, 41, 44, 0.08);
+  --blur: blur(10px) saturate(120%);
+  --row: rgba(244, 247, 248, 0.95); --row-strong: #ffffff;
+  --ok: #3f7d5c;
+}
+
+/* ---- Glass: the same calm palette, see-through surfaces over the landscape */
+:root[data-theme='glass'] {
+  --primary: #3f625c; --primary-700: #2b4642; --primary-500: #577a73; --primary-100: #d6e3df; --primary-50: #ecf3f1;
+  --accent: #9cc2b2; --accent-soft: rgba(226, 238, 232, 0.7);
+  --bg: #e4ebed; --surface: #ffffff; --text: #18262a; --muted: #55666b; --muted-2: #8796a0; --border: rgba(24, 38, 42, 0.1);
+  --glass: rgba(255, 255, 255, 0.48); --glass-strong: rgba(255, 255, 255, 0.66); --glass-border: rgba(255, 255, 255, 0.7); --glass-line: rgba(24, 38, 42, 0.08);
+  --blur: blur(24px) saturate(170%);
+  --row: rgba(255, 255, 255, 0.5); --row-strong: rgba(255, 255, 255, 0.72);
+  --ok: #3f7d5c;
+}
+
+/* ---- Ocean */
+:root[data-theme='ocean'] {
+  --primary: #1d6a85; --primary-700: #134e63; --primary-500: #2a84a3; --primary-100: #d2e9f1; --primary-50: #eaf5f9;
+  --accent: #5bbfd4; --accent-soft: #d9f0f5;
+  --bg: #e8f2f5; --surface: #ffffff; --text: #10252d; --muted: #557079; --muted-2: #8aa2aa; --border: #d4e4ea;
+  --glass: rgba(255, 255, 255, 0.62); --glass-strong: rgba(255, 255, 255, 0.78); --glass-border: rgba(255, 255, 255, 0.75); --glass-line: rgba(16, 37, 45, 0.08);
+  --row: rgba(255, 255, 255, 0.62); --row-strong: rgba(255, 255, 255, 0.85);
+  --ok: #148a6a;
+}
+
+/* ---- Sunset */
+:root[data-theme='sunset'] {
+  --primary: #a3473f; --primary-700: #7f342e; --primary-500: #bb6056; --primary-100: #f6dbd4; --primary-50: #fcf0ec;
+  --accent: #f2a35e; --accent-soft: #fde9d6;
+  --bg: #f8eee9; --surface: #ffffff; --text: #2e1c1d; --muted: #7a6062; --muted-2: #ab9496; --border: #eedfd9;
+  --glass: rgba(255, 255, 255, 0.62); --glass-strong: rgba(255, 255, 255, 0.8); --glass-border: rgba(255, 255, 255, 0.75); --glass-line: rgba(46, 28, 29, 0.08);
+  --row: rgba(255, 255, 255, 0.62); --row-strong: rgba(255, 255, 255, 0.86);
+  --ok: #2f8a5a;
+}
+
+/* ---- Minimal: graphite on white, no blur */
+:root[data-theme='minimal'] {
+  --primary: #2e3336; --primary-700: #1c2023; --primary-500: #4a5257; --primary-100: #e3e5e6; --primary-50: #f2f3f4;
+  --accent: #9aa3a8; --accent-soft: #eceeef;
+  --bg: #f5f6f6; --surface: #ffffff; --text: #16191b; --muted: #6a7277; --muted-2: #9ca3a7; --border: #e4e7e8;
+  --glass: #ffffff; --glass-strong: #ffffff; --glass-border: #e6e9ea; --glass-line: #e9ecec;
+  --blur: none;
+  --row: #f6f7f7; --row-strong: #ffffff;
+  --ok: #2f7d55;
+}
+
+/* ---- Dark (night mountains): the dark tokens from glass.css, slightly cooler */
+:root[data-theme='dark'] {
+  --bg: #0b1110;
+  --glass: rgba(24, 34, 38, 0.6); --glass-strong: rgba(24, 34, 38, 0.76);
+}
+
+/* ---- Forest */
+:root[data-theme='forest'] {
+  --primary: #86cfa2; --primary-700: #b4e6c6; --primary-500: #5aa97b; --primary-100: #1d3a2a; --primary-50: #14261c;
+  --accent: #c2e59c; --accent-soft: #263a1a;
+  --bg: #0d1712; --surface: #16231c; --text: #e6f0ea; --muted: #9db3a6; --muted-2: #6e8577; --border: #24372c;
+  --glass: rgba(22, 38, 29, 0.62); --glass-strong: rgba(22, 38, 29, 0.78); --glass-border: rgba(255, 255, 255, 0.09); --glass-line: rgba(255, 255, 255, 0.09);
+  --solid: #2f7a52; --sheet: rgba(18, 31, 24, 0.98); --nav-glass: rgba(20, 34, 26, 0.5); --glass-soft: rgba(22, 38, 29, 0.38);
+  --ok: #7fdc9c;
+}
+
+/* ---- Aurora */
+:root[data-theme='aurora'] {
+  --primary: #b9a6ff; --primary-700: #d6cbff; --primary-500: #9179f0; --primary-100: #2d2552; --primary-50: #1d1838;
+  --accent: #7ce7c9; --accent-soft: #1b3533;
+  --bg: #0e0c1d; --surface: #19162d; --text: #ece9fb; --muted: #a9a3c8; --muted-2: #77719a; --border: #2b2748;
+  --glass: rgba(28, 24, 52, 0.6); --glass-strong: rgba(28, 24, 52, 0.78); --glass-border: rgba(255, 255, 255, 0.09); --glass-line: rgba(255, 255, 255, 0.09);
+  --solid: #6a52d6; --sheet: rgba(22, 19, 42, 0.98); --nav-glass: rgba(26, 22, 48, 0.5); --glass-soft: rgba(28, 24, 52, 0.38);
+  --ok: #6ee7b7;
+}
+
+/* ---- consumers of the theme tokens */
+html .btn.primary { background: var(--solid); color: var(--on-solid); box-shadow: 0 6px 16px color-mix(in srgb, var(--solid) 30%, transparent); }
+html .btn.secondary, html .btn.text { color: var(--primary); }
+html .btn.secondary { border-color: color-mix(in srgb, var(--primary) 70%, transparent); }
+html .chip[aria-pressed='true'], html .segmented button[aria-selected='true'] { background: var(--solid); border-color: var(--solid); color: var(--on-solid); }
+html .segmented button[aria-selected='true'] { box-shadow: 0 4px 10px color-mix(in srgb, var(--solid) 25%, transparent); }
+html .bottom-nav a[aria-current='page'] .nav-ic { background: color-mix(in srgb, var(--primary) 14%, transparent); }
+html .hero { background: linear-gradient(160deg, color-mix(in srgb, var(--solid) 82%, #fff) 0%, var(--solid) 48%, color-mix(in srgb, var(--solid) 72%, #000) 100%); box-shadow: 0 12px 32px color-mix(in srgb, var(--solid) 24%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.28); }
+html .set-row { background: var(--row); }
+html .pbar > i { background: var(--primary); }
+html[data-tone] .sheet { background: var(--sheet); color: var(--text); }
+html[data-tone='light'] .bottom-nav { background: var(--nav-glass); }
+
+/* landscape backdrop of the themes that have one (Fitapp keeps its soft color blobs) */
+html[data-scene] .app-shell::before { background: var(--scene) center top / cover no-repeat, var(--bg); }
+html[data-scene] body { background: var(--bg); }
+html .btn.on-dark { color: var(--solid); }

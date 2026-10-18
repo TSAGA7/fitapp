@@ -6,12 +6,14 @@
     <title>Fitapp</title>
     <meta name="color-scheme" content="light dark" />
     <script>
-      /* Set the theme before the first paint so a dark phone does not flash white. */
+      /* Set the theme before the first paint so a dark phone does not flash white. The list matches src/app/themes.ts. */
       (function () {
         try {
           var c = localStorage.getItem('fitapp.theme');
-          var dark = c === 'dark' || (c !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          var tones = { light: 'light', classic: 'light', glass: 'light', ocean: 'light', sunset: 'light', minimal: 'light', dark: 'dark', forest: 'dark', aurora: 'dark' };
+          var id = tones[c] ? c : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.dataset.theme = id;
+          document.documentElement.dataset.tone = tones[id];
         } catch (e) {}
       })();
     </script>

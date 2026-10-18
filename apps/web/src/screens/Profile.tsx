@@ -1,3 +1,4 @@
+import { ThemeGrid } from './ThemePicker';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCommand } from '../app/useCommand';
@@ -6,7 +7,7 @@ import { applyDietMode, saveGoal, updateProfile } from '../actions';
 import { useData } from '../app/DataContext';
 import { deleteMetric } from '../actions';
 import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, WEEKDAY_SHORT, cm } from '../app/format';
-import { getDisplayName, setActivityBar, setDisplayName, setRestTimer, setTheme, setVacationMode, useActivityBar, useRestTimer, useTheme, useVacationMode, type ThemeChoice } from '../app/prefs';
+import { getDisplayName, setActivityBar, setDisplayName, setRestTimer, setVacationMode, useActivityBar, useRestTimer, useVacationMode } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
 import { CycleScreen, CycleTile } from './Cycle';
@@ -250,15 +251,12 @@ function BackupReminder() {
   );
 }
 
-const THEME_LABELS: Record<ThemeChoice, string> = { system: 'Системная', light: 'Светлая', dark: 'Тёмная' };
-
-/** Appearance: follow the phone (day / night) or force light or dark. Applied at once, no need to press "Сохранить". */
+/** Appearance: follow the phone (day / night) or pick a theme. Applied at once, no need to press "Сохранить". */
 function ThemePicker() {
-  const theme = useTheme();
   return (
     <div className="field">
       <span className="lbl">Оформление</span>
-      <Segmented<ThemeChoice> label="Оформление" options={(Object.keys(THEME_LABELS) as ThemeChoice[]).map((v) => ({ value: v, label: THEME_LABELS[v] }))} value={theme} onChange={setTheme} />
+      <ThemeGrid />
     </div>
   );
 }

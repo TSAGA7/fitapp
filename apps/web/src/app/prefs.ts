@@ -18,6 +18,7 @@ export function setDisplayName(name: string): void {
 }
 
 // ---- "Со своим весом" mode: a temporary status, the program itself is never changed.
+import { THEMES, sceneUrl, themeById, type ThemeDef, type ThemeId } from './themes';
 import { useSyncExternalStore } from 'react';
 
 const BW_KEY = 'fitapp.bodyweightMode';
@@ -186,8 +187,8 @@ export function useRestTimer(): boolean {
   );
 }
 
-// ---- theme: follows the system by default, or is forced light / dark
-export type ThemeChoice = 'system' | 'light' | 'dark';
+// ---- theme: follows the system (Fitapp light / dark) by default, or one of the named themes
+export type ThemeChoice = 'system' | ThemeId;
 const THEME_KEY = 'fitapp.theme';
 const themeListeners = new Set<() => void>();
 let themeCache: ThemeChoice | null = null;
@@ -195,7 +196,7 @@ let themeCache: ThemeChoice | null = null;
 function readTheme(): ThemeChoice {
   try {
     const v = window.localStorage.getItem(THEME_KEY);
-    return v === 'light' || v === 'dark' ? v : 'system';
+    return v && themeById(v) ? (v as ThemeId) : 'system';
   } catch {
     return themeCache ?? 'system';
   }
@@ -203,19 +204,31 @@ function readTheme(): ThemeChoice {
 export function getTheme(): ThemeChoice {
   return themeCache ?? readTheme();
 }
-/** The theme that is really shown: the system one unless the user forced light or dark. */
-export function resolveTheme(choice: ThemeChoice = getTheme()): 'light' | 'dark' {
-  if (choice !== 'system') return choice;
+/** The theme that is really shown: by the phone's day / night unless the user picked one. */
+export function resolveTheme(choice: ThemeChoice = getTheme()): ThemeDef {
+  if (choice !== 'system') return themeById(choice) ?? (THEMES[0] as ThemeDef);
+  let dark = false;
   try {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   } catch {
-    return 'light';
+    /* no media queries: light */
   }
+  return themeById(dark ? 'dark' : 'light') as ThemeDef;
 }
+/** Only attributes and one CSS variable change: React state (an open workout, a running rest timer, typed values) is untouched. */
 export function applyTheme(): void {
   const t = resolveTheme();
-  document.documentElement.dataset.theme = t;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0b1110' : '#065F46');
+  const root = document.documentElement;
+  root.dataset.theme = t.id;
+  root.dataset.tone = t.tone;
+  if (t.scene) {
+    root.style.setProperty('--scene', sceneUrl(t.scene));
+    root.dataset.scene = '1';
+  } else {
+    root.style.removeProperty('--scene');
+    delete root.dataset.scene;
+  }
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t.meta);
 }
 export function setTheme(choice: ThemeChoice): void {
   themeCache = choice;

@@ -8,6 +8,8 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/screens.css';
 import './styles/glass.css';
+import './styles/themes.css';
+import './styles/workout.css';
 
 applyTheme();
 try {

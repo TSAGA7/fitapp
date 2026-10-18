@@ -116,14 +116,14 @@ function clearInput(el: HTMLInputElement | null): void {
   el.focus();
 }
 
-export function TextField({ label, hint, error, unit, className = '', ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string | null; unit?: ReactNode }) {
+export function TextField({ label, hint, error, unit, labelIcon, className = '', ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string | null; unit?: ReactNode; labelIcon?: IconName }) {
   const id = useId();
   const ref = useRef<HTMLInputElement>(null);
   // A cross clears the field in one tap; only for typed values, and only when there is something to clear.
   const clearable = CLEARABLE_TYPES.has(rest.type ?? 'text') && !rest.readOnly && !rest.disabled && rest.value !== undefined && String(rest.value) !== '';
   return (
     <div className="field">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{labelIcon && <Icon name={labelIcon} size={16} />}{label}</label>
       <div className="input-wrap">
         <input ref={ref} id={id} className={`input ${unit ? 'has-unit' : ''} ${clearable ? 'has-clear' : ''} ${error ? 'invalid' : ''} ${className}`} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-e` : undefined} {...rest} />
         {(clearable || unit) && (
@@ -143,6 +143,19 @@ export function TextField({ label, hint, error, unit, className = '', ...rest }:
           {error}
         </span>
       )}
+    </div>
+  );
+}
+
+/** A number field with − and + on the sides (weight, reps): big tap targets for use mid-set, typing still works. */
+export function StepperField({ label, labelIcon, value, onChange, onStep, unit, inputMode = 'decimal', decLabel, incLabel, decDisabled }: { label: string; labelIcon?: IconName; value: string; onChange: (v: string) => void; onStep: (dir: -1 | 1) => void; unit?: ReactNode; inputMode?: 'decimal' | 'numeric'; decLabel: string; incLabel: string; decDisabled?: boolean }) {
+  return (
+    <div className="stepper">
+      <IconButton icon="minus" label={decLabel} disabled={decDisabled} onClick={() => onStep(-1)} />
+      <div className="grow">
+        <TextField label={label} labelIcon={labelIcon} unit={unit} inputMode={inputMode} value={value} onChange={(e) => onChange(e.target.value)} />
+      </div>
+      <IconButton icon="plus" label={incLabel} onClick={() => onStep(1)} />
     </div>
   );
 }

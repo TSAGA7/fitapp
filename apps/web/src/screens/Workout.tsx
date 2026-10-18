@@ -3,11 +3,12 @@ import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRes
 import { abandonWorkout, addExerciseToSession, addSetToExercise, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
-import { fmt, fromLift, liftUnit, toLift } from '../app/format';
+import { fmt, fromLift, liftUnit, plural, toLift } from '../app/format';
 import { getRestTimer, getWeightUnit, setWeightUnit, useWeightUnit, type WeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, TextField } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, StepperField, TextField } from '../ui';
+import { ThemeSheet } from './ThemePicker';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { ExercisePickerSheet } from './ExercisePicker';
 import { TvaGuideBody } from './TvaGuide';
@@ -41,6 +42,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const [celebrate, setCelebrate] = useState(false);
   const [picking, setPicking] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const barOn = useActivityBar();
   // Exercise blocks: any number can be open at once. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
@@ -114,15 +116,21 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   }
 
   return (
-    <main className={`screen workout ${rest !== null ? 'has-rest' : ''}`}>
-      <header className="screen-head">
-        <div className="back">
-          <IconButton icon="chevronLeft" label="К тренировкам" tone="ghost" onClick={() => go('training')} />
-          <h1 className="t-h2">{view.label}</h1>
+    <main className={`screen workout wk ${rest !== null ? 'has-rest' : ''}`}>
+      <header className="wk-top">
+        <IconButton icon="chevronLeft" label="К тренировкам" className="wk-round" onClick={() => go('training')} />
+        <div className="wk-top-end">
+          <IconButton icon="palette" label="Оформление" className="wk-round" onClick={() => setThemeOpen(true)} />
+          {readOnly
+            ? <span className="wk-pill">{view.session.status === 'completed' ? 'Завершена' : 'Прервана'}</span>
+            : <span className="wk-pill" aria-label={`Выполнено ${doneSets} из ${totalSets} подходов`}><b>{doneSets}</b>/{totalSets} подх.</span>}
         </div>
-        {readOnly ? <Badge tone="neutral">{view.session.status === 'completed' ? 'Завершена' : 'Прервана'}</Badge> : <Badge>{doneSets}/{totalSets}</Badge>}
       </header>
-      <ProgressBar value={totalSets > 0 ? doneSets / totalSets : 0} label="Прогресс тренировки" />
+      <div className="wk-hero">
+        <h1 className="wk-title">{view.label}</h1>
+        {!readOnly && totalSets > 0 && <p className="wk-sub">{doneSets === 0 ? `${view.exercises.length} ${plural(view.exercises.length, ['упражнение', 'упражнения', 'упражнений'])} · ${totalSets} ${plural(totalSets, ['подход', 'подхода', 'подходов'])}` : doneSets >= totalSets ? 'Все запланированные подходы сделаны' : `Сделано ${doneSets} из ${totalSets} подходов`}</p>}
+        {!readOnly && <ProgressBar value={totalSets > 0 ? doneSets / totalSets : 0} label="Прогресс тренировки" />}
+      </div>
       {barOn && !readOnly && <ActivityBar view={view} doneSets={doneSets} totalSets={totalSets} />}
       {readOnly && view.session.status === 'completed' && <WorkoutSummaryCard sessionId={sessionId} />}
       {banner}
@@ -131,12 +139,12 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         <Card flat><EmptyState icon="training" title={readOnly ? 'Упражнений не было' : 'Добавь первое упражнение'} text={readOnly ? undefined : 'Выбирай упражнения по ходу тренировки: вес подставится из истории, подходы и повторения можно поменять.'} /></Card>
       )}
       {view.exercises.map((ev, idx) => (
-        <ExerciseCard key={ev.se.id} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} />
+        <ExerciseCard key={ev.se.id} index={idx + 1} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} />
       ))}
 
       {!readOnly && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
       {!readOnly && (
-        <div className="stack">
+        <div className="wk-finish">
           <Button block icon="check" onClick={() => setFinishing(true)}>Завершить тренировку</Button>
           <Button block variant="text" disabled={busy} onClick={async () => { if (await ok((d) => abandonWorkout(d, sessionId))) go('training'); }}>Прервать без сохранения итогов</Button>
         </div>
@@ -163,6 +171,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         onClose={() => setPicking(false)}
       />
       {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
+      <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />
       <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} />
     </main>
   );
@@ -245,25 +254,33 @@ function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: 
       </button>
     );
   }
+  const R = 46;
+  const C = 2 * Math.PI * R;
+  const frac = rest.total > 0 ? Math.min(1, Math.max(0, left / rest.total)) : 0;
   return (
-    <div className="rest-float" role="timer" aria-live="off">
+    <div className={`rest-float wk-rest ${left === 0 ? 'over' : ''}`} role="timer" aria-live="off">
       <div className="rest-top">
         <span className="row"><Icon name="clock" size={18} /> <span className="t-caption">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</span></span>
-        <Button size="sm" variant="text" onClick={() => setMini(true)}>Свернуть</Button>
+        <Button size="sm" variant="text" icon="chevronDown" onClick={() => setMini(true)}>Свернуть</Button>
       </div>
-      <div className="rest-main">
-        <div className="rest-time" aria-label={`Осталось ${clock(left)}`}>{clock(left)}</div>
-        <div className="rest-adjust">
-          <Button size="sm" variant="secondary" onClick={() => adjust(-15)}>−15 с</Button>
-          <Button size="sm" variant="secondary" onClick={() => adjust(15)}>+15 с</Button>
+      <div className="wk-rest-main">
+        <div className="wk-ring" aria-label={`Осталось ${clock(left)}`}>
+          <svg viewBox="0 0 104 104" width="104" height="104" aria-hidden="true">
+            <circle cx="52" cy="52" r={R} className="wk-ring-bg" />
+            <circle cx="52" cy="52" r={R} className="wk-ring-fg" strokeDasharray={C} strokeDashoffset={C * (1 - frac)} transform="rotate(-90 52 52)" />
+          </svg>
+          <span className="rest-time">{clock(left)}</span>
+        </div>
+        <div className="wk-rest-side">
+          <div className="rest-cue" role="status" aria-live="polite">{cue ?? (left === 0 ? 'Пора!' : '\u00a0')}</div>
+          <div className="wk-rest-ctrl">
+            <Button size="sm" variant="secondary" onClick={() => adjust(-15)}>−15 с</Button>
+            <IconButton icon={paused ? 'play' : 'pause'} label={paused ? 'Продолжить' : 'Пауза'} className="wk-round wk-pause" onClick={toggle} />
+            <Button size="sm" variant="secondary" onClick={() => adjust(15)}>+15 с</Button>
+          </div>
         </div>
       </div>
-      <ProgressBar value={rest.total > 0 ? 1 - left / rest.total : 1} label="Прогресс перерыва" />
-      <div className="rest-cue t-h3" role="status" aria-live="polite">{cue ?? (left === 0 ? 'Пора!' : '\u00a0')}</div>
-      <div className="row">
-        <Button block variant="secondary" icon={paused ? 'play' : 'clock'} onClick={toggle}>{paused ? 'Продолжить' : 'Пауза'}</Button>
-        <Button block onClick={onDone}>Завершить</Button>
-      </div>
+      <Button block onClick={onDone}>{left === 0 ? 'Готов к подходу' : 'Завершить перерыв'}</Button>
     </div>
   );
 }
@@ -293,6 +310,7 @@ function warmPositionOf(list: readonly WorkoutExerciseView[], idx: number): Warm
 }
 
 interface CardProps {
+  index: number;
   ev: WorkoutExerciseView;
   warmPosition: WarmupPosition;
   readOnly: boolean;
@@ -317,27 +335,34 @@ function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutEx
   if (sets.length === 0) return null;
   const done = (no: number) => logs.find((l) => l.setType === 'warmup' && l.setNo === no && l.status === 'done');
   return (
-    <div className="warmup" role="group" aria-label="Разминка">
-      <div className="t-caption">Разминка перед рабочими подходами</div>
+    <div className="wk-panel wk-warm" role="group" aria-label="Разминка">
+      <div className="wk-panel-title">Разминка перед рабочими подходами</div>
       {sets.map((w, i) => {
         const no = i + 1;
         const d = done(no);
         return (
-          <div key={no} className="set-row">
-            <span className="t-caption">Разминка {no}</span>
-            <span className="t-small">{fmt(toLift(w.weightKg), 2)} {liftUnit()} × {w.reps}</span>
-            {d ? (
-              <span className="row">
-                <Badge>Готово</Badge>
-                <IconButton icon="close" label="Отменить разминочный подход" tone="ghost" onClick={() => void mutate((x) => undoSet(x, se.id, no, 'warmup'))} />
-              </span>
-            ) : (
-              <Button size="sm" variant="secondary" disabled={busy} onClick={() => void mutate((x) => logSet(x, { sessionExerciseId: se.id, exerciseId: exercise.id, variantKey: se.variantKey, contextKey, plannedSetId: null, setNo: no, setType: 'warmup', weightKg: w.weightKg, reps: w.reps, rir: null, restSec: null }))}>Сделал</Button>
-            )}
+          <div key={no} className={`wk-row ${d ? 'done' : ''}`}>
+            <span className="wk-num">{no}</span>
+            <span className="wk-row-text">
+              <b>Разминка {no}</b>
+              <span className="t-small">{fmt(toLift(w.weightKg), 2)} {liftUnit()} × {w.reps}</span>
+            </span>
+            <button
+              type="button"
+              className="wk-did"
+              aria-pressed={d ? true : false}
+              aria-label={d ? `Разминка ${no} сделана. Отменить` : `Разминка ${no}: сделал`}
+              disabled={busy}
+              onClick={() => void (d
+                ? mutate((x) => undoSet(x, se.id, no, 'warmup'))
+                : mutate((x) => logSet(x, { sessionExerciseId: se.id, exerciseId: exercise.id, variantKey: se.variantKey, contextKey, plannedSetId: null, setNo: no, setType: 'warmup', weightKg: w.weightKg, reps: w.reps, rir: null, restSec: null })))}
+            >
+              Сделал <span className="wk-did-mark"><Icon name="check" size={13} strokeWidth={3} /></span>
+            </button>
           </div>
         );
       })}
-      <p className="t-small">Лёгкие подходы без отказа и без записи запаса: на прогрессию и тоннаж они не влияют.</p>
+      <p className="wk-note"><Icon name="info" size={14} /> Лёгкие подходы без отказа и без записи запаса: на прогрессию и тоннаж они не влияют.</p>
     </div>
   );
 }
@@ -345,7 +370,7 @@ function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutEx
 /** Sets of the plan that are settled (done or skipped): the exercise is finished when all of them are. */
 export const settledSets = (ev: WorkoutExerciseView): number => ev.plan.filter((p) => ev.logs.some((l) => l.setType === 'working' && l.setNo === p.setNo)).length;
 
-function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable, journal }: CardProps) {
+function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable, journal }: CardProps) {
   const { snapshot: s } = useData();
   const { se, exercise, plan, logs } = ev;
   const working = logs.filter((l) => l.setType === 'working');
@@ -430,31 +455,71 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
     ? 'Все подходы выполнены'
     : `${se.replacedFromExerciseId ? 'Замена · ' : ''}Подход ${nextNo}: ${target ? (target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(target.targetWeightKg), 2)} ${liftUnit()}`) : ''} × ${target ? (target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`) : ''}${unit}`;
 
+  const planText = (p: (typeof plan)[number]): string => `${p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(p.targetWeightKg), 2)} ${liftUnit()}`} × ${p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}${unit}, запас ${p.targetRir.min}–${p.targetRir.max}`;
+  const factText = (l: (typeof working)[number]): string => `${l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}${l.actualReps}${unit} · RIR ${l.actualRir}`;
+  const extraRow = !readOnly && nextNo > plan.length;
+
+  // The editor of the next set: it opens inside that set's row.
+  const editor = readOnly ? null : (
+    <div className="wk-editor">
+      {exercise.loadUnit !== 'seconds' && (
+        <StepperField
+          label={exercise.loadUnit === 'bodyweight' ? 'Доп. вес (необязательно)' : 'Вес'}
+          labelIcon="training"
+          unit={<button type="button" className="rest-edit" aria-label={`Единицы веса: ${liftUnit()}. Изменить`} onClick={() => setUnitOpen(true)}>{liftUnit()}</button>}
+          value={weight}
+          onChange={setWeight}
+          onStep={(dir) => bump(dir * step)}
+          decLabel="Меньше веса"
+          incLabel="Больше веса"
+        />
+      )}
+      <StepperField
+        label={timed ? 'Секунды' : 'Повторения'}
+        labelIcon={timed ? 'clock' : 'repeat'}
+        inputMode="numeric"
+        value={reps}
+        onChange={setReps}
+        onStep={(dir) => setReps(String(dir < 0 ? Math.max(1, (Number.isFinite(r) ? r : 1) - 1) : (Number.isFinite(r) ? r : 0) + 1))}
+        decLabel={timed ? 'Меньше секунд' : 'Меньше повторений'}
+        incLabel={timed ? 'Больше секунд' : 'Больше повторений'}
+      />
+      <div className="rir-block">
+        <div className="t-caption">Сколько повторений ещё мог бы сделать (RIR)</div>
+        <div className="chips wk-rir" role="group" aria-label="RIR">
+          {RIR_OPTIONS.map((o) => <Chip key={o.value} pressed={rir === o.value} onClick={() => setRir(o.value)}>{o.label}</Chip>)}
+        </div>
+        {rir === null && <p className="t-small">Выбери запас — без него подход не записать.</p>}
+      </div>
+    </div>
+  );
+
   return (
-    <Card id={`ex-${se.id}`} className={`ex-acc ${open ? 'open' : ''}`}>
+    <Card id={`ex-${se.id}`} className={`ex-acc wk-ex ${open ? 'open' : ''} ${allSettled && !journal ? 'is-done' : ''}`}>
       <button type="button" className="ex-head" aria-expanded={open} onClick={onToggle}>
+        <span className="wk-num wk-ex-num" aria-hidden="true">{allSettled && !journal ? <Icon name="check" size={16} strokeWidth={2.6} /> : index}</span>
         <span className="ex-title">
-          <span className="t-h3">{exercise.name}</span>
-          <span className="t-small">{headline}</span>
+          <span className="wk-ex-name">{exercise.name}</span>
+          <span className="wk-ex-line">{headline}</span>
         </span>
         {journal ? <Badge tone={doneCount > 0 ? 'default' : 'neutral'}>{doneCount} подх.</Badge> : allSettled ? <Badge>Готово</Badge> : <Badge tone="neutral">{settled}/{plan.length}</Badge>}
-        <span className="ex-chev" aria-hidden="true"><Icon name="chevronRight" size={20} /></span>
+        <span className="ex-chev" aria-hidden="true"><Icon name="chevronDown" size={20} /></span>
       </button>
-      <div className="stack ex-body" hidden={!open}>
-        {ev.reasonText && !(ev.reasonCode === 'first_execution_choose_weight' && (exercise.loadUnit === 'seconds' || exercise.loadUnit === 'bodyweight')) && <p className="t-small"><Icon name="info" size={14} /> {ev.reasonText}</p>}
+      <div className="ex-body" hidden={!open}>
+        {ev.reasonText && !(ev.reasonCode === 'first_execution_choose_weight' && (exercise.loadUnit === 'seconds' || exercise.loadUnit === 'bodyweight')) && <p className="wk-note"><Icon name="info" size={14} /> {ev.reasonText}</p>}
         {ev.reminders.map((n) => (
           <div key={n.id} className="note-reminder" role="note">
             <b className="t-caption">Заметка с прошлого раза</b>
             <div className="t-body">{n.text}</div>
           </div>
         ))}
-        {ev.ownNote && <p className="t-small"><Icon name="edit" size={14} /> {ev.ownNote.text}</p>}
+        {ev.ownNote && <p className="wk-note"><Icon name="edit" size={14} /> {ev.ownNote.text}</p>}
         {exercise.variants.length > 1 && (
           <div className="var-pick">
             <div className="t-caption">Хват / вариант{working.length > 0 || readOnly ? '' : ' (до первого подхода)'}</div>
-            <div className="chips" role="group" aria-label="Вариант упражнения">
+            <div className="chips wk-variants" role="group" aria-label="Вариант упражнения">
               {exercise.variants.map((v) => (
-                <Chip key={v.key} pressed={se.variantKey === v.key} onClick={() => { if (!readOnly && working.length === 0 && !busy && se.variantKey !== v.key) void mutate((d) => changeExerciseVariant(d, { sessionExerciseId: se.id, variantKey: v.key })); }}>{v.label}</Chip>
+                <Chip key={v.key} pressed={se.variantKey === v.key} disabled={se.variantKey !== v.key && (readOnly || working.length > 0)} onClick={() => { if (!readOnly && working.length === 0 && !busy && se.variantKey !== v.key) void mutate((d) => changeExerciseVariant(d, { sessionExerciseId: se.id, variantKey: v.key })); }}>{v.label}</Chip>
               ))}
             </div>
             {exercise.variants.find((v) => v.key === se.variantKey)?.note && <p className="t-small">{exercise.variants.find((v) => v.key === se.variantKey)?.note}</p>}
@@ -465,59 +530,58 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
           <WarmupBlock ev={ev} position={warmPosition} busy={busy} mutate={mutate} contextKey={contextKey} />
         )}
 
-        <div className="list">
+        <div className="wk-sets">
           {plan.map((p) => {
             const l = logOf(p.setNo);
             const current = !readOnly && p.setNo === nextNo;
+            const state = l ? (l.status === 'done' ? 'done' : 'skipped') : current ? 'current' : 'pending';
             return (
-              <div key={p.id} className="set-row" aria-current={current ? 'step' : undefined}>
-                <span className="t-caption">Подход {p.setNo}</span>
-                {/* In a journal a recorded set shows only what was done: the suggestion is noise there. */}
-                {journal && l ? <span /> : <span className="t-small">{p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(p.targetWeightKg), 2)} ${liftUnit()}`} × {p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}{unit}, запас {p.targetRir.min}–{p.targetRir.max}</span>}
-                {l && l.status === 'done' && (
-                  <span className="row">
-                    <b className="t-body">{l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}{l.actualReps}{unit} · RIR {l.actualRir}</b>
-                    {!readOnly && <IconButton icon="close" label="Отменить подход" tone="ghost" onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))} />}
+              <div key={p.id} className={`wk-set ${state}`} aria-current={current ? 'step' : undefined}>
+                <div className="wk-set-head">
+                  <span className="wk-num">{state === 'done' ? <Icon name="check" size={15} strokeWidth={2.8} /> : p.setNo}</span>
+                  <span className="wk-row-text">
+                    <b>Подход {p.setNo}</b>
+                    {/* In a journal a recorded set shows only what was done: the suggestion is noise there. */}
+                    {state === 'done' ? <span className="wk-fact">{factText(l!)}</span> : journal && l ? null : <span className="t-small">{planText(p)}</span>}
                   </span>
-                )}
-                {l && l.status === 'skipped' && (
-                  <span className="row">
-                    <Badge tone={l.skipReason === 'pain' ? 'danger' : 'neutral'}>{l.skipReason === 'pain' ? 'Боль' : 'Пропущен'}</Badge>
-                    {!readOnly && <Button size="sm" variant="text" icon="swap" disabled={busy} onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))}>Вернуть</Button>}
-                  </span>
-                )}
+                  {state === 'done' && !readOnly && <IconButton icon="close" label={`Отменить подход ${p.setNo}`} tone="ghost" onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))} />}
+                  {state === 'skipped' && (
+                    <span className="row">
+                      <Badge tone={l!.skipReason === 'pain' ? 'danger' : 'neutral'}>{l!.skipReason === 'pain' ? 'Боль' : 'Пропущен'}</Badge>
+                      {!readOnly && <Button size="sm" variant="text" disabled={busy} onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))}>Вернуть</Button>}
+                    </span>
+                  )}
+                  {state === 'current' && <span className="wk-now">сейчас</span>}
+                </div>
+                {current && editor}
               </div>
             );
           })}
           {working.filter((l) => l.setNo > plan.length && l.status === 'done').map((l) => (
-            <div key={l.id} className="set-row"><span className="t-caption">Доп. {l.setNo}</span><b className="t-body">{l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}{l.actualReps} · RIR {l.actualRir}</b></div>
+            <div key={l.id} className="wk-set done">
+              <div className="wk-set-head">
+                <span className="wk-num"><Icon name="check" size={15} strokeWidth={2.8} /></span>
+                <span className="wk-row-text"><b>Доп. подход {l.setNo}</b><span className="wk-fact">{factText(l)}</span></span>
+              </div>
+            </div>
           ))}
+          {extraRow && (
+            <div className="wk-set current" aria-current="step">
+              <div className="wk-set-head">
+                <span className="wk-num">{nextNo}</span>
+                <span className="wk-row-text"><b>{journal ? `Подход ${nextNo}` : 'Дополнительный подход'}</b><span className="t-small">{journal ? 'запиши, что сделал' : 'сверх плана, по желанию'}</span></span>
+                <span className="wk-now">сейчас</span>
+              </div>
+              {editor}
+            </div>
+          )}
         </div>
 
         {!readOnly && (
-          <div className="stack">
-            <div className="t-caption">{nextNo <= plan.length || journal ? `Подход ${nextNo}` : 'Дополнительный подход'}</div>
-            {exercise.loadUnit !== 'seconds' && (
-              <div className="row" style={{ alignItems: 'flex-end' }}>
-                <IconButton icon="minus" label="Меньше веса" onClick={() => bump(-step)} />
-                <div className="grow"><TextField label={exercise.loadUnit === 'bodyweight' ? 'Доп. вес (необязательно)' : 'Вес'} unit={<button type="button" className="rest-edit" aria-label={`Единицы веса: ${liftUnit()}. Изменить`} onClick={() => setUnitOpen(true)}>{liftUnit()}</button>} inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} /></div>
-                <IconButton icon="plus" label="Больше веса" onClick={() => bump(step)} />
-              </div>
-            )}
-            <div className="row" style={{ alignItems: 'flex-end' }}>
-              <IconButton icon="minus" label="Меньше повторений" onClick={() => setReps(String(Math.max(1, (Number.isFinite(r) ? r : 1) - 1)))} />
-              <div className="grow"><TextField label={timed ? 'Секунды' : 'Повторения'} inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} /></div>
-              <IconButton icon="plus" label="Больше повторений" onClick={() => setReps(String((Number.isFinite(r) ? r : 0) + 1))} />
-            </div>
-            <div className="rir-block">
-              <div className="t-caption">Сколько повторений ещё мог бы сделать (RIR)</div>
-              <div className="chips" role="group" aria-label="RIR">
-                {RIR_OPTIONS.map((o) => <Chip key={o.value} pressed={rir === o.value} onClick={() => setRir(o.value)}>{o.label}</Chip>)}
-              </div>
-            </div>
-            <div className="row between rest-pick">
+          <div className="wk-actions">
+            <div className="wk-rest-pick">
               <span className="t-small">
-                Перерыв{' '}
+                Отдых{' '}
                 <button type="button" className="rest-edit" aria-label={`Перерыв ${clock(restSec)}. Изменить время`} onClick={() => setRestEditOpen(true)}>{clock(restSec)}</button>
                 {restOverride === null ? ` · ${suggestion.reason}` : ' · вручную'}
               </span>
@@ -526,15 +590,17 @@ function ExerciseCard({ ev, warmPosition, readOnly, busy, mutate, run, open, onT
                 <IconButton icon="plus" label="Больше отдыха" tone="ghost" onClick={() => setRestOverride(Math.min(600, restSec + 15))} />
               </span>
             </div>
-            <Button block icon="clock" disabled={!canLog} onClick={() => void mutate((d) => record(d, restSec), restSec, restOverride === null ? suggestion.reason : 'вручную')}>Перерыв · {clock(restSec)}</Button>
+            <Button block icon="clock" className="wk-go" disabled={!canLog} onClick={() => void mutate((d) => record(d, restSec), restSec, restOverride === null ? suggestion.reason : 'вручную')}>Перерыв · {clock(restSec)}</Button>
             <Button block variant="text" disabled={!canLog} onClick={() => void mutate((d) => record(d, null))}>Записать без перерыва</Button>
-            <div className="row" style={{ flexWrap: 'wrap' }}>
-              <Button size="sm" variant="text" icon="skip" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}>Пропустить подход</Button>
-              <Button size="sm" variant="text" icon="alert" onClick={() => setPainOpen(true)}>Боль</Button>
-              <Button size="sm" variant="text" icon="plus" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}>Добавить подход</Button>
-              <Button size="sm" variant="text" icon="swap" onClick={() => setSwapOpen(true)}>Заменить</Button>
-              <Button size="sm" variant="text" icon="edit" onClick={() => setNoteOpen(true)}>Заметка</Button>
+            <div className="wk-tools">
+              <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}><Icon name="skip" size={18} /><span>Пропустить подход</span></button>
+              <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}><Icon name="plus" size={18} /><span>Добавить подход</span></button>
+              <button type="button" className="wk-tool" onClick={() => setSwapOpen(true)}><Icon name="swap" size={18} /><span>Заменить</span></button>
+              <button type="button" className="wk-tool danger" onClick={() => setPainOpen(true)}><Icon name="alert" size={18} /><span>Боль</span></button>
+            </div>
+            <div className="wk-links">
               <Button size="sm" variant="text" icon="info" onClick={() => setInfoOpen(true)}>Техника</Button>
+              <Button size="sm" variant="text" icon="edit" onClick={() => setNoteOpen(true)}>Заметка</Button>
               {VACUUM_KEYS.has(exercise.key) && <Button size="sm" variant="text" icon="info" onClick={() => setGuideOpen(true)}>Как это работает</Button>}
               {removable && <Button size="sm" variant="text" icon="trash" disabled={busy} onClick={() => void mutate((d) => removeExerciseFromSession(d, se.id))}>Убрать</Button>}
             </div>
