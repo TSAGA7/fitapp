@@ -160,6 +160,42 @@ export function StepperField({ label, labelIcon, value, onChange, onStep, unit, 
   );
 }
 
+/** A scroll wheel like the iPhone timer: the value in the middle band is the chosen one. */
+export function WheelPicker({ values, value, onChange, format = String, label, suffix }: { values: readonly number[]; value: number; onChange: (v: number) => void; format?: (v: number) => string; label: string; suffix?: string }) {
+  const ITEM = 40;
+  const ref = useRef<HTMLDivElement>(null);
+  const idxOf = (v: number) => { const i = values.indexOf(v); return i >= 0 ? i : values.reduce((best, x, k) => (Math.abs(x - v) < Math.abs((values[best] as number) - v) ? k : best), 0); };
+  const settle = useRef<number | undefined>(undefined);
+  const last = useRef(value);
+  // External change (a preset): roll the wheel to it.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (last.current === value && el.scrollTop !== 0) return;
+    last.current = value;
+    el.scrollTo({ top: idxOf(value) * ITEM, behavior: el.scrollTop === 0 ? 'auto' : 'smooth' });
+  }, [value]);
+  const onScroll = () => {
+    const el = ref.current;
+    if (!el) return;
+    window.clearTimeout(settle.current);
+    settle.current = window.setTimeout(() => {
+      const i = Math.max(0, Math.min(values.length - 1, Math.round(el.scrollTop / ITEM)));
+      const v = values[i] as number;
+      if (v !== last.current) { last.current = v; onChange(v); }
+    }, 90);
+  };
+  return (
+    <div className="wheel" role="spinbutton" aria-label={label} aria-valuenow={value} aria-valuetext={`${format(value)}${suffix ? ` ${suffix}` : ''}`} tabIndex={0}
+      onKeyDown={(e) => { const i = idxOf(value); if (e.key === 'ArrowUp' && i > 0) onChange(values[i - 1] as number); if (e.key === 'ArrowDown' && i < values.length - 1) onChange(values[i + 1] as number); }}>
+      <div className="wheel-scroll" ref={ref} onScroll={onScroll}>
+        {values.map((v) => <div key={v} className={`wheel-item ${v === value ? 'on' : ''}`} onClick={() => onChange(v)}>{format(v)}</div>)}
+      </div>
+      {suffix && <span className="wheel-suffix" aria-hidden="true">{suffix}</span>}
+    </div>
+  );
+}
+
 export function SelectField({ label, hint, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement> & { label: string; hint?: string }) {
   const id = useId();
   return (

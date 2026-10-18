@@ -218,3 +218,14 @@
 .wk-stats { grid-template-columns: 1.45fr 1fr 0.9fr 1fr; }
 .wk-stat-v small { font-size: 13px; font-weight: 600; color: var(--muted); }
 .wk-tools.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ---- iPhone-style wheels (rest time) */
+.wheels { position: relative; display: flex; justify-content: center; gap: 8px; height: 200px; padding: 0 8px; }
+.wheel-band { position: absolute; left: 8px; right: 8px; top: 80px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--muted) 14%, transparent); pointer-events: none; }
+.wheel { position: relative; width: 120px; height: 200px; outline: none; }
+.wheel-scroll { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; padding: 80px 0; box-sizing: border-box; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent); overscroll-behavior: contain; }
+.wheel-scroll::-webkit-scrollbar { display: none; }
+.wheel-item { height: 40px; line-height: 40px; scroll-snap-align: center; text-align: center; font-size: 22px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; cursor: pointer; padding-right: 40px; }
+.wheel-item.on { color: var(--text); font-size: 26px; font-weight: 600; }
+.wheel-suffix { position: absolute; right: 8px; top: 80px; line-height: 40px; font-size: 16px; font-weight: 600; color: var(--text); pointer-events: none; }
+.rest-presets .chip { height: 36px; padding: 0 12px; font-size: 14px; }

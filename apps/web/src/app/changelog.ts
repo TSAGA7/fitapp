@@ -11,6 +11,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: '2026-10-18g',
+    date: '2026-10-18',
+    items: ['Время отдыха выбирается барабаном, как в таймере iPhone', 'Записанный подход можно исправить — карандаш рядом с крестиком'],
+  },
+  {
     id: '2026-10-18f',
     date: '2026-10-18',
     items: [

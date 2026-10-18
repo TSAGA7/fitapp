@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, addExerciseToSession, addSetToExercise, removeLastSet, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, addExerciseToSession, addSetToExercise, editSet, removeLastSet, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt, fromLift, liftUnit, plural, toLift } from '../app/format';
 import { getRestTimer, getWeightUnit, setWeightUnit, useWeightUnit, useWorkoutLayout, type WeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, StepperField, TextField } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, StepperField, TextField, WheelPicker } from '../ui';
 import { ThemeSheet } from './ThemePicker';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { ExercisePickerSheet } from './ExercisePicker';
@@ -238,31 +238,64 @@ function UnitSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 /** Type in any rest time. The recommended one stays one tap away: people differ in fitness, so it is advice, not a rule. */
+const MINUTES = Array.from({ length: 31 }, (_, i) => i);
+const SECONDS = Array.from({ length: 12 }, (_, i) => i * 5);
+
 function RestEditSheet({ open, current, recommended, onClose, onPick }: { open: boolean; current: number; recommended: number; onClose: () => void; onPick: (sec: number) => void }) {
-  const [min, setMin] = useState('');
-  const [sec, setSec] = useState('');
+  const [min, setMin] = useState(0);
+  const [sec, setSec] = useState(0);
+  const set = (t: number) => { setMin(Math.floor(t / 60)); setSec(Math.round((t % 60) / 5) * 5 % 60); };
   useEffect(() => {
-    if (open) {
-      setMin(String(Math.floor(current / 60)));
-      setSec(String(current % 60));
-    }
+    if (open) set(current);
   }, [open, current]);
-  const total = (Number.parseInt(min || '0', 10) || 0) * 60 + (Number.parseInt(sec || '0', 10) || 0);
+  const total = min * 60 + sec;
   const valid = total >= 10 && total <= 1800;
   return (
     <Sheet open={open} title="Сколько отдыхать" onClose={onClose}>
       <div className="stack">
-        <div className="grid-2">
-          <TextField label="Минуты" inputMode="numeric" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, '').slice(0, 2))} />
-          <TextField label="Секунды" inputMode="numeric" value={sec} onChange={(e) => setSec(e.target.value.replace(/\D/g, '').slice(0, 2))} />
+        <div className="wheels">
+          <div className="wheel-band" aria-hidden="true" />
+          <WheelPicker label="Минуты" values={MINUTES} value={min} onChange={setMin} suffix="мин" />
+          <WheelPicker label="Секунды" values={SECONDS} value={sec} onChange={setSec} format={(v) => String(v).padStart(2, '0')} suffix="сек" />
         </div>
-        <div className="chips" role="group" aria-label="Быстрый выбор">
-          {REST_PRESETS.map((p) => <Chip key={p} pressed={total === p} onClick={() => { setMin(String(Math.floor(p / 60))); setSec(String(p % 60)); }}>{clock(p)}</Chip>)}
+        <div className="chips rest-presets" role="group" aria-label="Быстрый выбор">
+          {REST_PRESETS.map((p) => <Chip key={p} pressed={total === p} onClick={() => set(p)}>{clock(p)}</Chip>)}
         </div>
-        {!valid && <p className="t-small">Укажи время от 0:10 до 30:00.</p>}
+        {!valid && <p className="t-small">Минимум 0:10, максимум 30:00.</p>}
         <Button block disabled={!valid} onClick={() => onPick(total)}>Готово · {clock(valid ? total : current)}</Button>
-        <Button block variant="secondary" onClick={() => onPick(recommended)}>Вернуть рекомендуемое · {clock(recommended)}</Button>
-        <p className="t-small">Рекомендуемое время учитывает упражнение, подход, запас повторений и твою историю. Если оно кажется долгим, сократи.</p>
+        {recommended !== total && <Button block variant="text" onClick={() => onPick(recommended)}>Вернуть рекомендуемое · {clock(recommended)}</Button>}
+      </div>
+    </Sheet>
+  );
+}
+
+/** Correcting a recorded set: weight, reps, reserve. */
+function EditSetSheet({ log, onClose, onSave, timed, loadUnit }: { log: { setNo: number; actualWeightKg: number | null; actualReps: number | null; actualRir: number | null } | null; onClose: () => void; onSave: (weightKg: number | null, reps: number, rir: number) => Promise<void>; timed: boolean; loadUnit: string }) {
+  const [w, setW] = useState('');
+  const [r, setR] = useState('');
+  const [rir, setRir] = useState<number>(2);
+  useEffect(() => {
+    if (!log) return;
+    setW(log.actualWeightKg === null ? '' : fmt(toLift(log.actualWeightKg), 2));
+    setR(String(log.actualReps ?? ''));
+    setRir(log.actualRir ?? 2);
+  }, [log]);
+  if (!log) return null;
+  const wv = w.trim() === '' ? null : parseDecimal(w);
+  const rv = parseDecimal(r);
+  const ok = Number.isFinite(rv) && rv >= 1 && (wv === null || (Number.isFinite(wv) && wv >= 0));
+  return (
+    <Sheet open title={`Подход ${log.setNo}: исправить`} onClose={onClose}>
+      <div className="stack">
+        {loadUnit !== 'seconds' && <StepperField label="Вес" labelIcon="training" unit={liftUnit()} value={w} onChange={setW} onStep={(d) => setW(fmt(Math.max(0, (wv ?? 0) + d * 2.5), 2))} decLabel="Меньше веса" incLabel="Больше веса" />}
+        <StepperField label={timed ? 'Секунды' : 'Повторения'} labelIcon={timed ? 'clock' : 'repeat'} inputMode="numeric" value={r} onChange={setR} onStep={(d) => setR(String(Math.max(1, (Number.isFinite(rv) ? rv : 0) + d)))} decLabel="Меньше" incLabel="Больше" />
+        <div className="rir-block">
+          <div className="t-caption">Запас (RIR)</div>
+          <div className="chips wk-rir" role="group" aria-label="RIR">
+            {RIR_OPTIONS.map((o) => <Chip key={o.value} pressed={rir === o.value} onClick={() => setRir(o.value)}>{o.label}</Chip>)}
+          </div>
+        </div>
+        <Button block icon="check" disabled={!ok} onClick={() => void onSave(wv === null ? null : Math.round(fromLift(wv) * 1000) / 1000, rv, rir)}>Сохранить</Button>
       </div>
     </Sheet>
   );
@@ -431,6 +464,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
   }, [nextNo, target?.id]);
 
   const [painOpen, setPainOpen] = useState(false);
+  const [editing, setEditing] = useState<(typeof logs)[number] | null>(null);
   const [swapOpen, setSwapOpen] = useState(false);
   const [advice, setAdvice] = useState<PainAdvice | null>(null);
 
@@ -610,6 +644,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
                     {/* In a journal a recorded set shows only what was done: the suggestion is noise there. */}
                     {state === 'done' && <span className="wk-fact">{factText(l!)}</span>}
                   </span>
+                  {state === 'done' && !readOnly && <IconButton icon="edit" label={`Исправить подход ${p.setNo}`} tone="ghost" onClick={() => setEditing(l!)} />}
                   {state === 'done' && !readOnly && <IconButton icon="close" label={`Отменить подход ${p.setNo}`} tone="ghost" onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))} />}
                   {state === 'skipped' && (
                     <span className="row">
@@ -681,6 +716,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
         </div>,
         dock,
       )}
+      <EditSetSheet log={editing} timed={timed} loadUnit={exercise.loadUnit} onClose={() => setEditing(null)} onSave={async (weightKg, reps, rirV) => { const no = editing!.setNo; setEditing(null); await mutate((d) => editSet(d, { sessionExerciseId: se.id, setNo: no, weightKg, reps, rir: rirV })); }} />
       <UnitSheet open={unitOpen} onClose={() => setUnitOpen(false)} />
       <RestEditSheet open={restEditOpen} current={restSec} recommended={suggestion.seconds} onClose={() => setRestEditOpen(false)} onPick={(sec) => { setRestOverride(sec === suggestion.seconds ? null : sec); setRestEditOpen(false); }} />
       {infoOpen && <ExerciseInfoSheet exercise={exercise} onClose={() => setInfoOpen(false)} />}

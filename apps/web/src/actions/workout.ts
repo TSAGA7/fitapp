@@ -462,6 +462,16 @@ export async function undoSet(deps: AppDeps, sessionExerciseId: string, setNo: n
   });
 }
 
+/** Corrects a recorded working set of a running workout: weight, reps and reserve. */
+export async function editSet(deps: AppDeps, input: { sessionExerciseId: string; setNo: number; weightKg: number | null; reps: number; rir: number }): Promise<void> {
+  if (!(input.reps >= 1)) throw new Error('Укажи повторения');
+  await deps.uow.run(async (r) => {
+    const existing = (await r.workouts.listSetLogs(input.sessionExerciseId)).find((s) => s.setNo === input.setNo && s.setType === 'working' && s.status === 'done' && s.deletedAt === null);
+    if (!existing) throw new Error('Подход не найден');
+    await r.workouts.putSetLog({ ...existing, actualWeightKg: input.weightKg, actualReps: Math.round(input.reps), actualRir: input.rir as typeof existing.actualRir });
+  });
+}
+
 /** Adds one more working set to the exercise of this workout (a copy of the last planned set). */
 export async function addSetToExercise(deps: AppDeps, sessionExerciseId: string): Promise<void> {
   await deps.uow.run(async (r) => {
