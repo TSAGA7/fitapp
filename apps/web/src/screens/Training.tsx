@@ -1,7 +1,7 @@
 import { CycleTrainingHint } from './Cycle';
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, assessExercise, type CardioSession, reentryAdvice, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
-import { createProgram, deleteCardioSession, deleteWorkout, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
+import { startCustomWorkout, createProgram, deleteCardioSession, deleteWorkout, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
@@ -10,6 +10,7 @@ import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, SwipeToDelete } from '../ui';
 import { useBodyweightMode, useOwnMode, useVacationMode } from '../app/prefs';
 import { OwnModeView, OwnWorkoutsSheet } from './OwnMode';
+import { OwnPlanSection, useOwnPlanByDate } from './OwnPlan';
 import { BodyweightCard, PlaceSwitch } from './BodyweightMode';
 import { CardioDetailSheet, cardioDetails, cardioTitle, CardioSheet } from './Cardio';
 import { ExerciseInfoSheet } from './ExerciseInfo';
@@ -75,9 +76,9 @@ export function Training({ route = [] }: { route?: string[] }) {
       <OwnWorkoutsSheet open={ownOpen} onClose={() => setOwnOpen(false)} />
       <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
       {banner}
-      {view === 'week' && (own ? <OwnModeView /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
-      {view === 'month' && <MonthView />}
-      {view === 'program' && <ProgramView />}
+      {view === 'week' && (own ? <OwnModeView onProgram={() => setView('program')} /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
+      {view === 'month' && <MonthView own={own} />}
+      {view === 'program' && (own ? <OwnPlanSection /> : <ProgramView />)}
       {view === 'history' && <History />}
     </main>
   );
@@ -515,8 +516,10 @@ function History() {
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /** Month calendar: tap a day to see what was done or planned. */
-function MonthView() {
+function MonthView({ own = false }: { /** «Своя»: the own plan is shown instead of the program. */ own?: boolean }) {
   const { snapshot: s } = useData();
+  const { run, banner, busy } = useCommand();
+  const ownDays = useOwnPlanByDate();
   const version = s.activeVersion!;
   const [ym, setYm] = useState(() => ({ y: Number(s.today.slice(0, 4)), m: Number(s.today.slice(5, 7)) }));
   const [picked, setPicked] = useState<string>(s.today);
@@ -531,11 +534,12 @@ function MonthView() {
     return m;
   }, [s.cardioSessions]);
   const [cardio, setCardio] = useState<CardioSession | null>(null);
-  const planned = useMemo(() => new Map(s.plannedSessions.filter((p) => p.deletedAt === null && p.status === 'planned').map((p) => [p.plannedDate, p])), [s.plannedSessions]);
+  const planned = useMemo(() => (own ? new Map<string, unknown>([...ownDays.keys()].filter((d) => !s.workouts.some((w) => w.completed && w.date === d)).map((d) => [d, true])) : new Map(s.plannedSessions.filter((p) => p.deletedAt === null && p.status === 'planned').map((p) => [p.plannedDate, p]))), [s.plannedSessions, own, ownDays, s.workouts]);
   const shift = (d: number) => setYm((c) => { const t = c.y * 12 + (c.m - 1) + d; return { y: Math.floor(t / 12), m: (t % 12) + 1 }; });
   const labelOf = (key: string) => version.training.workouts.find((w) => w.key === key)?.label ?? 'Тренировка';
   const day = done.get(picked);
-  const plan = planned.get(picked);
+  const plan = own ? undefined : (planned.get(picked) as PlannedSession | undefined);
+  const ownPlan = own && planned.has(picked) ? ownDays.get(picked) : undefined;
   const dayCardio = cardioByDate.get(picked) ?? [];
   return (
     <>
@@ -567,7 +571,9 @@ function MonthView() {
           {day && <ListItem icon="history" title={day.title ? `Своя: ${day.title}` : 'Тренировка выполнена'} subtitle={day.names.slice(0, 4).join(', ')} trailing={`${day.sets} подх.`} onClick={() => go(`workout/${day.id}`)} />}
           {dayCardio.map((c) => <ListItem key={c.id} icon="heart" title={`Кардио: ${cardioTitle(c)}`} subtitle={cardioDetails(c) || 'Выполнено'} onClick={() => setCardio(c)} />)}
           {plan && <ListItem icon="calendar" title={labelOf(plan.workoutKey)} subtitle="Запланировано" onClick={() => go('training')} />}
-          {!day && !plan && dayCardio.length === 0 && <p className="note">В этот день тренировки нет.</p>}
+          {ownPlan && <ListItem icon="play" title={ownPlan.name} subtitle={picked < s.today ? 'Пропущено · нажми, чтобы сделать сегодня' : picked === s.today ? 'Сегодня · нажми, чтобы начать' : 'Запланировано · можно начать сейчас'} onClick={async () => { if (busy) return; const sid = await run((d) => startCustomWorkout(d, ownPlan.customWorkoutId)); if (sid) go(`workout/${sid}`); }} />}
+          {banner}
+          {!day && !plan && !ownPlan && dayCardio.length === 0 && <p className="note">В этот день тренировки нет.</p>}
         </div>
       </Card>
       <CardioDetailSheet session={cardio} onClose={() => setCardio(null)} />

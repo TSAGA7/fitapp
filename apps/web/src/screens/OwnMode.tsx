@@ -7,7 +7,7 @@ import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Button, Chip, Icon, IconButton, Sheet, TextField } from '../ui';
 import { ExercisePickerSheet } from './ExercisePicker';
-import { OwnPlanSection } from './OwnPlan';
+import { OwnWeek } from './OwnPlan';
 
 const exWord = (n: number) => `${n} ${plural(n, ['упражнение', 'упражнения', 'упражнений'])}`;
 
@@ -68,16 +68,13 @@ export function BuildCartSheet({ open, title = 'Собрать трениров�
   );
 }
 
-/**
- * The training tab in «Своя» mode: the own program planned ahead (OwnPlanSection) and a workout off the plan.
- * Own workouts themselves are typed in «Профиль → Конструктор тренировок». The main program is on pause and never changed.
- */
-export function OwnModeView() {
+/** «Своя → Неделя»: the planned own workouts and a workout off the plan. The plan is set up in «Программа». */
+export function OwnModeView({ onProgram }: { onProgram: () => void }) {
   const { snapshot: s } = useData();
   const [choosing, setChoosing] = useState(false);
   return (
     <>
-      <OwnPlanSection />
+      <OwnWeek onProgram={onProgram} />
       {s.customWorkouts.length > 0 && <Button block variant="secondary" icon="play" onClick={() => setChoosing(true)}>Тренировка не по плану</Button>}
       <OwnWorkoutsSheet open={choosing} onClose={() => setChoosing(false)} />
     </>

@@ -157,3 +157,6 @@
 .rest-float.wk-rest, .rest-mini { background: color-mix(in srgb, var(--sheet) 78%, transparent); }
 .wk-dock-main:disabled { opacity: 1; background: color-mix(in srgb, var(--solid) 42%, var(--sheet)); }
 .wk-dock-alt:disabled { opacity: 1; color: var(--muted-2); background: var(--sheet); }
+.plan-go { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
+.plan-day.done .plan-go { background: transparent; color: var(--muted); }
+.swipe-front > .plan-day { position: relative; }

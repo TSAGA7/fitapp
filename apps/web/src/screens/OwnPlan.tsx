@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
-import { addDays, ownScheduleDays, trainingDays, weekdayOf, WEEKDAYS, type CustomWorkout, type OwnScheduleDay, type Weekday } from '@fitapp/domain';
+import { addDays, ownScheduleDays, startOfWeek, trainingDays, weekdayOf, WEEKDAYS, type CustomWorkout, type OwnScheduleDay, type Weekday } from '@fitapp/domain';
 import { deleteOwnSchedule, saveOwnSchedule, setOwnScheduleDay, startCustomWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { setOwnMode } from '../app/prefs';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, EmptyState, Icon, Sheet } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, Sheet, SwipeToDelete } from '../ui';
 import { BuildCartSheet } from './OwnMode';
 import { DateField, ScreenHeader } from './shared';
 
@@ -37,7 +37,8 @@ function useDayStatus() {
       if (d.date === s.today) return 'today';
       return d.date < s.today ? 'missed' : 'ahead';
     };
-    return { stateOf, runningId: (d: OwnScheduleDay) => (d.customWorkoutId ? running.get(`${d.date}|${d.customWorkoutId}`) ?? null : null) };
+    const doneId = (d: OwnScheduleDay): string | null => (d.customWorkoutId ? s.workouts.find((w) => w.completed && w.date === d.date && w.customWorkoutId === d.customWorkoutId)?.id ?? null : null);
+    return { stateOf, doneId, runningId: (d: OwnScheduleDay) => (d.customWorkoutId ? running.get(`${d.date}|${d.customWorkoutId}`) ?? null : null) };
   }, [s.workouts, s.today]);
 }
 
@@ -229,7 +230,7 @@ function OwnPlanView({ onEdit }: { onEdit: () => void }) {
         </div>
       </Card>
 
-      {shownUpcoming.length > 0 && <div className="section-title"><h2 className="t-h3">Впереди</h2></div>}
+      {shownUpcoming.length > 0 && <div className="section-title"><h2 className="t-h3">Расписание</h2><span className="t-caption">нажми на день, чтобы поменять</span></div>}
       {renderRows(shownUpcoming)}
       {!all && upcoming.length > shownUpcoming.length && <Button block variant="text" onClick={() => setAll(true)}>Показать весь план · ещё {upcoming.length - shownUpcoming.length} {plural(upcoming.length - shownUpcoming.length, ['день', 'дня', 'дней'])}</Button>}
       {before.length > 0 && <Button block variant="text" onClick={() => setPast((x) => !x)}>{past ? 'Скрыть прошедшие' : `Прошедшие дни · ${before.length}`}</Button>}
@@ -320,4 +321,93 @@ export function ConstructorScreen() {
       <BuildCartSheet open={cart} onClose={() => setCart(false)} onSaved={() => setCart(false)} />
     </main>
   );
+}
+
+/**
+ * «Тренировки → Своя → Неделя»: the planned own workouts of this week and the next one.
+ * Tap — start at once (or continue / open what was done); swipe left — take it off (the day becomes rest).
+ * The plan itself is set up in «Программа».
+ */
+export function OwnWeek({ onProgram }: { onProgram: () => void }) {
+  const { snapshot: s } = useData();
+  const { run, banner, busy } = useCommand();
+  const { stateOf, runningId, doneId } = useDayStatus();
+  const byId = useMemo(() => new Map(s.customWorkouts.map((w) => [w.id, w])), [s.customWorkouts]);
+  const plan = s.ownSchedule;
+  const days = useMemo(() => (plan ? ownScheduleDays(plan) : []), [plan]);
+  if (!plan) {
+    return (
+      <Card flat>
+        <EmptyState
+          icon="calendar"
+          title="Своих тренировок на неделю пока нет"
+          text={s.customWorkouts.length === 0 ? 'Сначала собери тренировки в «Профиль → Конструктор тренировок», потом распиши их во вкладке «Программа».' : 'Распиши свои тренировки по дням во вкладке «Программа» — они появятся здесь.'}
+          action={s.customWorkouts.length === 0 ? <Button icon="plus" onClick={() => go('profile/builder')}>Открыть конструктор</Button> : <Button icon="calendar" onClick={onProgram}>Составить план</Button>}
+        />
+      </Card>
+    );
+  }
+  const mon = startOfWeek(s.today);
+  const weeks: Array<{ title: string; items: OwnScheduleDay[] }> = [
+    { title: 'Эта неделя', items: days.filter((d) => d.date >= mon && d.date <= addDays(mon, 6) && d.customWorkoutId !== null) },
+    { title: 'Следующая неделя', items: days.filter((d) => d.date > addDays(mon, 6) && d.date <= addDays(mon, 13) && d.customWorkoutId !== null) },
+  ];
+  const open = async (d: OwnScheduleDay) => {
+    const st = stateOf(d);
+    if (st === 'done') { const id = doneId(d); if (id) go(`workout/${id}`); return; }
+    const r = runningId(d);
+    if (r) return go(`workout/${r}`);
+    const sid = await run((x) => startCustomWorkout(x, d.customWorkoutId));
+    if (sid) go(`workout/${sid}`);
+  };
+  return (
+    <>
+      {banner}
+      {weeks.map((w) => (
+        <div key={w.title} className="stack tight">
+          <div className="section-title"><h2 className="t-h3">{w.title}</h2></div>
+          {w.items.length === 0 ? (
+            <p className="note">{w.title === 'Эта неделя' ? 'На этой неделе тренировок по плану нет.' : 'На следующей неделе тренировок по плану нет.'}</p>
+          ) : (
+            <div className="list">
+              {w.items.map((d) => {
+                const st = stateOf(d);
+                const cw = byId.get(d.customWorkoutId as string);
+                const b = STATE_BADGE[st];
+                const action = st === 'done' ? 'Открыть' : st === 'running' ? 'Продолжить' : 'Начать';
+                return (
+                  <SwipeToDelete key={d.date} label={`Убрать: ${cw?.name ?? 'тренировка'}, ${formatDateShort(d.date)}`} disabled={busy || st === 'done' || st === 'running'} onDelete={() => void run((x) => setOwnScheduleDay(x, d.date, null))}>
+                    <button type="button" className={`plan-day ${st}`} disabled={busy || !cw} onClick={() => void open(d)} aria-label={`${action}: ${cw?.name ?? ''}, ${formatDateShort(d.date)}`}>
+                      <span className="plan-date"><b>{WEEKDAY_SHORT[weekdayOf(d.date)]}</b><span>{formatDateShort(d.date)}</span></span>
+                      <span className="grow">
+                        <span className="li-title">{cw?.name ?? 'Тренировка удалена'}</span>
+                        {cw && <span className="li-sub">{exWord(cw.exercises.length)}</span>}
+                      </span>
+                      {b && <Badge tone={b.tone}>{b.text}</Badge>}
+                      <span className="plan-go" aria-hidden="true"><Icon name={st === 'done' ? 'chevronRight' : 'play'} size={16} /></span>
+                    </button>
+                  </SwipeToDelete>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+      <p className="t-small">Нажми на тренировку — она сразу начнётся. Свайп влево — убрать её из плана (день станет отдыхом). Вернуть или поменять день — во вкладке «Программа».</p>
+    </>
+  );
+}
+
+/** Own plan days by date for the month calendar: the workout name and the day. */
+export function useOwnPlanByDate(): Map<string, OwnScheduleDay & { name: string }> {
+  const { snapshot: s } = useData();
+  return useMemo(() => {
+    const m = new Map<string, OwnScheduleDay & { name: string }>();
+    if (!s.ownSchedule) return m;
+    for (const d of ownScheduleDays(s.ownSchedule)) {
+      if (d.customWorkoutId === null) continue;
+      m.set(d.date, { ...d, name: s.customWorkouts.find((w) => w.id === d.customWorkoutId)?.name ?? 'Своя тренировка' });
+    }
+    return m;
+  }, [s.ownSchedule, s.customWorkouts]);
 }
