@@ -489,6 +489,8 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
   const factText = (l: (typeof working)[number]): string => `${l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}${l.actualReps}${unit} · RIR ${l.actualRir}`;
   const hasCurrent = !readOnly && nextNo <= plan.length;
   const layout = useWorkoutLayout();
+  // Sets are swiped only while there is a set to do; a finished exercise is easier to read as a list.
+  const carousel = layout === 'focus' && hasCurrent;
   const lastPlanNo = plan.length > 0 ? (plan[plan.length - 1] as (typeof plan)[number]).setNo : 0;
   const canRemoveLast = !readOnly && plan.length > 1 && !logOf(lastPlanNo);
   const nextLabel = journal || nextNo < plan.length ? `${exercise.name} · подход ${nextNo + 1}` : 'следующее упражнение';
@@ -506,11 +508,11 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
     if (el && el.clientWidth > 0) setSlide(Math.round(el.scrollLeft / el.clientWidth));
   };
   useEffect(() => {
-    if (layout !== 'focus' || !open) return;
+    if (!carousel || !open) return;
     const i = Math.max(0, Math.min(plan.length - 1, (hasCurrent ? nextNo : plan.length) - 1));
     const t = setTimeout(() => goSlide(i), 60);
     return () => clearTimeout(t);
-  }, [layout, open, nextNo, plan.length]);
+  }, [carousel, open, nextNo, plan.length]);
 
   // The editor of the next set: it opens inside that set's row.
   const editor = readOnly ? null : (
@@ -594,7 +596,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
           <WarmupBlock ev={ev} position={warmPosition} busy={busy} mutate={mutate} contextKey={contextKey} />
         )}
 
-        <div className={`wk-sets ${layout === 'focus' ? 'focus' : ''}`} ref={setsRef} onScroll={layout === 'focus' ? onSetsScroll : undefined}>
+        <div className={`wk-sets ${carousel ? 'focus' : ''}`} ref={setsRef} onScroll={carousel ? onSetsScroll : undefined}>
           {plan.map((p) => {
             const l = logOf(p.setNo);
             const current = !readOnly && p.setNo === nextNo;
@@ -618,7 +620,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
                   {state === 'current' && <span className="wk-now">сейчас</span>}
                   {canRemoveLast && p.setNo === lastPlanNo && <IconButton icon="trash" label={`Убрать подход ${p.setNo}`} tone="ghost" disabled={busy} onClick={() => void mutate((d) => removeLastSet(d, se.id))} />}
                 </div>
-                {state === 'pending' && layout === 'focus' && <p className="wk-wait">Откроется после подхода {nextNo}</p>}
+                {state === 'pending' && carousel && <p className="wk-wait">Откроется после подхода {nextNo}</p>}
                 {current && editor}
               </div>
             );
@@ -632,7 +634,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
             </div>
           ))}
         </div>
-        {layout === 'focus' && plan.length > 1 && (
+        {carousel && plan.length > 1 && (
           <div className="wk-dots" role="tablist" aria-label="Подходы">
             {plan.map((p, i) => <button key={p.id} type="button" role="tab" aria-selected={slide === i} aria-label={`Подход ${p.setNo}`} className={logOf(p.setNo) ? 'done' : ''} onClick={() => goSlide(i)} />)}
           </div>
