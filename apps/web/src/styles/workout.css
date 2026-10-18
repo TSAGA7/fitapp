@@ -207,3 +207,14 @@
 .wk-dots button::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: color-mix(in srgb, var(--muted) 35%, transparent); transition: width .2s, background .2s; }
 .wk-dots button.done::before { background: color-mix(in srgb, var(--ok) 55%, transparent); }
 .wk-dots button[aria-selected='true']::before { width: 20px; border-radius: 4px; background: var(--primary); }
+
+/* ===== «Фокус»: one exercise chosen from a list, its sets swiped ===== */
+.wk-ex-select { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 16px 10px 12px; border-radius: var(--r-xl); background: var(--glass); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); color: var(--text); text-align: left; font: inherit; box-shadow: 0 2px 14px rgba(15, 23, 42, 0.05); }
+.wk-ex-select .grow { display: grid; min-width: 0; }
+.wk-ex-select-l { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.wk-ex-select-v { font-size: 19px; line-height: 24px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-ex-select > svg { color: var(--primary); flex: none; }
+.wk-ex.focus .ex-body { margin-top: 0; }
+.wk-stats { grid-template-columns: 1.45fr 1fr 0.9fr 1fr; }
+.wk-stat-v small { font-size: 13px; font-weight: 600; color: var(--muted); }
+.wk-tools.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }

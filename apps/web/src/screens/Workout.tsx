@@ -52,6 +52,8 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const [dock, setDock] = useState<HTMLDivElement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const barOn = useActivityBar();
+  const layout = useWorkoutLayout();
+  const [exPick, setExPick] = useState(false);
   // Exercise blocks: any number can be open at once. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const settledRef = useRef<Map<string, boolean> | null>(null);
@@ -102,7 +104,10 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const doneSets = view.exercises.reduce((n, e) => n + e.logs.filter((l) => l.setType === 'working' && l.status !== 'skipped').length, 0);
   const readOnly = view.session.status !== 'in_progress';
   const openList = view.exercises.filter((e) => openIds.has(e.se.id)).map((e) => e.se.id);
-  const dockOwner = readOnly ? null : activeId && openIds.has(activeId) ? activeId : (openList[0] ?? null);
+  const focusMode = layout === 'focus' && view.exercises.length > 0;
+  const focusEv = focusMode ? (view.exercises.find((e) => e.se.id === (activeId && openIds.has(activeId) ? activeId : openList[0])) ?? view.exercises.find((e) => !(e.plan.length > 0 && settledSets(e) >= e.plan.length)) ?? view.exercises[0]) : undefined;
+  const dockOwner = readOnly ? null : focusEv ? focusEv.se.id : activeId && openIds.has(activeId) ? activeId : (openList[0] ?? null);
+  const pickExercise = (id: string) => { setOpenIds(new Set([id])); setActiveId(id); setExPick(false); window.scrollTo({ top: 0 }); };
 
   const mutate = async (fn: Parameters<typeof ok>[0], restSec?: number | null, reason = '', next = '') => {
     if (await ok(fn)) {
@@ -146,11 +151,21 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       {view.exercises.length === 0 && (
         <Card flat><EmptyState icon="training" title={readOnly ? 'Упражнений не было' : 'Добавь первое упражнение'} text={readOnly ? undefined : 'Выбирай упражнения по ходу тренировки: вес подставится из истории, подходы и повторения можно поменять.'} /></Card>
       )}
-      {view.exercises.map((ev, idx) => (
-        <ExerciseCard key={ev.se.id} index={idx + 1} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} dock={ev.se.id === dockOwner ? dock : null} onActivate={() => setActiveId(ev.se.id)} />
+      {focusMode && focusEv && (
+        <button type="button" className="wk-ex-select" aria-haspopup="dialog" onClick={() => setExPick(true)}>
+          <span className="wk-num">{view.exercises.indexOf(focusEv) + 1}</span>
+          <span className="grow">
+            <span className="wk-ex-select-l">Упражнение {view.exercises.indexOf(focusEv) + 1} из {view.exercises.length}</span>
+            <span className="wk-ex-select-v">{focusEv.exercise.name}</span>
+          </span>
+          <Icon name="chevronDown" size={22} />
+        </button>
+      )}
+      {(focusMode ? view.exercises.filter((e) => e === focusEv) : view.exercises).map((ev) => ({ ev, idx: view.exercises.indexOf(ev) })).map(({ ev, idx }) => (
+        <ExerciseCard key={ev.se.id} focusMode={focusMode} index={idx + 1} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={focusMode || openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} dock={ev.se.id === dockOwner ? dock : null} onActivate={() => setActiveId(ev.se.id)} />
       ))}
 
-      {!readOnly && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
+      {!readOnly && !focusMode && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
       {!readOnly && (
         <div className="wk-finish">
           <Button block icon="check" onClick={() => setFinishing(true)}>Завершить тренировку</Button>
@@ -169,7 +184,8 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
           const id = await run((d) => addExerciseToSession(d, { sessionId, exerciseId: e.id, sets: view.custom ? 1 : undefined }));
           if (id) {
             await reload();
-            setOpenIds((cur) => new Set([...cur, id]));
+            setOpenIds((cur) => (focusMode ? new Set([id]) : new Set([...cur, id])));
+            if (focusMode) { setActiveId(id); setPicking(false); }
             if (view.custom) {
               setPicking(false);
               setTimeout(() => document.getElementById(`ex-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 80);
@@ -180,6 +196,20 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       />
       {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
       <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />
+      <Sheet open={exPick} title="Упражнения" onClose={() => setExPick(false)}>
+        <div className="list">
+          {view.exercises.map((e, i) => {
+            const done = e.plan.length > 0 && settledSets(e) >= e.plan.length;
+            return (
+              <button key={e.se.id} type="button" className={`plan-pick ${focusEv === e ? 'on' : ''}`} aria-pressed={focusEv === e} onClick={() => pickExercise(e.se.id)}>
+                <span className="wk-num">{done ? <Icon name="check" size={15} strokeWidth={2.8} /> : i + 1}</span>
+                <span className="grow"><span className="li-title">{e.exercise.name}</span><span className="li-sub">{done ? 'Готово' : `${settledSets(e)} из ${e.plan.length} подходов`}</span></span>
+              </button>
+            );
+          })}
+          {!readOnly && <Button block variant="secondary" icon="plus" onClick={() => { setExPick(false); setPicking(true); }}>Добавить упражнение</Button>}
+        </div>
+      </Sheet>
       {!readOnly && <div className="wk-dock" ref={setDock} />}
       <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} />
     </main>
@@ -309,6 +339,8 @@ function warmPositionOf(list: readonly WorkoutExerciseView[], idx: number): Warm
 
 interface CardProps {
   index: number;
+  /** «Фокус»: the only card on screen, chosen in the list above; no fold header, fewer tools. */
+  focusMode?: boolean;
   ev: WorkoutExerciseView;
   warmPosition: WarmupPosition;
   readOnly: boolean;
@@ -371,7 +403,7 @@ function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutEx
 /** Sets of the plan that are settled (done or skipped): the exercise is finished when all of them are. */
 export const settledSets = (ev: WorkoutExerciseView): number => ev.plan.filter((p) => ev.logs.some((l) => l.setType === 'working' && l.setNo === p.setNo)).length;
 
-function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable, journal, dock, onActivate }: CardProps) {
+function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable, journal, dock, onActivate }: CardProps) {
   const { snapshot: s } = useData();
   const { se, exercise, plan, logs } = ev;
   const working = logs.filter((l) => l.setType === 'working');
@@ -516,8 +548,8 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
   );
 
   return (
-    <Card id={`ex-${se.id}`} className={`ex-acc wk-ex ${open ? 'open' : ''} ${allSettled && !journal ? 'is-done' : ''} ${dock ? 'is-active' : ''}`} onPointerDownCapture={onActivate} onFocusCapture={onActivate}>
-      <button type="button" className="ex-head" aria-expanded={open} onClick={onToggle}>
+    <Card id={`ex-${se.id}`} className={`ex-acc wk-ex ${focusMode ? 'focus' : ''} ${open ? 'open' : ''} ${allSettled && !journal ? 'is-done' : ''} ${dock ? 'is-active' : ''}`} onPointerDownCapture={onActivate} onFocusCapture={onActivate}>
+      {!focusMode && <button type="button" className="ex-head" aria-expanded={open} onClick={onToggle}>
         <span className="wk-num wk-ex-num" aria-hidden="true">{allSettled && !journal ? <Icon name="check" size={16} strokeWidth={2.6} /> : index}</span>
         <span className="ex-title">
           <span className="wk-ex-name">{exercise.name}</span>
@@ -525,7 +557,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
         </span>
         {journal ? <Badge tone={doneCount > 0 ? 'default' : 'neutral'}>{doneCount} подх.</Badge> : allSettled ? <Badge>Готово</Badge> : <Badge tone="neutral">{settled}/{plan.length}</Badge>}
         <span className="ex-chev" aria-hidden="true"><Icon name="chevronDown" size={20} /></span>
-      </button>
+      </button>}
       <div className="ex-body" hidden={!open}>
         {ev.reasonText && SHOWN_REASONS.test(ev.reasonCode ?? '') && !(ev.reasonCode === 'first_execution_choose_weight' && (exercise.loadUnit === 'seconds' || exercise.loadUnit === 'bodyweight')) && <p className="wk-note"><Icon name="info" size={14} /> {ev.reasonText}</p>}
         {ev.reminders.map((n) => (
@@ -537,8 +569,8 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
         {ev.ownNote && <p className="wk-note"><Icon name="edit" size={14} /> {ev.ownNote.text}</p>}
         {hasCurrent && target && (
           <div className="wk-stats" role="group" aria-label="План подхода">
-            <div className="wk-stat"><span className="wk-stat-l">Подходы</span><span className="wk-stat-v">{plan.length}</span></div>
-            <div className="wk-stat"><span className="wk-stat-l">{timed ? 'Секунды' : 'Повторы'}</span><span className="wk-stat-v">{target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`}</span></div>
+            <div className="wk-stat wide"><span className="wk-stat-l">{timed ? 'Подх. × сек' : 'Подх. × повт'}</span><span className="wk-stat-v">{plan.length} × {target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`}</span></div>
+            <div className="wk-stat"><span className="wk-stat-l">Вес</span><span className="wk-stat-v">{target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (exercise.loadUnit === 'bodyweight' ? 'свой' : '—') : `${fmt(toLift(target.targetWeightKg), 2)}`}<small>{target.targetWeightKg !== null && exercise.loadUnit !== 'seconds' ? ` ${liftUnit()}` : ''}</small></span></div>
             <div className="wk-stat"><span className="wk-stat-l">Запас</span><span className="wk-stat-v">{target.targetRir.min}–{target.targetRir.max}</span></div>
             <button type="button" className="wk-stat edit" aria-label={`Отдых ${clock(restSec)}. Изменить`} onClick={() => setRestEditOpen(true)}>
               <span className="wk-stat-l">Отдых <Icon name="edit" size={12} /></span>
@@ -572,7 +604,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
                 <div className="wk-set-head">
                   <span className="wk-num">{state === 'done' ? <Icon name="check" size={15} strokeWidth={2.8} /> : p.setNo}</span>
                   <span className="wk-row-text">
-                    <b>Подход {p.setNo}</b>
+                    <b>Подход {p.setNo}{focusMode ? ` из ${plan.length}` : ''}</b>
                     {/* In a journal a recorded set shows only what was done: the suggestion is noise there. */}
                     {state === 'done' && <span className="wk-fact">{factText(l!)}</span>}
                   </span>
@@ -608,6 +640,13 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
 
         {!readOnly && (
           <div className="wk-actions">
+            {focusMode ? (
+              <div className="wk-tools three">
+                <button type="button" className="wk-tool" onClick={() => setInfoOpen(true)}><Icon name="info" size={18} /><span>Техника</span></button>
+                <button type="button" className="wk-tool" onClick={() => setSwapOpen(true)}><Icon name="swap" size={18} /><span>Заменить</span></button>
+                <button type="button" className="wk-tool danger" onClick={() => setPainOpen(true)}><Icon name="alert" size={18} /><span>Боль</span></button>
+              </div>
+            ) : (<>
             <div className="wk-tools">
               {hasCurrent && <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}><Icon name="skip" size={18} /><span>Пропустить подход</span></button>}
               <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}><Icon name="plus" size={18} /><span>Добавить подход</span></button>
@@ -620,6 +659,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
               {VACUUM_KEYS.has(exercise.key) && <Button size="sm" variant="text" icon="info" onClick={() => setGuideOpen(true)}>Как это работает</Button>}
               {removable && <Button size="sm" variant="text" icon="trash" disabled={busy} onClick={() => void mutate((d) => removeExerciseFromSession(d, se.id))}>Убрать</Button>}
             </div>
+            </>)}
           </div>
         )}
       </div>
