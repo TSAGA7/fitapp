@@ -50,7 +50,6 @@ import {
   deleteCustomWorkout,
   addExerciseToSession,
   removeExerciseFromSession,
-  canRemoveFromSession,
   saveSessionAsCustomWorkout,
   addCardioSession,
   deleteCardioSession,
@@ -581,8 +580,6 @@ describe('app flow on the real storage', () => {
     view = await loadWorkout(deps, sid);
     const added = view.exercises.find((e) => e.se.id === wrong)!;
     expect(added.plan.length).toBeGreaterThan(0);
-    expect(canRemoveFromSession(added, view.custom)).toBe(true);
-    expect(canRemoveFromSession(view.exercises[0]!, view.custom)).toBe(false); // has sets
     await removeExerciseFromSession(deps, wrong);
     const extraId = await addExerciseToSession(deps, { sessionId: sid, exerciseId: c! });
     view = await loadWorkout(deps, sid);

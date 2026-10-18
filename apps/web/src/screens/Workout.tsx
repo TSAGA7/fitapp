@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, addExerciseToSession, addSetToExercise, editSet, removeLastSet, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, addExerciseToSession, addSetToExercise, editSet, removeLastSet, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt, fromLift, liftUnit, plural, toLift } from '../app/format';
@@ -54,6 +54,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const barOn = useActivityBar();
   const layout = useWorkoutLayout();
   const [exPick, setExPick] = useState(false);
+  const [confirmDel, setConfirmDel] = useState<string | null>(null);
   // Exercise blocks: any number can be open at once. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const settledRef = useRef<Map<string, boolean> | null>(null);
@@ -162,7 +163,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         </button>
       )}
       {(focusMode ? view.exercises.filter((e) => e === focusEv) : view.exercises).map((ev) => ({ ev, idx: view.exercises.indexOf(ev) })).map(({ ev, idx }) => (
-        <ExerciseCard key={ev.se.id} focusMode={focusMode} index={idx + 1} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={focusMode || openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} dock={ev.se.id === dockOwner ? dock : null} onActivate={() => setActiveId(ev.se.id)} />
+        <ExerciseCard key={ev.se.id} focusMode={focusMode} index={idx + 1} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={focusMode || openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly} journal={view.custom} dock={ev.se.id === dockOwner ? dock : null} onActivate={() => setActiveId(ev.se.id)} />
       ))}
 
       {!readOnly && !focusMode && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
@@ -196,15 +197,30 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       />
       {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
       <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />
-      <Sheet open={exPick} title="Упражнения" onClose={() => setExPick(false)}>
+      <Sheet open={exPick} title="Упражнения" onClose={() => { setExPick(false); setConfirmDel(null); }}>
         <div className="list">
           {view.exercises.map((e, i) => {
             const done = e.plan.length > 0 && settledSets(e) >= e.plan.length;
+            const recorded = e.logs.filter((l) => l.deletedAt === null && l.status === 'done').length;
+            if (confirmDel === e.se.id) {
+              return (
+                <div key={e.se.id} className="plan-pick del-confirm" role="alert">
+                  <span className="grow"><span className="li-title">Удалить «{e.exercise.name}»?</span><span className="li-sub">{recorded > 0 ? `Записанные подходы (${recorded}) тоже удалятся.` : 'Из этой тренировки. Программа не меняется.'}</span></span>
+                  <span className="row">
+                    <Button size="sm" variant="text" onClick={() => setConfirmDel(null)}>Отмена</Button>
+                    <Button size="sm" variant="danger" icon="trash" disabled={busy} onClick={async () => { setConfirmDel(null); await mutate((d) => removeExerciseFromSession(d, e.se.id)); }}>Удалить</Button>
+                  </span>
+                </div>
+              );
+            }
             return (
-              <button key={e.se.id} type="button" className={`plan-pick ${focusEv === e ? 'on' : ''}`} aria-pressed={focusEv === e} onClick={() => pickExercise(e.se.id)}>
-                <span className="wk-num">{done ? <Icon name="check" size={15} strokeWidth={2.8} /> : i + 1}</span>
-                <span className="grow"><span className="li-title">{e.exercise.name}</span><span className="li-sub">{done ? 'Готово' : `${settledSets(e)} из ${e.plan.length} подходов`}</span></span>
-              </button>
+              <div key={e.se.id} className="ex-pick-row">
+                <button type="button" className={`plan-pick ${focusEv === e ? 'on' : ''}`} aria-pressed={focusEv === e} onClick={() => pickExercise(e.se.id)}>
+                  <span className="wk-num">{done ? <Icon name="check" size={15} strokeWidth={2.8} /> : i + 1}</span>
+                  <span className="grow"><span className="li-title">{e.exercise.name}</span><span className="li-sub">{done ? 'Готово' : `${settledSets(e)} из ${e.plan.length} подходов`}</span></span>
+                </button>
+                {!readOnly && <button type="button" className="ex-del" aria-label={`Удалить: ${e.exercise.name}`} onClick={() => setConfirmDel(e.se.id)}><Icon name="trash" size={20} /></button>}
+              </div>
             );
           })}
           {!readOnly && <Button block variant="secondary" icon="plus" onClick={() => { setExPick(false); setPicking(true); }}>Добавить упражнение</Button>}

@@ -1047,17 +1047,22 @@ export async function addExerciseToSession(deps: AppDeps, input: { sessionId: st
 }
 
 /** Can this exercise be taken out of the running workout: added by hand (or in an own workout) and nothing recorded yet. */
-export const canRemoveFromSession = (ev: Pick<WorkoutExerciseView, 'se' | 'logs'>, custom: boolean): boolean =>
-  ev.logs.length === 0 && ev.se.replacedFromExerciseId === null && (custom || (ev.se.plannedExerciseKey ?? '').startsWith('add_'));
-
-/** Takes an exercise out of the running workout (added by mistake). Only before its first set. */
+/**
+ * Takes an exercise out of the running workout: its recorded sets and its planned sets of this workout are removed too,
+ * so it counts neither as done nor as skipped. The program itself is not changed.
+ */
 export async function removeExerciseFromSession(deps: AppDeps, sessionExerciseId: string): Promise<void> {
   await deps.uow.run(async (r) => {
     for (const s of await r.workouts.listSessions()) {
       if (s.status !== 'in_progress') continue;
       const se = (await r.workouts.listSessionExercises(s.id)).find((e) => e.id === sessionExerciseId);
       if (!se) continue;
-      if ((await r.workouts.listSetLogs(se.id)).length > 0) throw new Error('В упражнении уже есть записанные подходы');
+      for (const l of await r.workouts.listSetLogs(se.id)) if (l.deletedAt === null) await r.workouts.softDeleteSetLog(l.id);
+      if (s.plannedSessionId) {
+        const now = deps.clock.now();
+        const sets = (await r.plannedSessions.listSets(s.plannedSessionId)).filter((p) => p.plannedExerciseKey === se.plannedExerciseKey && p.exerciseId === se.exerciseId);
+        if (sets.length > 0) await r.plannedSessions.putSets(sets.map((p) => ({ ...p, deletedAt: now })));
+      }
       await r.workouts.softDeleteSessionExercise(se.id);
       return;
     }
