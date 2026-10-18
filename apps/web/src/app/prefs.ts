@@ -431,3 +431,35 @@ export function useActivityBar(): boolean {
     () => isActivityBarOn(),
   );
 }
+
+// ---- how an open workout shows its sets: «Список» (all sets in a column) or «Фокус» (one set at a time, swipe to the next)
+export type WorkoutLayout = 'list' | 'focus';
+const LAYOUT_KEY = 'fitapp.workoutLayout';
+const layoutListeners = new Set<() => void>();
+let layoutCache: WorkoutLayout | null = null;
+export function getWorkoutLayout(): WorkoutLayout {
+  if (layoutCache) return layoutCache;
+  try {
+    return window.localStorage.getItem(LAYOUT_KEY) === 'focus' ? 'focus' : 'list';
+  } catch {
+    return 'list';
+  }
+}
+export function setWorkoutLayout(v: WorkoutLayout): void {
+  layoutCache = v;
+  try {
+    window.localStorage.setItem(LAYOUT_KEY, v);
+  } catch {
+    /* storage unavailable: the choice lives until the page is closed */
+  }
+  layoutListeners.forEach((l) => l());
+}
+export function useWorkoutLayout(): WorkoutLayout {
+  return useSyncExternalStore(
+    (cb) => {
+      layoutListeners.add(cb);
+      return () => layoutListeners.delete(cb);
+    },
+    getWorkoutLayout,
+  );
+}

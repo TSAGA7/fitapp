@@ -10,6 +10,7 @@ import { applyDietMode, saveGoal, updateProfile } from '../actions';
 import { useData } from '../app/DataContext';
 import { deleteMetric } from '../actions';
 import { EXPERIENCE_LABELS, FOCUS_LABELS, formatDateLong, formatDay, fmt, GOAL_LABELS, initials, JOB_LABELS, kg, METRIC_LABELS, plural, SEX_LABELS, WEEKDAY_SHORT, cm } from '../app/format';
+import { setWorkoutLayout, useWorkoutLayout, type WorkoutLayout } from '../app/prefs';
 import { getDisplayName, setActivityBar, setDisplayName, setRestTimer, setVacationMode, useActivityBar, useRestTimer, useVacationMode } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, Chip, Icon, IconButton, ListItem, Segmented, SelectField, TextField, type IconName } from '../ui';
@@ -267,6 +268,18 @@ function ThemePicker() {
   );
 }
 
+/** How an open workout shows its sets. */
+function LayoutPicker() {
+  const layout = useWorkoutLayout();
+  return (
+    <div className="field">
+      <span className="lbl">Подходы на тренировке</span>
+      <Segmented<WorkoutLayout> label="Подходы на тренировке" options={[{ value: 'list', label: 'Список' }, { value: 'focus', label: 'Фокус' }]} value={layout} onChange={setWorkoutLayout} />
+      <span className="hint">{layout === 'list' ? 'Все подходы упражнения видны столбиком.' : 'На экране только один подход: записал — свайп влево к следующему. Меньше прокрутки и лишнего.'}</span>
+    </div>
+  );
+}
+
 function ActivityBarPicker() {
   const on = useActivityBar();
   return (
@@ -310,6 +323,7 @@ function SettingsScreen() {
       <ScreenHeader title="Настройки" back="profile" />
       <div className="stack-lg">
         <ThemePicker />
+        <LayoutPicker />
         <ActivityBarPicker />
         <RestTimerPicker />
         <ZonePicker />

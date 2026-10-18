@@ -486,6 +486,29 @@ export async function addSetToExercise(deps: AppDeps, sessionExerciseId: string)
   });
 }
 
+/** Takes the last planned set off an exercise of a running workout, if nothing is recorded for it (at least one set stays). */
+export async function removeLastSet(deps: AppDeps, sessionExerciseId: string): Promise<void> {
+  await deps.uow.run(async (r) => {
+    let session: WorkoutSession | undefined;
+    let se: SessionExercise | undefined;
+    for (const s of await r.workouts.listSessions()) {
+      const found = (await r.workouts.listSessionExercises(s.id)).find((e) => e.id === sessionExerciseId);
+      if (found) {
+        se = found;
+        session = s;
+        break;
+      }
+    }
+    if (!se || !session?.plannedSessionId || session.status !== 'in_progress') throw new Error('Тренировка уже завершена');
+    const plan = (await r.plannedSessions.listSets(session.plannedSessionId)).filter((p) => p.plannedExerciseKey === se.plannedExerciseKey && p.exerciseId === se.exerciseId).sort((a, b) => a.setNo - b.setNo);
+    const last = plan[plan.length - 1];
+    if (!last || plan.length < 2) throw new Error('Один подход должен остаться — можно убрать упражнение целиком');
+    const logs = (await r.workouts.listSetLogs(se.id)).filter((l) => l.deletedAt === null && l.setType === 'working' && l.setNo === last.setNo);
+    if (logs.length > 0) throw new Error('Этот подход уже записан — сначала отмени запись');
+    await r.plannedSessions.putSets([{ ...last, deletedAt: deps.clock.now() }]);
+  });
+}
+
 export interface PainReport {
   sessionExerciseId: string;
   exerciseId: string;

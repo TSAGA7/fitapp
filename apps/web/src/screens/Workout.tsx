@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, addExerciseToSession, addSetToExercise, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, addExerciseToSession, addSetToExercise, removeLastSet, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt, fromLift, liftUnit, plural, toLift } from '../app/format';
-import { getRestTimer, getWeightUnit, setWeightUnit, useWeightUnit, type WeightUnit } from '../app/prefs';
+import { getRestTimer, getWeightUnit, setWeightUnit, useWeightUnit, useWorkoutLayout, type WeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, StepperField, TextField } from '../ui';
@@ -17,6 +17,8 @@ import { parseDecimal } from './shared';
 import { ActivityBar, WorkoutSummaryCard } from './WorkoutActivity';
 import { useActivityBar } from '../app/prefs';
 
+/** Progression notes worth showing during the set (pain, a layoff, the first time); the rest is noise mid-workout. */
+const SHOWN_REASONS = /^(pain_|layoff_|first_execution|deload)/;
 const VACUUM_KEYS = new Set(['vacuum_standing', 'vacuum_quadruped', 'vacuum_lying', 'breathing_90_90']);
 
 interface RestState {
@@ -55,8 +57,8 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const settledRef = useRef<Map<string, boolean> | null>(null);
   useEffect(() => {
     if (!view) return;
-    // In a journal (own workout) an exercise is never "finished": more sets can always be added, so nothing folds by itself.
-    const finished = new Map(view.exercises.map((e) => [e.se.id, !view.custom && e.plan.length > 0 && settledSets(e) >= e.plan.length]));
+    // An exercise is finished when all its planned sets are recorded or skipped (own workouts too: one more set is added by hand).
+    const finished = new Map(view.exercises.map((e) => [e.se.id, e.plan.length > 0 && settledSets(e) >= e.plan.length]));
     const prev = settledRef.current;
     settledRef.current = finished;
     if (prev === null) {
@@ -66,9 +68,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         return;
       }
       // Open the first exercise that is not done yet (in an own workout: its planned sets not all logged), from the top.
-      const first = view.custom
-        ? (view.exercises.find((e) => e.plan.length === 0 || settledSets(e) < e.plan.length) ?? view.exercises[0])
-        : (view.exercises.find((e) => !finished.get(e.se.id)) ?? view.exercises[0]);
+      const first = view.exercises.find((e) => !finished.get(e.se.id)) ?? view.exercises[0];
       if (first) setOpenIds(new Set([first.se.id]));
       return;
     }
@@ -273,7 +273,9 @@ function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: 
       <div className="wk-rest-ctrl">
         <button type="button" className="wk-rc" aria-label="Свернуть" onClick={() => setMini(true)}><Icon name="chevronDown" size={20} /></button>
         <button type="button" className="wk-rc" aria-label="Минус 15 секунд" onClick={() => adjust(-15)}>−15</button>
-        <button type="button" className="wk-rc-main" aria-label={paused ? 'Продолжить' : 'Пауза'} onClick={toggle}><Icon name={paused ? 'play' : 'pause'} size={24} strokeWidth={3} /></button>
+        <button type="button" className="wk-rc-main" aria-label={paused ? 'Продолжить' : 'Пауза'} onClick={toggle} style={{ ['--p' as string]: `${rest.total > 0 ? Math.min(1, Math.max(0, 1 - left / rest.total)) * 360 : 360}deg` }}>
+          <span className="wk-rc-core"><Icon name={paused ? 'play' : 'pause'} size={26} strokeWidth={2.6} /></span>
+        </button>
         <button type="button" className="wk-rc" aria-label="Плюс 15 секунд" onClick={() => adjust(15)}>+15</button>
         <button type="button" className="wk-rc ok" aria-label="Завершить перерыв" onClick={onDone}><Icon name="check" size={20} strokeWidth={2.6} /></button>
       </div>
@@ -448,15 +450,35 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
   const settled = settledSets(ev);
   const allSettled = plan.length > 0 && settled >= plan.length;
   const doneCount = working.filter((l) => l.status === 'done').length;
-  const headline = journal && allSettled
-    ? `Записано ${doneCount} ${doneCount === 1 ? 'подход' : doneCount < 5 ? 'подхода' : 'подходов'} · можно ещё`
-    : allSettled
+  const headline = allSettled
     ? 'Все подходы выполнены'
     : `${se.replacedFromExerciseId ? 'Замена · ' : ''}Подход ${nextNo}: ${target ? (target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(target.targetWeightKg), 2)} ${liftUnit()}`) : ''} × ${target ? (target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`) : ''}${unit}`;
 
   const factText = (l: (typeof working)[number]): string => `${l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}${l.actualReps}${unit} · RIR ${l.actualRir}`;
-  const extraRow = !readOnly && nextNo > plan.length;
+  const hasCurrent = !readOnly && nextNo <= plan.length;
+  const layout = useWorkoutLayout();
+  const lastPlanNo = plan.length > 0 ? (plan[plan.length - 1] as (typeof plan)[number]).setNo : 0;
+  const canRemoveLast = !readOnly && plan.length > 1 && !logOf(lastPlanNo);
   const nextLabel = journal || nextNo < plan.length ? `${exercise.name} · подход ${nextNo + 1}` : 'следующее упражнение';
+
+  // «Фокус»: the sets are slides; the current one is brought into view whenever it changes.
+  const setsRef = useRef<HTMLDivElement>(null);
+  const [slide, setSlide] = useState(0);
+  const goSlide = (i: number) => {
+    const el = setsRef.current;
+    const child = el?.children[i] as HTMLElement | undefined;
+    if (el && child) el.scrollTo({ left: child.offsetLeft - el.offsetLeft, behavior: 'smooth' });
+  };
+  const onSetsScroll = () => {
+    const el = setsRef.current;
+    if (el && el.clientWidth > 0) setSlide(Math.round(el.scrollLeft / el.clientWidth));
+  };
+  useEffect(() => {
+    if (layout !== 'focus' || !open) return;
+    const i = Math.max(0, Math.min(plan.length - 1, (hasCurrent ? nextNo : plan.length) - 1));
+    const t = setTimeout(() => goSlide(i), 60);
+    return () => clearTimeout(t);
+  }, [layout, open, nextNo, plan.length]);
 
   // The editor of the next set: it opens inside that set's row.
   const editor = readOnly ? null : (
@@ -505,7 +527,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
         <span className="ex-chev" aria-hidden="true"><Icon name="chevronDown" size={20} /></span>
       </button>
       <div className="ex-body" hidden={!open}>
-        {ev.reasonText && !(ev.reasonCode === 'first_execution_choose_weight' && (exercise.loadUnit === 'seconds' || exercise.loadUnit === 'bodyweight')) && <p className="wk-note"><Icon name="info" size={14} /> {ev.reasonText}</p>}
+        {ev.reasonText && SHOWN_REASONS.test(ev.reasonCode ?? '') && !(ev.reasonCode === 'first_execution_choose_weight' && (exercise.loadUnit === 'seconds' || exercise.loadUnit === 'bodyweight')) && <p className="wk-note"><Icon name="info" size={14} /> {ev.reasonText}</p>}
         {ev.reminders.map((n) => (
           <div key={n.id} className="note-reminder" role="note">
             <b className="t-caption">Заметка с прошлого раза</b>
@@ -513,17 +535,15 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
           </div>
         ))}
         {ev.ownNote && <p className="wk-note"><Icon name="edit" size={14} /> {ev.ownNote.text}</p>}
-        {!readOnly && (
-          <div className="wk-plan">
-            <div className="wk-plan-row">
-              {target && <span className="wk-plan-chip">Запас {target.targetRir.min}–{target.targetRir.max}</span>}
-              <span className="wk-plan-rest">
-                <IconButton icon="minus" label="Меньше отдыха" tone="ghost" onClick={() => setRestOverride(Math.max(15, restSec - 15))} />
-                <button type="button" className="wk-plan-chip rest" aria-label={`Отдых ${clock(restSec)}. Изменить время`} onClick={() => setRestEditOpen(true)}><Icon name="clock" size={16} /> Отдых {clock(restSec)}</button>
-                <IconButton icon="plus" label="Больше отдыха" tone="ghost" onClick={() => setRestOverride(Math.min(600, restSec + 15))} />
-              </span>
-            </div>
-            <span className="t-small">{restOverride === null ? `Отдых: ${suggestion.reason}` : 'Отдых задан вручную'}</span>
+        {hasCurrent && target && (
+          <div className="wk-stats" role="group" aria-label="План подхода">
+            <div className="wk-stat"><span className="wk-stat-l">Подходы</span><span className="wk-stat-v">{plan.length}</span></div>
+            <div className="wk-stat"><span className="wk-stat-l">{timed ? 'Секунды' : 'Повторы'}</span><span className="wk-stat-v">{target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`}</span></div>
+            <div className="wk-stat"><span className="wk-stat-l">Запас</span><span className="wk-stat-v">{target.targetRir.min}–{target.targetRir.max}</span></div>
+            <button type="button" className="wk-stat edit" aria-label={`Отдых ${clock(restSec)}. Изменить`} onClick={() => setRestEditOpen(true)}>
+              <span className="wk-stat-l">Отдых <Icon name="edit" size={12} /></span>
+              <span className="wk-stat-v">{clock(restSec)}</span>
+            </button>
           </div>
         )}
         {exercise.variants.length > 1 && (
@@ -542,7 +562,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
           <WarmupBlock ev={ev} position={warmPosition} busy={busy} mutate={mutate} contextKey={contextKey} />
         )}
 
-        <div className="wk-sets">
+        <div className={`wk-sets ${layout === 'focus' ? 'focus' : ''}`} ref={setsRef} onScroll={layout === 'focus' ? onSetsScroll : undefined}>
           {plan.map((p) => {
             const l = logOf(p.setNo);
             const current = !readOnly && p.setNo === nextNo;
@@ -564,7 +584,9 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
                     </span>
                   )}
                   {state === 'current' && <span className="wk-now">сейчас</span>}
+                  {canRemoveLast && p.setNo === lastPlanNo && <IconButton icon="trash" label={`Убрать подход ${p.setNo}`} tone="ghost" disabled={busy} onClick={() => void mutate((d) => removeLastSet(d, se.id))} />}
                 </div>
+                {state === 'pending' && layout === 'focus' && <p className="wk-wait">Откроется после подхода {nextNo}</p>}
                 {current && editor}
               </div>
             );
@@ -577,22 +599,17 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
               </div>
             </div>
           ))}
-          {extraRow && (
-            <div className="wk-set current" aria-current="step">
-              <div className="wk-set-head">
-                <span className="wk-num">{nextNo}</span>
-                <span className="wk-row-text"><b>{journal ? `Подход ${nextNo}` : 'Дополнительный подход'}</b><span className="t-small">{journal ? 'запиши, что сделал' : 'сверх плана, по желанию'}</span></span>
-                <span className="wk-now">сейчас</span>
-              </div>
-              {editor}
-            </div>
-          )}
         </div>
+        {layout === 'focus' && plan.length > 1 && (
+          <div className="wk-dots" role="tablist" aria-label="Подходы">
+            {plan.map((p, i) => <button key={p.id} type="button" role="tab" aria-selected={slide === i} aria-label={`Подход ${p.setNo}`} className={logOf(p.setNo) ? 'done' : ''} onClick={() => goSlide(i)} />)}
+          </div>
+        )}
 
         {!readOnly && (
           <div className="wk-actions">
             <div className="wk-tools">
-              <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}><Icon name="skip" size={18} /><span>Пропустить подход</span></button>
+              {hasCurrent && <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}><Icon name="skip" size={18} /><span>Пропустить подход</span></button>}
               <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}><Icon name="plus" size={18} /><span>Добавить подход</span></button>
               <button type="button" className="wk-tool" onClick={() => setSwapOpen(true)}><Icon name="swap" size={18} /><span>Заменить</span></button>
               <button type="button" className="wk-tool danger" onClick={() => setPainOpen(true)}><Icon name="alert" size={18} /><span>Боль</span></button>
@@ -607,18 +624,17 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
         )}
       </div>
 
-      {dock && open && !readOnly && createPortal(
+      {dock && open && hasCurrent && createPortal(
         <div className="wk-dock-in">
           <button type="button" className="wk-dock-main" disabled={!canLog} onClick={() => void mutate((d) => record(d, restSec), restSec, restOverride === null ? suggestion.reason : 'вручную', nextLabel)}>
             <Icon name="clock" size={22} />
             <span className="wk-dock-text">
               <b>Перерыв · {clock(restSec)}</b>
-              <small>{rir === null ? 'Сначала выбери запас (RIR)' : `${exercise.name} · ${nextNo <= plan.length || journal ? `подход ${nextNo}` : 'доп. подход'}`}</small>
+              <small>{rir === null ? 'Выбери запас (RIR)' : `${exercise.name} · ${nextNo <= plan.length || journal ? `подход ${nextNo}` : 'доп. подход'}`}</small>
             </span>
           </button>
-          <button type="button" className="wk-dock-alt" disabled={!canLog} aria-label="Записать без перерыва" onClick={() => void mutate((d) => record(d, null))}>
-            <Icon name="check" size={20} strokeWidth={2.4} />
-            <small>без перерыва</small>
+          <button type="button" className="wk-dock-alt" disabled={!canLog} onClick={() => void mutate((d) => record(d, null))}>
+            Без отдыха
           </button>
         </div>,
         dock,
