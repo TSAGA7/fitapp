@@ -42,6 +42,7 @@ import {
   type LocalDate,
   type MetricPoint,
   type MetricType,
+  type OwnSchedule,
   type Profile,
   type StrengthRow,
   type WeightPoint,
@@ -107,6 +108,8 @@ export interface Snapshot {
   mealTemplates: MealTemplate[];
   /** Own workouts from the builder, most used first. */
   customWorkouts: CustomWorkout[];
+  /** The own program planned ahead, if there is one. */
+  ownSchedule: OwnSchedule | undefined;
   exerciseNotes: ExerciseNote[];
   foodLogs: FoodLog[];
   program: Program | undefined;
@@ -138,6 +141,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
     const muscleMap = new Map(exercises.map((e) => [e.id, e]));
 
     const customWorkouts = (await r.customWorkouts.listAll()).filter((t) => t.deletedAt === null).sort((a, b) => (b.lastUsedOn ?? '').localeCompare(a.lastUsedOn ?? '') || b.useCount - a.useCount || a.name.localeCompare(b.name, 'ru'));
+    const ownSchedule = (await r.ownSchedules.listAll()).filter((x) => x.deletedAt === null).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
     const customNames = new Map((await r.customWorkouts.listAll()).map((t) => [t.id, t.name]));
     const customSessions = new Map(
       (await r.plannedSessions.listByDateRange({ from: '2000-01-01', to: addDays(today, 60) })).filter((p) => isCustomWorkoutKey(p.workoutKey)).map((p) => [p.id, p.workoutKey]),
@@ -225,6 +229,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       userFoods: await r.userFoods.listAll(),
       userExercises: await r.userExercises.listAll(),
       customWorkouts,
+      ownSchedule,
       mealTemplates: (await r.mealTemplates.listAll()).filter((t) => t.deletedAt === null).sort((a, b) => b.useCount - a.useCount || a.name.localeCompare(b.name)),
       cardioSessions: (await r.cardioSessions.listAll()).filter((c) => c.deletedAt === null).sort((a, b) => (a.date === b.date ? (a.createdAt < b.createdAt ? 1 : -1) : a.date < b.date ? 1 : -1)),
       exerciseNotes: await r.exerciseNotes.listAll(),

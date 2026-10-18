@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { autoWorkoutName, type CustomWorkout, type Exercise, type PlannedSession } from '@fitapp/domain';
+import { autoWorkoutName, type Exercise, type PlannedSession } from '@fitapp/domain';
 import { customDefaults, saveCustomWorkout, startCustomWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { formatDateShort, plural } from '../app/format';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, Sheet, TextField } from '../ui';
+import { Button, Chip, Icon, IconButton, Sheet, TextField } from '../ui';
 import { ExercisePickerSheet } from './ExercisePicker';
+import { OwnPlanSection } from './OwnPlan';
 
 const exWord = (n: number) => `${n} ${plural(n, ['упражнение', 'упражнения', 'упражнений'])}`;
 
@@ -67,61 +68,17 @@ export function BuildCartSheet({ open, title = 'Собрать трениров�
   );
 }
 
-/** One saved own workout: start (or continue) in one tap, edit in the builder. */
-function OwnWorkoutCard({ w, highlight, busy, onStart }: { w: CustomWorkout; highlight: boolean; busy: boolean; onStart: (w: CustomWorkout, openId: string | null) => void }) {
-  const { snapshot: s } = useData();
-  const running = s.workouts.find((x) => x.inProgress && x.customWorkoutId === w.id);
-  const names = w.exercises.map((e) => s.exercises.find((x) => x.id === e.exerciseId)?.name).filter(Boolean) as string[];
-  return (
-    <Card className={highlight ? 'own-new' : ''} id={`own-${w.id}`}>
-      <div className="stack tight">
-        <div className="row between">
-          <div className="grow">
-            <div className="t-h3">{w.name}</div>
-            <div className="t-small">{exWord(w.exercises.length)} · {running ? 'идёт сейчас' : w.lastUsedOn ? `последний раз ${formatDateShort(w.lastUsedOn)}` : 'ещё не делал'}</div>
-          </div>
-          {highlight && <Badge>Новая</Badge>}
-          <IconButton icon="edit" label={`Изменить: ${w.name}`} tone="ghost" onClick={() => go(`training/builder/${w.id}`)} />
-        </div>
-        <p className="t-small">{names.slice(0, 4).join(', ')}{names.length > 4 ? ` и ещё ${names.length - 4}` : ''}</p>
-        <Button size="sm" icon="play" disabled={busy} onClick={() => onStart(w, running?.id ?? null)}>{running ? 'Продолжить' : 'Начать'}</Button>
-      </div>
-    </Card>
-  );
-}
-
 /**
- * The training tab in «Своя программа» mode: «Собрать тренировку», «Добавить из своих» and the own workouts (what was done is in «История»).
- * The program is on pause and is never changed.
+ * The training tab in «Своя» mode: the own program planned ahead (OwnPlanSection) and a workout off the plan.
+ * Own workouts themselves are typed in «Профиль → Конструктор тренировок». The main program is on pause and never changed.
  */
 export function OwnModeView() {
   const { snapshot: s } = useData();
-  const { run, banner, busy } = useCommand();
-  const [building, setBuilding] = useState(false);
-  const [fresh, setFresh] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
-  const start = async (w: CustomWorkout, openId: string | null) => {
-    if (openId) return go(`workout/${openId}`);
-    const sid = await run((d) => startCustomWorkout(d, w.id));
-    if (sid) go(`workout/${sid}`);
-  };
-  useEffect(() => {
-    if (fresh) setTimeout(() => document.getElementById(`own-${fresh}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 80);
-  }, [fresh]);
   return (
     <>
-      <Button block icon="plus" onClick={() => setBuilding(true)}>Собрать тренировку</Button>
-      {s.customWorkouts.length > 0 && <Button block variant="secondary" icon="history" onClick={() => setChoosing(true)}>Добавить из своих</Button>}
-      {banner}
-      <div className="section-title"><h2 className="t-h3">Мои тренировки</h2></div>
-      {s.customWorkouts.length === 0 ? (
-        <Card flat><EmptyState icon="training" title="Пока нет своих тренировок" text="Нажми «Собрать тренировку», отметь упражнения и нажми «Готово». Хватит и одного упражнения." /></Card>
-      ) : (
-        <div className="stack">
-          {s.customWorkouts.map((w) => <OwnWorkoutCard key={w.id} w={w} highlight={w.id === fresh} busy={busy} onStart={(x, openId) => void start(x, openId)} />)}
-        </div>
-      )}
-      <BuildCartSheet open={building} onClose={() => setBuilding(false)} onSaved={(id) => { setBuilding(false); setFresh(id); }} />
+      <OwnPlanSection />
+      {s.customWorkouts.length > 0 && <Button block variant="secondary" icon="play" onClick={() => setChoosing(true)}>Тренировка не по плану</Button>}
       <OwnWorkoutsSheet open={choosing} onClose={() => setChoosing(false)} />
     </>
   );
@@ -164,7 +121,7 @@ export function OwnWorkoutsSheet({ open, replaces, label, onClose }: { open: boo
                       <span className="li-title">{w.name}</span>
                       <span className="li-sub">{exWord(w.exercises.length)} · {running ? 'идёт сейчас' : w.lastUsedOn ? `последний раз ${formatDateShort(w.lastUsedOn)}` : 'ещё не делал'}</span>
                     </button>
-                    <IconButton icon="edit" label={`Изменить: ${w.name}`} tone="ghost" onClick={() => { onClose(); go(`training/builder/${w.id}`); }} />
+                    <IconButton icon="edit" label={`Изменить: ${w.name}`} tone="ghost" onClick={() => { onClose(); go(`profile/builder/${w.id}`); }} />
                     <button type="button" className="pick-add" aria-label={`${running && !replaces ? 'Продолжить' : 'Начать'}: ${w.name}`} disabled={busy} onClick={() => void begin(w.id, running?.id ?? null)}><Icon name="play" size={18} /></button>
                   </div>
                 );

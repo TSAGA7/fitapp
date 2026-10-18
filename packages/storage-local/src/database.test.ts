@@ -7,7 +7,7 @@ import { META_KEYS } from './constants';
 import { openAppDatabase } from './database';
 import { StorageTooNewError } from './errors';
 import { getMeta, setMeta } from './meta';
-import { LATEST_VERSION, MIGRATIONS, STORES_V1, STORES_V2, STORES_V3, STORES_V4, STORES_V5 } from './schema';
+import { LATEST_VERSION, MIGRATIONS, STORES_V1, STORES_V2, STORES_V3, STORES_V4, STORES_V5, STORES_V6 } from './schema';
 import { builders, makeStorage } from './testkit';
 import { createLocalStorage } from './storage';
 import { deterministicIds } from './testkit';
@@ -23,7 +23,7 @@ describe('schema', () => {
     }
     expect(names).toEqual(expect.arrayContaining(['appMeta', 'syncState']));
     expect(names).toHaveLength(STORE_NAMES.length + 2);
-    expect(Object.keys({ ...STORES_V1, ...STORES_V2, ...STORES_V3, ...STORES_V4, ...STORES_V5 })).toHaveLength(STORE_NAMES.length + 2);
+    expect(Object.keys({ ...STORES_V1, ...STORES_V2, ...STORES_V3, ...STORES_V4, ...STORES_V5, ...STORES_V6 })).toHaveLength(STORE_NAMES.length + 2);
   });
   it('the last migration matches the domain schema version', () => {
     expect(LATEST_VERSION).toBe(SCHEMA_VERSION);

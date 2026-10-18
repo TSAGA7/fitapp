@@ -1,4 +1,7 @@
 import { ThemeGrid } from './ThemePicker';
+import { ConstructorScreen } from './OwnPlan';
+import { ChangelogSheet } from './WhatsNew';
+import { WorkoutBuilder } from './WorkoutBuilder';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCommand } from '../app/useCommand';
@@ -51,6 +54,8 @@ export function Profile({ route }: { route: string[] }) {
       return <VersionsScreen />;
     case 'exercises':
       return <ExerciseCatalogScreen />;
+    case 'builder':
+      return route[2] ? <WorkoutBuilder key={route[2]} id={route[2] === 'new' ? null : route[2]} back="profile/builder" /> : <ConstructorScreen />;
     case 'tva':
       return <TvaGuideScreen />;
     case 'cardio':
@@ -66,6 +71,7 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'calendar', name: 'Расписание', to: 'profile/schedule' },
   { icon: 'basket', name: 'Продукты', to: 'profile/foods' },
   { icon: 'gear', name: 'Тренажёры', to: 'profile/equipment' },
+  { icon: 'edit', name: 'Конструктор тренировок', to: 'profile/builder' },
   { icon: 'training', name: 'Каталог упражнений', to: 'profile/exercises' },
   { icon: 'leaf', name: 'Поперечная мышца', to: 'profile/tva' },
   { icon: 'heart', name: 'Кардио', to: 'profile/cardio' },
@@ -298,6 +304,7 @@ function ZonePicker() {
 
 /** The gear: only the app's settings, in this order. Everything applies at once. */
 function SettingsScreen() {
+  const [newsOpen, setNewsOpen] = useState(false);
   return (
     <main className="screen no-nav">
       <ScreenHeader title="Настройки" back="profile" />
@@ -307,7 +314,9 @@ function SettingsScreen() {
         <RestTimerPicker />
         <ZonePicker />
         <ListItem icon="history" title="История изменений программы" subtitle="Служебный журнал версий нормы и тренировок" onClick={() => go('profile/versions')} />
+        <ListItem icon="info" title="Что нового" subtitle="Изменения приложения по обновлениям" onClick={() => setNewsOpen(true)} />
       </div>
+      <ChangelogSheet open={newsOpen} onClose={() => setNewsOpen(false)} />
     </main>
   );
 }

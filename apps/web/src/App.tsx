@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getAppRuntime, type AppRuntime } from './composition';
 import { DataProvider, useData } from './app/DataContext';
 import { useRoute } from './app/router';
+import { WhatsNewOnUpdate } from './screens/WhatsNew';
 import { BottomNav, Button, ScrollTop, Sheet } from './ui';
 import { DesignSystem } from './screens/DesignSystem';
 import { Nutrition } from './screens/Nutrition';
@@ -63,12 +64,13 @@ function Gate() {
   const { snapshot } = useData();
   const route = useRoute();
   if (route[0] === 'design') return <DesignSystem />;
-  if (!snapshot.profile) return <Onboarding />;
+  if (!snapshot.profile) return <><WhatsNewOnUpdate fresh /><Onboarding /></>;
   if (route[0] === 'workout' && route[1]) return <Workout key={route[1]} sessionId={route[1]} focus={route[2]} />;
   const tab = ['today', 'nutrition', 'training', 'progress', 'profile'].includes(route[0] as string) ? (route[0] as string) : 'today';
   return (
     <>
       <BirthdayGreeting birthDate={snapshot.profile.birthDate} />
+      <WhatsNewOnUpdate fresh={false} />
       {tab === 'today' && <Today />}
       {tab === 'nutrition' && <Nutrition />}
       {tab === 'training' && <Training route={route} />}

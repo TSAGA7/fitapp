@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
 import { abandonWorkout, addExerciseToSession, addSetToExercise, canRemoveFromSession, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
@@ -22,6 +23,8 @@ interface RestState {
   endsAt: number;
   total: number;
   reason: string;
+  /** What comes after the rest: «Жим платформы · подход 3». */
+  next: string;
   phrase: number;
   /** Seconds left while the timer is paused, otherwise null. */
   pausedLeft: number | null;
@@ -43,6 +46,9 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const [picking, setPicking] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  // The bottom bar («Перерыв») belongs to one open exercise: the one touched last, otherwise the first open one.
+  const [dock, setDock] = useState<HTMLDivElement | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const barOn = useActivityBar();
   // Exercise blocks: any number can be open at once. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
@@ -76,7 +82,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       return next;
     });
   }, [view]);
-  const toggle = (id: string) => setOpenIds((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggle = (id: string) => setOpenIds((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else { n.add(id); setActiveId(id); } return n; });
 
   const reload = useCallback(async () => {
     try {
@@ -95,10 +101,12 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const totalSets = view.exercises.reduce((n, e) => n + Math.max(e.plan.length, 0), 0);
   const doneSets = view.exercises.reduce((n, e) => n + e.logs.filter((l) => l.setType === 'working' && l.status !== 'skipped').length, 0);
   const readOnly = view.session.status !== 'in_progress';
+  const openList = view.exercises.filter((e) => openIds.has(e.se.id)).map((e) => e.se.id);
+  const dockOwner = readOnly ? null : activeId && openIds.has(activeId) ? activeId : (openList[0] ?? null);
 
-  const mutate = async (fn: Parameters<typeof ok>[0], restSec?: number | null, reason = '') => {
+  const mutate = async (fn: Parameters<typeof ok>[0], restSec?: number | null, reason = '', next = '') => {
     if (await ok(fn)) {
-      if (restSec && getRestTimer()) setRest({ endsAt: Date.now() + restSec * 1000, total: restSec, reason, phrase: Math.floor(Math.random() * REST_PHRASES.length), pausedLeft: null });
+      if (restSec && getRestTimer()) setRest({ endsAt: Date.now() + restSec * 1000, total: restSec, reason, next, phrase: Math.floor(Math.random() * REST_PHRASES.length), pausedLeft: null });
       await reload();
     }
   };
@@ -116,7 +124,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   }
 
   return (
-    <main className={`screen workout wk ${rest !== null ? 'has-rest' : ''}`}>
+    <main className={`screen workout wk ${rest !== null ? 'has-rest' : ''} ${dockOwner ? 'has-dock' : ''}`}>
       <header className="wk-top">
         <IconButton icon="chevronLeft" label="К тренировкам" className="wk-round" onClick={() => go('training')} />
         <div className="wk-top-end">
@@ -139,7 +147,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         <Card flat><EmptyState icon="training" title={readOnly ? 'Упражнений не было' : 'Добавь первое упражнение'} text={readOnly ? undefined : 'Выбирай упражнения по ходу тренировки: вес подставится из истории, подходы и повторения можно поменять.'} /></Card>
       )}
       {view.exercises.map((ev, idx) => (
-        <ExerciseCard key={ev.se.id} index={idx + 1} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} />
+        <ExerciseCard key={ev.se.id} index={idx + 1} ev={ev} warmPosition={warmPositionOf(view.exercises, idx)} readOnly={readOnly} busy={busy} mutate={mutate} run={run} reload={reload} open={openIds.has(ev.se.id)} onToggle={() => toggle(ev.se.id)} removable={!readOnly && canRemoveFromSession(ev, view.custom)} journal={view.custom} dock={ev.se.id === dockOwner ? dock : null} onActivate={() => setActiveId(ev.se.id)} />
       ))}
 
       {!readOnly && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
@@ -172,6 +180,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       />
       {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
       <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />
+      {!readOnly && <div className="wk-dock" ref={setDock} />}
       <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} />
     </main>
   );
@@ -254,34 +263,56 @@ function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: 
       </button>
     );
   }
-  const R = 46;
-  const C = 2 * Math.PI * R;
-  const frac = rest.total > 0 ? Math.min(1, Math.max(0, left / rest.total)) : 0;
+  const mm = String(Math.floor(left / 60)).padStart(2, '0');
+  const ss = String(left % 60).padStart(2, '0');
   return (
-    <div className={`rest-float wk-rest ${left === 0 ? 'over' : ''}`} role="timer" aria-live="off">
-      <div className="rest-top">
-        <span className="row"><Icon name="clock" size={18} /> <span className="t-caption">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</span></span>
-        <Button size="sm" variant="text" icon="chevronDown" onClick={() => setMini(true)}>Свернуть</Button>
+    <div className={`rest-float wk-rest ${left === 0 ? 'over' : ''} ${paused ? 'paused' : ''}`} role="timer" aria-live="off">
+      <div className="wk-rest-cap">Перерыв{rest.reason ? ` · ${rest.reason}` : ''}</div>
+      <div className="wk-rest-next">{left === 0 ? 'Пора!' : rest.next ? `Дальше: ${rest.next}` : 'Отдыхай'}</div>
+      <DotClock text={`${mm}:${ss}`} label={`Осталось ${clock(left)}`} />
+      <div className="rest-cue" role="status" aria-live="polite">{cue ?? '\u00a0'}</div>
+      <div className="wk-rest-ctrl">
+        <button type="button" className="wk-rc" aria-label="Свернуть" onClick={() => setMini(true)}><Icon name="chevronDown" size={20} /></button>
+        <button type="button" className="wk-rc" aria-label="Минус 15 секунд" onClick={() => adjust(-15)}>−15</button>
+        <button type="button" className="wk-rc-main" aria-label={paused ? 'Продолжить' : 'Пауза'} onClick={toggle}><Icon name={paused ? 'play' : 'pause'} size={24} strokeWidth={3} /></button>
+        <button type="button" className="wk-rc" aria-label="Плюс 15 секунд" onClick={() => adjust(15)}>+15</button>
+        <button type="button" className="wk-rc ok" aria-label="Завершить перерыв" onClick={onDone}><Icon name="check" size={20} strokeWidth={2.6} /></button>
       </div>
-      <div className="wk-rest-main">
-        <div className="wk-ring" aria-label={`Осталось ${clock(left)}`}>
-          <svg viewBox="0 0 104 104" width="104" height="104" aria-hidden="true">
-            <circle cx="52" cy="52" r={R} className="wk-ring-bg" />
-            <circle cx="52" cy="52" r={R} className="wk-ring-fg" strokeDasharray={C} strokeDashoffset={C * (1 - frac)} transform="rotate(-90 52 52)" />
-          </svg>
-          <span className="rest-time">{clock(left)}</span>
-        </div>
-        <div className="wk-rest-side">
-          <div className="rest-cue" role="status" aria-live="polite">{cue ?? (left === 0 ? 'Пора!' : '\u00a0')}</div>
-          <div className="wk-rest-ctrl">
-            <Button size="sm" variant="secondary" onClick={() => adjust(-15)}>−15 с</Button>
-            <IconButton icon={paused ? 'play' : 'pause'} label={paused ? 'Продолжить' : 'Пауза'} className="wk-round wk-pause" onClick={toggle} />
-            <Button size="sm" variant="secondary" onClick={() => adjust(15)}>+15 с</Button>
-          </div>
-        </div>
-      </div>
-      <Button block onClick={onDone}>{left === 0 ? 'Готов к подходу' : 'Завершить перерыв'}</Button>
     </div>
+  );
+}
+
+// 5 × 7 dot font for the rest clock (like a dot-matrix display)
+const DOT_FONT: Record<string, readonly string[]> = {
+  '0': ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
+  '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+  '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+  '3': ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+  '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+  '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+  '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+  '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+  '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+  '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+  ':': ['0', '0', '1', '0', '1', '0', '0'],
+};
+
+/** Big dotted digits of the rest timer. */
+function DotClock({ text, label }: { text: string; label: string }) {
+  const STEP = 9;
+  const dots: Array<{ x: number; y: number }> = [];
+  let col = 0;
+  for (const ch of text) {
+    const g = DOT_FONT[ch];
+    if (!g) continue;
+    g.forEach((row, y) => [...row].forEach((bit, x) => { if (bit === '1') dots.push({ x: col + x, y }); }));
+    col += (g[0] as string).length + 1;
+  }
+  const w = (col - 1) * STEP;
+  return (
+    <svg className="wk-dots" viewBox={`-5 -5 ${w + 10} ${6 * STEP + 10}`} role="img" aria-label={label}>
+      {dots.map((d) => <circle key={`${d.x}-${d.y}`} cx={d.x * STEP} cy={d.y * STEP} r={2.7} />)}
+    </svg>
   );
 }
 
@@ -315,7 +346,10 @@ interface CardProps {
   warmPosition: WarmupPosition;
   readOnly: boolean;
   busy: boolean;
-  mutate: (fn: Parameters<ReturnType<typeof useCommand>['ok']>[0], rest?: number | null, reason?: string) => Promise<void>;
+  mutate: (fn: Parameters<ReturnType<typeof useCommand>['ok']>[0], rest?: number | null, reason?: string, next?: string) => Promise<void>;
+  /** The bottom bar to render «Перерыв» into, when this exercise owns it. */
+  dock?: HTMLElement | null;
+  onActivate?: () => void;
   run: ReturnType<typeof useCommand>['run'];
   reload: () => Promise<void>;
   open: boolean;
@@ -370,7 +404,7 @@ function WarmupBlock({ ev, position, busy, mutate, contextKey }: { ev: WorkoutEx
 /** Sets of the plan that are settled (done or skipped): the exercise is finished when all of them are. */
 export const settledSets = (ev: WorkoutExerciseView): number => ev.plan.filter((p) => ev.logs.some((l) => l.setType === 'working' && l.setNo === p.setNo)).length;
 
-function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable, journal }: CardProps) {
+function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, open, onToggle, removable, journal, dock, onActivate }: CardProps) {
   const { snapshot: s } = useData();
   const { se, exercise, plan, logs } = ev;
   const working = logs.filter((l) => l.setType === 'working');
@@ -458,6 +492,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
   const planText = (p: (typeof plan)[number]): string => `${p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(p.targetWeightKg), 2)} ${liftUnit()}`} × ${p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}${unit}, запас ${p.targetRir.min}–${p.targetRir.max}`;
   const factText = (l: (typeof working)[number]): string => `${l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}${l.actualReps}${unit} · RIR ${l.actualRir}`;
   const extraRow = !readOnly && nextNo > plan.length;
+  const nextLabel = journal || nextNo < plan.length ? `${exercise.name} · подход ${nextNo + 1}` : 'следующее упражнение';
 
   // The editor of the next set: it opens inside that set's row.
   const editor = readOnly ? null : (
@@ -495,7 +530,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
   );
 
   return (
-    <Card id={`ex-${se.id}`} className={`ex-acc wk-ex ${open ? 'open' : ''} ${allSettled && !journal ? 'is-done' : ''}`}>
+    <Card id={`ex-${se.id}`} className={`ex-acc wk-ex ${open ? 'open' : ''} ${allSettled && !journal ? 'is-done' : ''} ${dock ? 'is-active' : ''}`} onPointerDownCapture={onActivate} onFocusCapture={onActivate}>
       <button type="button" className="ex-head" aria-expanded={open} onClick={onToggle}>
         <span className="wk-num wk-ex-num" aria-hidden="true">{allSettled && !journal ? <Icon name="check" size={16} strokeWidth={2.6} /> : index}</span>
         <span className="ex-title">
@@ -590,8 +625,6 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
                 <IconButton icon="plus" label="Больше отдыха" tone="ghost" onClick={() => setRestOverride(Math.min(600, restSec + 15))} />
               </span>
             </div>
-            <Button block icon="clock" className="wk-go" disabled={!canLog} onClick={() => void mutate((d) => record(d, restSec), restSec, restOverride === null ? suggestion.reason : 'вручную')}>Перерыв · {clock(restSec)}</Button>
-            <Button block variant="text" disabled={!canLog} onClick={() => void mutate((d) => record(d, null))}>Записать без перерыва</Button>
             <div className="wk-tools">
               <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}><Icon name="skip" size={18} /><span>Пропустить подход</span></button>
               <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}><Icon name="plus" size={18} /><span>Добавить подход</span></button>
@@ -608,6 +641,22 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
         )}
       </div>
 
+      {dock && open && !readOnly && createPortal(
+        <div className="wk-dock-in">
+          <button type="button" className="wk-dock-main" disabled={!canLog} onClick={() => void mutate((d) => record(d, restSec), restSec, restOverride === null ? suggestion.reason : 'вручную', nextLabel)}>
+            <Icon name="clock" size={22} />
+            <span className="wk-dock-text">
+              <b>Перерыв · {clock(restSec)}</b>
+              <small>{rir === null ? 'Сначала выбери запас (RIR)' : `${exercise.name} · ${nextNo <= plan.length || journal ? `подход ${nextNo}` : 'доп. подход'}`}</small>
+            </span>
+          </button>
+          <button type="button" className="wk-dock-alt" disabled={!canLog} aria-label="Записать без перерыва" onClick={() => void mutate((d) => record(d, null))}>
+            <Icon name="check" size={20} strokeWidth={2.4} />
+            <small>без перерыва</small>
+          </button>
+        </div>,
+        dock,
+      )}
       <UnitSheet open={unitOpen} onClose={() => setUnitOpen(false)} />
       <RestEditSheet open={restEditOpen} current={restSec} recommended={suggestion.seconds} onClose={() => setRestEditOpen(false)} onPick={(sec) => { setRestOverride(sec === suggestion.seconds ? null : sec); setRestEditOpen(false); }} />
       {infoOpen && <ExerciseInfoSheet exercise={exercise} onClose={() => setInfoOpen(false)} />}

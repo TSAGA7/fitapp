@@ -33,6 +33,7 @@ import type {
   CardioSession,
   MealTemplate,
   CustomWorkout,
+  OwnSchedule,
   ExerciseNote,
   WeeklySummary,
   WorkoutSession,
@@ -91,6 +92,7 @@ export type UserExerciseRepo = Repo<UserExercise>;
 export type CardioSessionRepo = Repo<CardioSession>;
 export type MealTemplateRepo = Repo<MealTemplate>;
 export type CustomWorkoutRepo = Repo<CustomWorkout>;
+export type OwnScheduleRepo = Repo<OwnSchedule>;
 export type ExerciseNoteRepo = Repo<ExerciseNote>;
 export interface NutritionTargetsRepo extends Repo<NutritionTargetsRecord> {
   activeOn(date: LocalDate): Promise<NutritionTargetsRecord | undefined>;
@@ -172,6 +174,7 @@ export interface Repositories {
   plannedSessions: PlannedSessionRepo;
   workouts: WorkoutRepo;
   customWorkouts: CustomWorkoutRepo;
+  ownSchedules: OwnScheduleRepo;
   summaries: SummaryRepo;
 }
 

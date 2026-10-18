@@ -283,6 +283,7 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
     plannedSessions: new PlannedSessionRepo(db.plannedSessions as never, db.plannedSets as never),
     workouts,
     customWorkouts: core('customWorkouts') as never,
+    ownSchedules: core('ownSchedules') as never,
     summaries: new SummaryRepo(db.weeklySummaries as never, 'weeklySummaries', now),
   };
 }

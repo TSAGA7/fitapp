@@ -58,7 +58,7 @@ describe('export', () => {
     expect(file.stores.foods).toEqual([]);
     expect(file.stores.setLogs).toHaveLength(1);
     expect(file.stores.programVersions).toHaveLength(1);
-    expect(Object.keys(file.stores)).toHaveLength(31); // customWorkouts are in the backup too
+    expect(Object.keys(file.stores)).toHaveLength(32); // customWorkouts and ownSchedules are in the backup too
     expect(await getMeta(a.s.db, META_KEYS.lastBackupAt)).toBe(file.createdAt);
   });
   it('a cancelled save does not count as a backup until it is recorded', async () => {

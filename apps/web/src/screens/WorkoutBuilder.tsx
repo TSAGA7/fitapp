@@ -40,7 +40,7 @@ function toExercises(rows: readonly Row[], nameOf: (id: string) => string): { ex
  * The workout builder: an own workout from scratch (name, exercises, sets, reps, rest), saved to be repeated.
  * Weights are not typed here: at the start they come from the history of each exercise, like in the program.
  */
-export function WorkoutBuilder({ id }: { id: string | null }) {
+export function WorkoutBuilder({ id, back = 'training' }: { id: string | null; /** Where «Сохранить», delete and the back arrow lead. */ back?: string }) {
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
   const existing = id ? s.customWorkouts.find((w) => w.id === id) : undefined;
@@ -96,7 +96,7 @@ export function WorkoutBuilder({ id }: { id: string | null }) {
     const savedId = await run((d) => saveCustomWorkout(d, { id: existing?.id ?? null, name, exercises }));
     if (!savedId) return;
     if (!andStart) {
-      go('training');
+      go(back);
       return;
     }
     const sessionId = await run((d) => startCustomWorkout(d, savedId));
@@ -106,7 +106,7 @@ export function WorkoutBuilder({ id }: { id: string | null }) {
   const totalSets = rows.reduce((n, r) => n + r.sets, 0);
   return (
     <main className="screen">
-      <ScreenHeader title={existing ? 'Изменить тренировку' : 'Конструктор тренировки'} back="training" />
+      <ScreenHeader title={existing ? 'Изменить тренировку' : 'Конструктор тренировки'} back={back} />
       <p className="t-small">Собери тренировку как тебе нужно и сохрани: потом её можно повторять в один тап. Программа и календарь не меняются, а веса подставятся из истории каждого упражнения.</p>
       <TextField label="Название (необязательно)" placeholder={rows.length ? autoWorkoutName(rows.map((r) => byId.get(r.exerciseId)).filter((e): e is Exercise => !!e).map((e) => ({ name: e.name, primaryMuscles: e.primaryMuscles }))) : 'Придумается само по упражнениям'} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
 
@@ -169,7 +169,7 @@ export function WorkoutBuilder({ id }: { id: string | null }) {
       <Button block variant="secondary" icon="check" disabled={busy} onClick={() => void save(false)}>Сохранить</Button>
       {existing && (confirmDelete ? (
         <div className="row">
-          <Button block variant="danger" icon="trash" disabled={busy} onClick={async () => { if (await run((d) => deleteCustomWorkout(d, existing.id).then(() => true))) go('training'); }}>Да, удалить</Button>
+          <Button block variant="danger" icon="trash" disabled={busy} onClick={async () => { if (await run((d) => deleteCustomWorkout(d, existing.id).then(() => true))) go(back); }}>Да, удалить</Button>
           <Button block variant="secondary" onClick={() => setConfirmDelete(false)}>Отмена</Button>
         </div>
       ) : (
