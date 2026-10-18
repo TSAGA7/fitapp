@@ -163,3 +163,13 @@
 .wk-rest-time { font-size: 64px; line-height: 72px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; margin: 2px 0; }
 .wk-rest.over .wk-rest-time { color: var(--ok); }
 .wk-rest.paused .wk-rest-time { opacity: .45; }
+/* plan of the next set above the set rows: reserve and rest in one place */
+.wk-plan { display: grid; gap: 4px; }
+.wk-plan-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.wk-plan-chip { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: var(--r-pill); background: var(--row-strong); border: 1px solid var(--glass-line); color: var(--text); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.wk-plan-chip.rest { color: var(--primary); }
+.wk-plan-rest { display: inline-flex; align-items: center; gap: 2px; }
+.wk-plan .t-small { padding: 0 4px; }
+.wk-plan-row { flex-wrap: nowrap; }
+.wk-plan-chip { padding: 0 12px; font-size: 14px; white-space: nowrap; }
+.wk-plan-rest .icon-btn { width: 40px; height: 40px; }

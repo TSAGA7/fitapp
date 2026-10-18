@@ -454,7 +454,6 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
     ? 'Все подходы выполнены'
     : `${se.replacedFromExerciseId ? 'Замена · ' : ''}Подход ${nextNo}: ${target ? (target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(target.targetWeightKg), 2)} ${liftUnit()}`) : ''} × ${target ? (target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`) : ''}${unit}`;
 
-  const planText = (p: (typeof plan)[number]): string => `${p.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (timed ? 'удержание' : 'без веса') : `${fmt(toLift(p.targetWeightKg), 2)} ${liftUnit()}`} × ${p.repMin === p.repMax ? p.repMin : `${p.repMin}–${p.repMax}`}${unit}, запас ${p.targetRir.min}–${p.targetRir.max}`;
   const factText = (l: (typeof working)[number]): string => `${l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}${l.actualReps}${unit} · RIR ${l.actualRir}`;
   const extraRow = !readOnly && nextNo > plan.length;
   const nextLabel = journal || nextNo < plan.length ? `${exercise.name} · подход ${nextNo + 1}` : 'следующее упражнение';
@@ -514,6 +513,19 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
           </div>
         ))}
         {ev.ownNote && <p className="wk-note"><Icon name="edit" size={14} /> {ev.ownNote.text}</p>}
+        {!readOnly && (
+          <div className="wk-plan">
+            <div className="wk-plan-row">
+              {target && <span className="wk-plan-chip">Запас {target.targetRir.min}–{target.targetRir.max}</span>}
+              <span className="wk-plan-rest">
+                <IconButton icon="minus" label="Меньше отдыха" tone="ghost" onClick={() => setRestOverride(Math.max(15, restSec - 15))} />
+                <button type="button" className="wk-plan-chip rest" aria-label={`Отдых ${clock(restSec)}. Изменить время`} onClick={() => setRestEditOpen(true)}><Icon name="clock" size={16} /> Отдых {clock(restSec)}</button>
+                <IconButton icon="plus" label="Больше отдыха" tone="ghost" onClick={() => setRestOverride(Math.min(600, restSec + 15))} />
+              </span>
+            </div>
+            <span className="t-small">{restOverride === null ? `Отдых: ${suggestion.reason}` : 'Отдых задан вручную'}</span>
+          </div>
+        )}
         {exercise.variants.length > 1 && (
           <div className="var-pick">
             <div className="t-caption">Хват / вариант{working.length > 0 || readOnly ? '' : ' (до первого подхода)'}</div>
@@ -542,7 +554,7 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
                   <span className="wk-row-text">
                     <b>Подход {p.setNo}</b>
                     {/* In a journal a recorded set shows only what was done: the suggestion is noise there. */}
-                    {state === 'done' ? <span className="wk-fact">{factText(l!)}</span> : journal && l ? null : <span className="t-small">{planText(p)}</span>}
+                    {state === 'done' && <span className="wk-fact">{factText(l!)}</span>}
                   </span>
                   {state === 'done' && !readOnly && <IconButton icon="close" label={`Отменить подход ${p.setNo}`} tone="ghost" onClick={() => void mutate((d) => undoSet(d, se.id, p.setNo))} />}
                   {state === 'skipped' && (
@@ -579,17 +591,6 @@ function ExerciseCard({ index, ev, warmPosition, readOnly, busy, mutate, run, op
 
         {!readOnly && (
           <div className="wk-actions">
-            <div className="wk-rest-pick">
-              <span className="t-small">
-                Отдых{' '}
-                <button type="button" className="rest-edit" aria-label={`Перерыв ${clock(restSec)}. Изменить время`} onClick={() => setRestEditOpen(true)}>{clock(restSec)}</button>
-                {restOverride === null ? ` · ${suggestion.reason}` : ' · вручную'}
-              </span>
-              <span className="row">
-                <IconButton icon="minus" label="Меньше отдыха" tone="ghost" onClick={() => setRestOverride(Math.max(15, restSec - 15))} />
-                <IconButton icon="plus" label="Больше отдыха" tone="ghost" onClick={() => setRestOverride(Math.min(600, restSec + 15))} />
-              </span>
-            </div>
             <div className="wk-tools">
               <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}><Icon name="skip" size={18} /><span>Пропустить подход</span></button>
               <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}><Icon name="plus" size={18} /><span>Добавить подход</span></button>
