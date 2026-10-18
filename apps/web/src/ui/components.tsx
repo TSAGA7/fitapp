@@ -296,3 +296,78 @@ function useScrollLock(active: boolean): void {
     };
   }, [active]);
 }
+
+const SWIPE_W = 84;
+const SWIPE_EVENT = 'fitapp-swipe-open';
+
+/**
+ * A list row that slides left to show a trash button (iOS style). Only one row is open at a time;
+ * a tap on an open row closes it instead of opening it. Vertical scrolling is left to the page.
+ */
+export function SwipeToDelete({ children, label, onDelete, disabled }: { children: ReactNode; label: string; onDelete: () => void | Promise<void>; disabled?: boolean }) {
+  const id = useId();
+  const [offset, setOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const g = useRef<{ x: number; y: number; base: number; axis: 'x' | 'y' | null; moved: boolean } | null>(null);
+  const openRef = useRef(false);
+  openRef.current = offset !== 0;
+  useEffect(() => {
+    const onOther = (e: Event) => { if ((e as CustomEvent<string>).detail !== id) setOffset(0); };
+    window.addEventListener(SWIPE_EVENT, onOther);
+    return () => window.removeEventListener(SWIPE_EVENT, onOther);
+  }, [id]);
+  const start = (x: number, y: number) => { g.current = { x, y, base: offset, axis: null, moved: false }; };
+  const move = (x: number, y: number, prevent: () => void) => {
+    const s = g.current;
+    if (!s || disabled) return;
+    const dx = x - s.x;
+    const dy = y - s.y;
+    if (s.axis === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (s.axis === 'x') { setDragging(true); window.dispatchEvent(new CustomEvent(SWIPE_EVENT, { detail: id })); }
+    }
+    if (s.axis !== 'x') return;
+    prevent();
+    s.moved = true;
+    const raw = s.base + dx;
+    setOffset(raw > 0 ? 0 : raw < -SWIPE_W ? -SWIPE_W - (Math.abs(raw) - SWIPE_W) * 0.25 : raw);
+  };
+  const end = () => {
+    const s = g.current;
+    setDragging(false);
+    if (s?.axis === 'x') setOffset((o) => (o < -SWIPE_W / 2 ? -SWIPE_W : 0));
+    setTimeout(() => { g.current = null; }, 0);
+  };
+  const ref = useRef<HTMLDivElement>(null);
+  // touchmove must be non-passive to stop the page from scrolling sideways while the row slides.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const tm = (e: TouchEvent) => { const t = e.touches[0]; if (t) move(t.clientX, t.clientY, () => { if (e.cancelable) e.preventDefault(); }); };
+    el.addEventListener('touchmove', tm, { passive: false });
+    return () => el.removeEventListener('touchmove', tm);
+  });
+  const reveal = Math.min(1, Math.abs(offset) / SWIPE_W);
+  return (
+    <div className="swipe-row" ref={ref}>
+      <button type="button" className="swipe-del" aria-label={label} tabIndex={offset ? 0 : -1} style={{ opacity: reveal, pointerEvents: offset ? 'auto' : 'none' }} onClick={() => { setOffset(0); void onDelete(); }}>
+        <Icon name="trash" size={22} />
+      </button>
+      <div
+        className="swipe-front"
+        style={{ transform: `translateX(${offset}px)`, transition: dragging ? 'none' : 'transform .22s ease' }}
+        onTouchStart={(e) => { const t = e.touches[0]; if (t) start(t.clientX, t.clientY); }}
+        onTouchEnd={end}
+        onTouchCancel={end}
+        onMouseDown={(e) => { start(e.clientX, e.clientY); const mm = (ev: MouseEvent) => move(ev.clientX, ev.clientY, () => ev.preventDefault()); const mu = () => { end(); window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); }; window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu); }}
+        onClickCapture={(e) => {
+          if (g.current?.moved) { e.preventDefault(); e.stopPropagation(); return; }
+          if (openRef.current) { e.preventDefault(); e.stopPropagation(); setOffset(0); }
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}

@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { autoWorkoutName, type CustomWorkout, type Exercise, type PlannedSession } from '@fitapp/domain';
 import { customDefaults, saveCustomWorkout, startCustomWorkout } from '../actions';
 import { useData } from '../app/DataContext';
-import { formatDateShort, formatDay, plural } from '../app/format';
+import { formatDateShort, plural } from '../app/format';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, EmptyState, Icon, IconButton, ListItem, Sheet, TextField } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, Sheet, TextField } from '../ui';
 import { ExercisePickerSheet } from './ExercisePicker';
 
 const exWord = (n: number) => `${n} ${plural(n, ['упражнение', 'упражнения', 'упражнений'])}`;
@@ -41,7 +41,21 @@ export function BuildCartSheet({ open, title = 'Собрать трениров�
       onPick={(e) => setCart((c) => (c.includes(e.id) || c.length >= 20 ? c : [...c, e.id]))}
       onRemove={(e) => setCart((c) => c.filter((x) => x !== e.id))}
       onClose={onClose}
-      header={<TextField label="Название (необязательно)" placeholder={cart.length ? auto : 'Придумается само по упражнениям'} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />}
+      header={
+        <>
+          <TextField label="Название (необязательно)" placeholder={cart.length ? auto : 'Придумается само по упражнениям'} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+          {s.customWorkouts.length > 0 && (
+            <div className="stack tight">
+              <span className="t-small">Добавить из своих — все упражнения тренировки разом:</span>
+              <div className="chips">
+                {s.customWorkouts.map((w) => (
+                  <Chip key={w.id} pressed={false} onClick={() => setCart((c) => [...c, ...w.exercises.map((e) => e.exerciseId).filter((id, i, a) => byId.has(id) && !c.includes(id) && a.indexOf(id) === i)].slice(0, 20))}>+ {w.name}</Chip>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      }
       footer={
         <>
           {banner}
@@ -77,7 +91,7 @@ function OwnWorkoutCard({ w, highlight, busy, onStart }: { w: CustomWorkout; hig
 }
 
 /**
- * The training tab in «Своя программа» mode: only «Собрать тренировку», the own workouts and what was recorded.
+ * The training tab in «Своя программа» mode: «Собрать тренировку», «Добавить из своих» and the own workouts (what was done is in «История»).
  * The program is on pause and is never changed.
  */
 export function OwnModeView() {
@@ -85,7 +99,7 @@ export function OwnModeView() {
   const { run, banner, busy } = useCommand();
   const [building, setBuilding] = useState(false);
   const [fresh, setFresh] = useState<string | null>(null);
-  const recorded = s.workouts.filter((w) => w.title !== null && (w.completed || w.inProgress) && (w.sets > 0 || w.inProgress)).slice(0, 30);
+  const [choosing, setChoosing] = useState(false);
   const start = async (w: CustomWorkout, openId: string | null) => {
     if (openId) return go(`workout/${openId}`);
     const sid = await run((d) => startCustomWorkout(d, w.id));
@@ -97,6 +111,7 @@ export function OwnModeView() {
   return (
     <>
       <Button block icon="plus" onClick={() => setBuilding(true)}>Собрать тренировку</Button>
+      {s.customWorkouts.length > 0 && <Button block variant="secondary" icon="history" onClick={() => setChoosing(true)}>Добавить из своих</Button>}
       {banner}
       <div className="section-title"><h2 className="t-h3">Мои тренировки</h2></div>
       {s.customWorkouts.length === 0 ? (
@@ -106,17 +121,8 @@ export function OwnModeView() {
           {s.customWorkouts.map((w) => <OwnWorkoutCard key={w.id} w={w} highlight={w.id === fresh} busy={busy} onStart={(x, openId) => void start(x, openId)} />)}
         </div>
       )}
-      {recorded.length > 0 && (
-        <>
-          <div className="section-title"><h2 className="t-h3">Записанные</h2></div>
-          <div className="list">
-            {recorded.map((w) => (
-              <ListItem key={w.id} icon="history" title={`${formatDay(w.date)} · ${w.title}`} subtitle={w.inProgress ? 'Идёт сейчас — продолжить' : `${w.names.slice(0, 3).join(', ')}${w.names.length > 3 ? ` и ещё ${w.names.length - 3}` : ''}`} trailing={w.inProgress ? <Badge tone="warning">Идёт</Badge> : `${w.sets} ${plural(w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${w.id}`)} />
-            ))}
-          </div>
-        </>
-      )}
       <BuildCartSheet open={building} onClose={() => setBuilding(false)} onSaved={(id) => { setBuilding(false); setFresh(id); }} />
+      <OwnWorkoutsSheet open={choosing} onClose={() => setChoosing(false)} />
     </>
   );
 }

@@ -42,7 +42,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const [picking, setPicking] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const barOn = useActivityBar();
-  // Exercise blocks: any number can be open at once. The first unfinished one is open at the start; a finished one folds and the next opens.
+  // Exercise blocks: any number can be open at once. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const settledRef = useRef<Map<string, boolean> | null>(null);
   useEffect(() => {
@@ -57,7 +57,10 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         setTimeout(() => document.getElementById(`ex-${focus}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
         return;
       }
-      const first = view.custom ? view.exercises[view.exercises.length - 1] : view.exercises.find((e) => !finished.get(e.se.id));
+      // Open the first exercise that is not done yet (in an own workout: its planned sets not all logged), from the top.
+      const first = view.custom
+        ? (view.exercises.find((e) => e.plan.length === 0 || settledSets(e) < e.plan.length) ?? view.exercises[0])
+        : (view.exercises.find((e) => !finished.get(e.se.id)) ?? view.exercises[0]);
       if (first) setOpenIds(new Set([first.se.id]));
       return;
     }

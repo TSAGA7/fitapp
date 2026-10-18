@@ -690,6 +690,31 @@ export async function abandonWorkout(deps: AppDeps, sessionId: string): Promise<
   });
 }
 
+/**
+ * Deletes a workout from the history: its sets stop counting in the progression and the tonnage.
+ * A program workout goes back to «planned»; an own/bodyweight one disappears from the calendar.
+ * Records are soft-deleted, so a backup made before still has them.
+ */
+export async function deleteWorkout(deps: AppDeps, sessionId: string): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const session = await r.workouts.getSession(sessionId);
+    if (!session) return;
+    for (const se of await r.workouts.listSessionExercises(sessionId)) {
+      for (const log of await r.workouts.listSetLogs(se.id)) await r.workouts.softDeleteSetLog(log.id);
+      await r.workouts.softDeleteSessionExercise(se.id);
+    }
+    await r.workouts.putSession({ ...session, deletedAt: deps.clock.now() });
+    const ps = session.plannedSessionId ? await r.plannedSessions.get(session.plannedSessionId) : undefined;
+    if (!ps) return;
+    if ((ps.movedReason ?? '').startsWith(REPLACES_KEY)) {
+      const target = await r.plannedSessions.get((ps.movedReason as string).slice(REPLACES_KEY.length));
+      if (target && target.status === 'done' && (target.movedReason ?? '').startsWith(REPLACED_BY_OWN)) await r.plannedSessions.put({ ...target, status: 'planned', movedReason: null });
+    }
+    if (isAdHocWorkoutKey(ps.workoutKey)) await r.plannedSessions.softDelete(ps.id);
+    else if (ps.status === 'done') await r.plannedSessions.put({ ...ps, status: 'planned' });
+  });
+}
+
 // ---------------------------------------------------------------- notes, likes, bodyweight
 
 /** A comment on an exercise ("hard, watch the shoulder"). It is shown once, in the next workout with the same exercise. */

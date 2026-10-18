@@ -107,3 +107,9 @@ button.list-item:active { background: #f8faf9; }
 .range { display: flex; gap: 6px; }
 .range button { height: 30px; padding: 0 12px; border-radius: 99px; border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 13px; }
 .range button[aria-pressed='true'] { background: var(--primary-50); color: var(--primary); }
+
+/* Swipe-to-delete row */
+.swipe-row { position: relative; border-radius: var(--r-lg); }
+.swipe-front { position: relative; z-index: 1; touch-action: pan-y; will-change: transform; }
+.swipe-del { position: absolute; top: 0; right: 0; bottom: 0; width: 72px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-lg); background: #e5484d; color: #fff; z-index: 0; transition: opacity .15s; }
+.swipe-del:active { background: #c93b40; }

@@ -1,13 +1,13 @@
 import { CycleTrainingHint } from './Cycle';
 import { useEffect, useMemo, useState } from 'react';
 import { addDays, assessExercise, type CardioSession, reentryAdvice, WEEKDAYS, inAdaptation, rankSubstitutes, suggestMoveDate, weekdayOf, type Exercise, type PlannedSession, type WorkoutTemplate } from '@fitapp/domain';
-import { createProgram, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
+import { createProgram, deleteCardioSession, deleteWorkout, ensureSessions, loadTrainingAdvice, type TrainingAdvice, movePlannedSession, rebuildTrainingPlan, replaceExerciseInPlan, skipPlannedSession, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, SwipeToDelete } from '../ui';
 import { useBodyweightMode, useOwnMode, useVacationMode } from '../app/prefs';
 import { OwnModeView, OwnWorkoutsSheet } from './OwnMode';
 import { BodyweightCard, PlaceSwitch } from './BodyweightMode';
@@ -472,6 +472,7 @@ function SwapSheet({ target, catalog, onClose, onPick }: { target: { workout: Wo
 function History() {
   const { snapshot: s } = useData();
   const [cardio, setCardio] = useState<CardioSession | null>(null);
+  const { run, banner, busy } = useCommand();
   // Strength workouts and cardio in one feed, newest first.
   const items = useMemo(() => {
     const list = [
@@ -483,6 +484,8 @@ function History() {
   return (
     <>
       <div className="section-title"><h2 className="t-h3">История тренировок</h2></div>
+      {items.length > 0 && <p className="t-small">Свайп влево — удалить.</p>}
+      {banner}
       {items.length === 0 ? (
         <>
           <p className="note">Тренировок пока нет. Они появятся здесь после первой записанной тренировки или кардио.</p>
@@ -491,9 +494,13 @@ function History() {
         <div className="list">
           {items.map((it) =>
             it.kind === 'workout' ? (
-              <ListItem key={it.key} icon="history" title={it.w.title ? `${formatDay(it.w.date)} · ${it.w.title}` : formatDay(it.w.date)} subtitle={`${it.w.names.slice(0, 3).join(', ')}${it.w.names.length > 3 ? ` и ещё ${it.w.names.length - 3}` : ''}`} trailing={`${it.w.sets} ${plural(it.w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${it.w.id}`)} />
+              <SwipeToDelete key={it.key} label={`Удалить тренировку ${formatDay(it.w.date)}`} disabled={busy} onDelete={() => void run((d) => deleteWorkout(d, it.w.id))}>
+                <ListItem icon="history" title={it.w.title ? `${formatDay(it.w.date)} · ${it.w.title}` : formatDay(it.w.date)} subtitle={`${it.w.names.slice(0, 3).join(', ')}${it.w.names.length > 3 ? ` и ещё ${it.w.names.length - 3}` : ''}`} trailing={it.w.inProgress ? <Badge tone="warning">Идёт</Badge> : `${it.w.sets} ${plural(it.w.sets, ['подход', 'подхода', 'подходов'])}`} onClick={() => go(`workout/${it.w.id}`)} />
+              </SwipeToDelete>
             ) : (
-              <ListItem key={it.key} icon="heart" title={`${formatDay(it.c.date)} · кардио`} subtitle={[cardioTitle(it.c), cardioDetails(it.c)].filter(Boolean).join(' · ')} onClick={() => setCardio(it.c)} />
+              <SwipeToDelete key={it.key} label={`Удалить кардио ${formatDay(it.c.date)}`} disabled={busy} onDelete={() => void run((d) => deleteCardioSession(d, it.c.id))}>
+                <ListItem icon="heart" title={`${formatDay(it.c.date)} · кардио`} subtitle={[cardioTitle(it.c), cardioDetails(it.c)].filter(Boolean).join(' · ')} onClick={() => setCardio(it.c)} />
+              </SwipeToDelete>
             ),
           )}
         </div>
