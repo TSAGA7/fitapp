@@ -253,12 +253,6 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         )}
       </Card>
 
-      {items.length === 0 && !isPast && (
-        <Card flat>
-          <EmptyState icon="leaf" title="На этот день рациона ещё нет" text="Составлю рацион на неделю из твоих продуктов под норму калорий и БЖУ." action={<Button icon="check" disabled={busy} onClick={() => void run((d) => generateWeekPlan(d, startOfWeek(date, s.profile?.weekStartsOn ?? 'monday'), variation()))}>Составить рацион на неделю</Button>} />
-        </Card>
-      )}
-
       {SLOT_ORDER.map((slot) => {
         const slotItems = items.filter((i) => i.slot === slot);
         const itemIds = new Set(items.map((i) => i.id));
@@ -352,6 +346,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         );
       })}
 
+      {items.length === 0 && !isPast && <Button block icon="check" disabled={busy} onClick={() => void run((d) => generateWeekPlan(d, startOfWeek(date, s.profile?.weekStartsOn ?? 'monday'), variation()))}>Составить рацион на неделю</Button>}
       {!isPast && <Button variant="secondary" block icon="scan" onClick={() => setSlotForAdd({ slot: 'snack', scan: true })}>Сканировать штрих-код</Button>}
       {!isPast && items.length > 0 && (
         <Button variant="secondary" block icon="history" disabled={busy} onClick={() => void run((d) => regenerateDay(d, date, variation()))}>Переделать день</Button>
