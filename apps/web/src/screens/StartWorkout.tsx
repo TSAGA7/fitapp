@@ -6,17 +6,18 @@ import { formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { useBodyweightMode, useHomeEquipment, useOwnMode } from '../app/prefs';
 import { useCommand } from '../app/useCommand';
-import { Button, Card, Icon, ListItem, Sheet } from '../ui';
+import { Button, Icon, ListItem, Sheet } from '../ui';
 import { OwnWorkoutsSheet } from './OwnMode';
 import { useDayStatus } from './OwnPlan';
 
 const exWord = (n: number) => `${n} ${plural(n, ['упражнение', 'упражнения', 'упражнений'])}`;
 
 /**
- * Top of «Тренировки»: the workouts started and not finished (any kind, so a workout left with «Назад»
- * is always one tap away) and «Начать тренировку» — from the program, or an empty one built on the go.
+ * «Начать тренировку» at the top of «Тренировки»: one button, and the choice opens after the tap —
+ * from the program, or an empty one built on the go. Workouts started and not finished are listed
+ * there too, so one left with «Назад» is always one tap away.
  */
-export function StartWorkoutBar() {
+export function StartWorkoutButton() {
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
   const [choosing, setChoosing] = useState(false);
@@ -37,30 +38,27 @@ export function StartWorkoutBar() {
   };
   return (
     <>
-      {running.length > 0 && (
-        <Card>
-          <div className="stack tight">
-            <span className="t-caption">{running.length === 1 ? 'Тренировка не закончена' : `Не закончены · ${running.length}`}</span>
-            <div className="list">
-              {running.map((w) => (
-                <ListItem
-                  key={w.id}
-                  icon="play"
-                  lime
-                  title={titleOf(w)}
-                  subtitle={`${w.date === s.today ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(w.date)]}, ${formatDateShort(w.date)}`} · ${w.exercises === 0 ? 'упражнений пока нет' : `${exWord(w.exercises)} · ${w.sets} ${plural(w.sets, ['подход', 'подхода', 'подходов'])}`}`}
-                  trailing={<span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>Продолжить</span>}
-                  onClick={() => go(`workout/${w.id}`)}
-                />
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
       <Button block icon="play" onClick={() => setChoosing(true)}>Начать тренировку</Button>
       <Sheet open={choosing && !fromPlan} title="Начать тренировку" onClose={() => setChoosing(false)}>
         <div className="stack">
           {banner}
+          {running.length > 0 && (
+            <>
+              <span className="t-caption">Не закончены — продолжить</span>
+              <div className="list">
+                {running.map((w) => (
+                  <ListItem
+                    key={w.id}
+                    icon="history"
+                    title={titleOf(w)}
+                    subtitle={`${w.date === s.today ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(w.date)]}, ${formatDateShort(w.date)}`} · ${w.exercises === 0 ? 'упражнений пока нет' : exWord(w.exercises)}`}
+                    onClick={() => { setChoosing(false); go(`workout/${w.id}`); }}
+                  />
+                ))}
+              </div>
+              <span className="t-caption">Новая</span>
+            </>
+          )}
           <button type="button" className="plan-pick" disabled={busy} onClick={() => setFromPlan(true)}>
             <Icon name="calendar" size={22} />
             <span className="grow">
@@ -77,7 +75,7 @@ export function StartWorkoutBar() {
             </span>
             <Icon name="chevronRight" size={18} />
           </button>
-          <p className="t-small">Выйдешь «Назад» — тренировка сохранится здесь, наверху вкладки, и к ней можно вернуться в любой момент.</p>
+          <p className="t-small">Выйдешь «Назад» — тренировка сохранится, вернуться к ней можно здесь же, через «Начать тренировку».</p>
         </div>
       </Sheet>
       <FromPlanSheet open={choosing && fromPlan} onBack={() => setFromPlan(false)} onClose={() => { setFromPlan(false); setChoosing(false); }} />
