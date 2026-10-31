@@ -7,7 +7,7 @@ import { exerciseName, safetyContext } from '../app/derive';
 import { formatDay, formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
-import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, SwipeToDelete } from '../ui';
+import { Badge, Button, Card, Chip, EmptyState, Icon, ListItem, Segmented, Sheet, SwipePager, SwipeToDelete } from '../ui';
 import { useBodyweightMode, useOwnMode, useVacationMode } from '../app/prefs';
 import { OwnModeView, OwnWorkoutsSheet } from './OwnMode';
 import { OwnPlanSection, useOwnPlanByDate } from './OwnPlan';
@@ -21,6 +21,7 @@ import { StartWorkoutButton } from './StartWorkout';
 import { isReplacedByOwn, REPLACED_BY_OWN } from '@fitapp/domain';
 
 type View = 'day' | 'week' | 'month' | 'program' | 'history';
+const VIEWS: readonly View[] = ['day', 'week', 'month', 'program', 'history'];
 
 const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
@@ -76,13 +77,15 @@ export function Training({ route = [] }: { route?: string[] }) {
       <CardioSheet open={cardioOpen} onClose={() => setCardioOpen(false)} />
       <OwnWorkoutsSheet open={ownOpen} onClose={() => setOwnOpen(false)} />
       <Segmented<View> label="Раздел" value={view} onChange={setView} fit options={[{ value: 'day', label: 'День' }, { value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
-      <StartWorkoutButton />
       {banner}
-      {view === 'day' && <p className="t-small">Тренировка на сегодня: нажми «Начать тренировку» и выбери — из программы или собрать по ходу. Начатую, но не законченную тренировку найдёшь там же.</p>}
-      {view === 'week' && (own ? <OwnModeView onProgram={() => setView('program')} /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
-      {view === 'month' && <MonthView own={own} />}
-      {view === 'program' && (own ? <OwnPlanSection /> : <ProgramView />)}
-      {view === 'history' && <History />}
+      <SwipePager index={VIEWS.indexOf(view)} count={VIEWS.length} onIndex={(i) => setView(VIEWS[i] as View)}>
+        {view !== 'history' && <StartWorkoutButton />}
+        {view === 'day' && <p className="t-small">Тренировка на сегодня: нажми «Начать тренировку» и выбери — из программы или собрать по ходу. Начатую, но не законченную тренировку найдёшь там же.</p>}
+        {view === 'week' && (own ? <OwnModeView onProgram={() => setView('program')} /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
+        {view === 'month' && <MonthView own={own} />}
+        {view === 'program' && (own ? <OwnPlanSection /> : <ProgramView />)}
+        {view === 'history' && <History />}
+      </SwipePager>
     </main>
   );
 }

@@ -416,3 +416,11 @@ input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; d
 [data-tone='dark'] .upd-backdrop { background: rgba(0, 0, 0, 0.60); }
 [data-tone='dark'] .upd-card { background: var(--sheet); color: var(--text); }
 @keyframes upd-pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+
+/* Tabs switched by a swipe: the page follows the finger, the next one slides in. */
+.pager { overflow-x: clip; margin: 0 -16px; padding: 0 16px; touch-action: pan-y; }
+.pager-page { display: grid; gap: 16px; align-content: start; grid-template-columns: minmax(0, 1fr); transition: transform .2s ease, opacity .2s ease; }
+.pager-page.from-right { animation: pager-in-r .24s ease-out; }
+.pager-page.from-left { animation: pager-in-l .24s ease-out; }
+@keyframes pager-in-r { from { transform: translateX(40%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pager-in-l { from { transform: translateX(-40%); opacity: 0; } to { transform: none; opacity: 1; } }

@@ -420,3 +420,78 @@ export function SwipeToDelete({ children, label, onDelete, disabled }: { childre
     </div>
   );
 }
+
+/** Where a horizontal swipe belongs to the element itself (swipe to delete, charts, fields): the pager ignores it. */
+const OWN_SWIPE = '.swipe-row, .chart, input, textarea, select, .wheel, [data-noswipe]';
+
+/**
+ * Tabs switched by a horizontal swipe, like Instagram: the page follows the finger and the next tab slides in.
+ * Vertical scrolling is untouched; a swipe that starts on a swipe-to-delete row or a chart is left to it.
+ */
+export function SwipePager({ index, count, onIndex, children }: { index: number; count: number; onIndex: (i: number) => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [dx, setDx] = useState(0);
+  const [enter, setEnter] = useState<'' | 'from-right' | 'from-left'>('');
+  const g = useRef<{ x: number; y: number; t: number; lock: 'h' | 'v' | null } | null>(null);
+  const live = useRef({ index, count, onIndex });
+  live.current = { index, count, onIndex };
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const start = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t || e.touches.length > 1 || (e.target as Element | null)?.closest(OWN_SWIPE)) { g.current = null; return; }
+      g.current = { x: t.clientX, y: t.clientY, t: Date.now(), lock: null };
+    };
+    const move = (e: TouchEvent) => {
+      const s = g.current;
+      const t = e.touches[0];
+      if (!s || !t) return;
+      const mx = t.clientX - s.x;
+      const my = t.clientY - s.y;
+      if (s.lock === null && Math.abs(mx) + Math.abs(my) > 10) s.lock = Math.abs(mx) > Math.abs(my) * 1.3 ? 'h' : 'v';
+      if (s.lock !== 'h') return;
+      if (e.cancelable) e.preventDefault();
+      const { index: i, count: n } = live.current;
+      const edge = (mx > 0 && i === 0) || (mx < 0 && i === n - 1);
+      setDx(edge ? mx / 4 : mx);
+    };
+    const end = (e: TouchEvent) => {
+      const s = g.current;
+      g.current = null;
+      if (!s || s.lock !== 'h') return;
+      const t = e.changedTouches[0];
+      const mx = t ? t.clientX - s.x : 0;
+      const fast = Math.abs(mx) / Math.max(1, Date.now() - s.t) > 0.5;
+      const { index: i, count: n, onIndex: go } = live.current;
+      const next = Math.abs(mx) > 70 || (fast && Math.abs(mx) > 30) ? (mx < 0 ? i + 1 : i - 1) : i;
+      setDx(0);
+      if (next !== i && next >= 0 && next < n) {
+        setEnter(next > i ? 'from-right' : 'from-left');
+        go(next);
+      }
+    };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', start);
+      el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
+    };
+  }, []);
+  return (
+    <div ref={ref} className="pager">
+      <div
+        key={index}
+        className={`pager-page ${dx === 0 ? enter : ''}`}
+        style={dx !== 0 ? { transform: `translateX(${dx}px)`, opacity: 1 - Math.min(0.35, Math.abs(dx) / 600), transition: 'none' } : undefined}
+        onAnimationEnd={() => setEnter('')}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
