@@ -3,7 +3,6 @@ import { parseInBodyQr, weekdayOf, type InBodySegmentKey, type InBodySegments, t
 import { deleteInBodyTest, saveInBodyTest } from '../actions';
 import { useData } from '../app/DataContext';
 import { fmt, formatDateLong, formatDateShort, signed, WEEKDAY_SHORT } from '../app/format';
-import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Button, Card, EmptyState, Icon, Sheet, TextField } from '../ui';
 import { DateField, parseDecimal, ScreenHeader } from './shared';
@@ -61,25 +60,6 @@ const SEGMENTS: ReadonlyArray<{ key: InBodySegmentKey; label: string }> = [
 ];
 
 const show = (v: number | null, f: Field) => (v === null ? '—' : `${fmt(v, f.digits)}${f.unit ? `\u00a0${f.unit}` : ''}`);
-
-/** «Профиль»: the last InBody test in short. */
-export function InBodyCard() {
-  const { snapshot: s } = useData();
-  const last = s.inbodyTests[0];
-  return (
-    <Card onClick={() => go('profile/inbody')}>
-      <div className="goal-card">
-        <span className="li-icon lime"><Icon name="scale" /></span>
-        <div className="grow">
-          <div className="t-small">InBody</div>
-          <div className="li-title">{last ? `${formatDateShort(last.measuredOn)} · ${fmt(last.weightKg, 1)} кг` : 'Состав тела'}</div>
-          <div className="li-sub">{last ? [last.bodyFatPct !== null ? `жир ${fmt(last.bodyFatPct, 1)}%` : null, last.skeletalMuscleKg !== null ? `мышцы ${fmt(last.skeletalMuscleKg, 1)} кг` : null, last.score !== null ? `оценка ${last.score}` : null].filter(Boolean).join(' · ') : 'Сканируй QR с распечатки или введи вручную'}</div>
-        </div>
-        <Icon name="chevronRight" size={18} />
-      </div>
-    </Card>
-  );
-}
 
 export function InBodyScreen() {
   const { snapshot: s } = useData();

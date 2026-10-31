@@ -22,7 +22,7 @@ import { ImportPanel } from './ImportPanel';
 import { CardioGuideScreen } from './Cardio';
 import { TvaGuideScreen } from './TvaGuide';
 import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './ProfileMore';
-import { InBodyCard, InBodyScreen } from './InBody';
+import { InBodyScreen } from './InBody';
 import { AddMeasurementSheet, AddWeightSheet, DateField, parseDecimal, RebuildOffer, ScreenHeader } from './shared';
 
 export function Profile({ route }: { route: string[] }) {
@@ -77,6 +77,7 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'gear', name: 'Тренажёры', to: 'profile/equipment' },
   { icon: 'edit', name: 'Конструктор тренировок', to: 'profile/builder' },
   { icon: 'training', name: 'Каталог упражнений', to: 'profile/exercises' },
+  { icon: 'scale', name: 'InBody', to: 'profile/inbody' },
   { icon: 'leaf', name: 'Поперечная мышца', to: 'profile/tva' },
   { icon: 'heart', name: 'Кардио', to: 'profile/cardio' },
   { icon: 'shield', name: 'Болевые точки', to: 'profile/injuries' },
@@ -119,7 +120,6 @@ function ProfileHome() {
         </div>
       </Card>
       <VacationButton />
-      <InBodyCard />
       <CycleTile />
       <BackupReminder />
       <div className="grid-3">
