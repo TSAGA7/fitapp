@@ -424,3 +424,4 @@ input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; d
 .pager-page.from-left { animation: pager-in-l .24s ease-out; }
 @keyframes pager-in-r { from { transform: translateX(40%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes pager-in-l { from { transform: translateX(-40%); opacity: 0; } to { transform: none; opacity: 1; } }
+.pager { min-height: 62dvh; }

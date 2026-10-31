@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, addExerciseToSession, addSetToExercise, editSet, removeLastSet, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, reopenWorkout, addExerciseToSession, addSetToExercise, editSet, removeLastSet, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt, fromLift, liftUnit, plural, toLift } from '../app/format';
@@ -111,6 +111,8 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const totalSets = view.exercises.reduce((n, e) => n + Math.max(e.plan.length, 0), 0);
   const doneSets = view.exercises.reduce((n, e) => n + e.logs.filter((l) => l.setType === 'working' && l.status !== 'skipped').length, 0);
   const readOnly = view.session.status !== 'in_progress';
+  // A workout from the history opened again to correct it: it already has a finish time.
+  const editing = !readOnly && view.session.endedAt !== null;
   const openList = view.exercises.filter((e) => openIds.has(e.se.id)).map((e) => e.se.id);
   const focusMode = layout === 'focus' && view.exercises.length > 0;
   const focusEv = focusMode ? (view.exercises.find((e) => e.se.id === (activeId && openIds.has(activeId) ? activeId : openList[0])) ?? view.exercises.find((e) => !(e.plan.length > 0 && settledSets(e) >= e.plan.length)) ?? view.exercises[0]) : undefined;
@@ -119,7 +121,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
 
   const mutate = async (fn: Parameters<typeof ok>[0], restSec?: number | null, reason = '', next = '') => {
     if (await ok(fn)) {
-      if (restSec && getRestTimer()) setRest({ endsAt: Date.now() + restSec * 1000, total: restSec, reason, next, phrase: Math.floor(Math.random() * REST_PHRASES.length), pausedLeft: null });
+      if (restSec && getRestTimer() && !editing) setRest({ endsAt: Date.now() + restSec * 1000, total: restSec, reason, next, phrase: Math.floor(Math.random() * REST_PHRASES.length), pausedLeft: null });
       await reload();
     }
   };
@@ -144,7 +146,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
           <IconButton icon="palette" label="Оформление" className="wk-round" onClick={() => setThemeOpen(true)} />
           {readOnly
             ? <span className="wk-pill">{view.session.status === 'completed' ? 'Завершена' : 'Прервана'}</span>
-            : <span className="wk-pill" aria-label={`Выполнено ${doneSets} из ${totalSets} подходов`}><b>{doneSets}</b>/{totalSets} подх.</span>}
+            : editing ? <span className="wk-pill">Правка</span> : <span className="wk-pill" aria-label={`Выполнено ${doneSets} из ${totalSets} подходов`}><b>{doneSets}</b>/{totalSets} подх.</span>}
         </div>
       </header>
       <div className="wk-hero">
@@ -174,13 +176,19 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       ))}
 
       {!readOnly && !focusMode && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
-      {!readOnly && (
+      {editing && (
+        <div className="wk-finish">
+          <Button block icon="check" disabled={busy} onClick={async () => { if (await ok((d) => finishWorkout(d, sessionId, view.session.note))) go('training'); }}>Сохранить изменения</Button>
+        </div>
+      )}
+      {!readOnly && !editing && (
         <div className="wk-finish">
           <Button block icon="check" onClick={() => setFinishing(true)}>Завершить тренировку</Button>
           <Button block variant="text" disabled={busy} onClick={async () => { if (await ok((d) => abandonWorkout(d, sessionId))) go('training'); }}>Прервать без сохранения итогов</Button>
         </div>
       )}
       {readOnly && view.session.status === 'completed' && doneSets > 0 && <Button block variant="secondary" icon="history" onClick={() => setSaveOpen(true)}>Сохранить как свою, чтобы повторять</Button>}
+      {readOnly && <Button block icon="edit" disabled={busy} onClick={async () => { if (await ok((d) => reopenWorkout(d, sessionId))) await reload(); }}>Редактировать</Button>}
       {readOnly && <Button block variant="secondary" onClick={() => go('training')}>К тренировкам</Button>}
       <SaveOwnSheet open={saveOpen} view={view} onClose={() => setSaveOpen(false)} />
       <ExercisePickerSheet

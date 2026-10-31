@@ -696,7 +696,8 @@ export async function finishWorkout(deps: AppDeps, sessionId: string, note: stri
       const status = done === 0 ? 'skipped' : target > 0 && done < target ? 'partial' : 'done';
       if (se.status !== 'partial' || status !== 'skipped') await r.workouts.putSessionExercise({ ...se, status, skipReason: status === 'skipped' ? (se.skipReason ?? 'other') : null });
     }
-    await r.workouts.putSession({ ...session, status: 'completed', endedAt: deps.clock.now(), note: note && note.trim() ? note.trim() : null });
+    // A workout opened again to edit it keeps the time it was finished at the first time.
+    await r.workouts.putSession({ ...session, status: 'completed', endedAt: session.endedAt ?? deps.clock.now(), note: note && note.trim() ? note.trim() : null });
     if (session.plannedSessionId) {
       const ps = await r.plannedSessions.get(session.plannedSessionId);
       if (ps) await r.plannedSessions.put({ ...ps, status: 'done' });
@@ -710,6 +711,19 @@ export async function finishWorkout(deps: AppDeps, sessionId: string, note: stri
         }
       }
     }
+  });
+}
+
+/**
+ * Opens a finished (or interrupted) workout from the history again to correct it: sets, weights, exercises.
+ * Its date and finish time stay; «Сохранить изменения» finishes it again.
+ */
+export async function reopenWorkout(deps: AppDeps, sessionId: string): Promise<void> {
+  await deps.uow.run(async (r) => {
+    const session = await r.workouts.getSession(sessionId);
+    if (!session) throw new Error('Тренировка не найдена');
+    if (session.status === 'in_progress') return;
+    await r.workouts.putSession({ ...session, status: 'in_progress', endedAt: session.endedAt ?? deps.clock.now() });
   });
 }
 

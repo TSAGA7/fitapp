@@ -5,6 +5,7 @@ import { deterministicIds } from '../packages/storage-local/src/testkit';
 import { openAppRuntime } from '../apps/web/src/composition';
 import { loadSnapshot } from '../apps/web/src/app/snapshot';
 import {
+  reopenWorkout,
   acceptTargetAdjustment,
   abandonWorkout,
   addInjury,
@@ -612,6 +613,15 @@ describe('app flow on the real storage', () => {
     expect(view.label).toBe('Тренировка по ходу');
     expect(view.exercises).toHaveLength(0);
     await abandonWorkout(deps, empty);
+    // a finished workout from the history is opened again, corrected and saved: its finish time stays
+    const before = (await deps.uow.run((r) => r.workouts.getSession(sid)))!;
+    await reopenWorkout(deps, sid);
+    expect((await loadWorkout(deps, sid)).session.status).toBe('in_progress');
+    clock.set('2026-10-08T09:00:00+03:00');
+    await finishWorkout(deps, sid, before.note);
+    const after = (await deps.uow.run((r) => r.workouts.getSession(sid)))!;
+    expect(after.status).toBe('completed');
+    expect(after.endedAt).toBe(before.endedAt);
     const rows = await deps.uow.run((r) => r.plannedSessions.listByDateRange({ from: '2026-09-01', to: '2026-12-31' }));
     expect(rows.filter((p) => p.workoutKey.startsWith('custom') && p.status === 'planned')).toHaveLength(0);
 

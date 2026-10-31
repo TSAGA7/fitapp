@@ -22,13 +22,30 @@ import { isReplacedByOwn, REPLACED_BY_OWN } from '@fitapp/domain';
 
 type View = 'day' | 'week' | 'month' | 'program' | 'history';
 const VIEWS: readonly View[] = ['day', 'week', 'month', 'program', 'history'];
+const VIEW_KEY = 'fitapp.trainingView';
 
 const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
 export function Training({ route = [] }: { route?: string[] }) {
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
-  const [view, setView] = useState<View>('week');
+  // The open section is remembered while the app runs: «Назад» from a workout returns to the same one (e.g. «История»).
+  const [view, setViewState] = useState<View>(() => {
+    try {
+      const v = sessionStorage.getItem(VIEW_KEY) as View | null;
+      return v && VIEWS.includes(v) ? v : 'week';
+    } catch {
+      return 'week';
+    }
+  });
+  const setView = (v: View) => {
+    setViewState(v);
+    try {
+      sessionStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* private mode: not remembered */
+    }
+  };
   const bodyweight = useBodyweightMode();
   const own = useOwnMode();
   const [cardioOpen, setCardioOpen] = useState(false);
