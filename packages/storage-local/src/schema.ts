@@ -68,6 +68,10 @@ export const STORES_V6: Record<string, string> = {
   ownSchedules: 'id, updatedAt',
 };
 
+export const STORES_V7: Record<string, string> = {
+  inbodyTests: 'id, measuredOn, updatedAt',
+};
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, description: 'Initial schema', stores: STORES_V1 },
   { version: 2, description: 'Exercise likes and notes', stores: STORES_V2 },
@@ -75,6 +79,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 4, description: 'Saved meals (my usual breakfast, lunch, snack)', stores: STORES_V4 },
   { version: 5, description: 'Own workouts built in the workout builder', stores: STORES_V5 },
   { version: 6, description: 'Own program planned ahead from own workouts', stores: STORES_V6 },
+  { version: 7, description: 'InBody body composition tests', stores: STORES_V7 },
 ];
 
 export const LATEST_VERSION = (MIGRATIONS[MIGRATIONS.length - 1] as Migration).version;

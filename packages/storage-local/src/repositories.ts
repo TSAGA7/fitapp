@@ -170,6 +170,14 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
     async putSets(sets: readonly PlannedSet[]): Promise<void> {
       await this.sets.bulkPut(sets.map((s) => stamp(ENTITY_SCHEMAS.plannedSets, 'plannedSets', now, s)));
     }
+    async restore(id: string): Promise<PlannedSession | undefined> {
+      const row = await this.table.get(id);
+      if (!row) return undefined;
+      if (row.deletedAt === null) return row;
+      const back = this.stamp({ ...row, deletedAt: null });
+      await this.table.put(back);
+      return back;
+    }
   }
 
   const sessions = db.workoutSessions as unknown as Table<WorkoutSession, string>;
@@ -270,6 +278,7 @@ export function createRepositories(db: AppDatabase, now: () => string): Reposito
     exercises: core('exercises') as never,
     userExercises: core('userExercises') as never,
     cardioSessions: core('cardioSessions') as never,
+    inbodyTests: core('inbodyTests') as never,
     exerciseNotes: core('exerciseNotes') as never,
     foods: new FoodRepo(db.foods as never, 'foods', now),
     userFoods: core('userFoods') as never,

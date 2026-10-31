@@ -5,6 +5,9 @@ import { deterministicIds } from '../packages/storage-local/src/testkit';
 import { openAppRuntime } from '../apps/web/src/composition';
 import { loadSnapshot } from '../apps/web/src/app/snapshot';
 import {
+  saveInBodyTest,
+  deleteInBodyTest,
+  addExerciseToSession,
   reopenWorkout,
   acceptTargetAdjustment,
   abandonWorkout,
@@ -57,7 +60,7 @@ import {
   createCustomFood,
   setEquipmentLimits,
 } from '../apps/web/src/actions';
-import { isReplacedByOwn, mealDish } from '../packages/domain/src';
+import { isReplacedByOwn, mealDish, parseInBodyQr } from '../packages/domain/src';
 import { planFoods } from '../apps/web/src/app/derive';
 import { lookupBarcode } from '../apps/web/src/app/openFoodFacts';
 
@@ -612,6 +615,17 @@ describe('app flow on the real storage', () => {
     view = await loadWorkout(deps, empty);
     expect(view.label).toBe('Тренировка по ходу');
     expect(view.exercises).toHaveLength(0);
+    // ...an exercise is added and logged, then it is interrupted: its calendar entry goes, but opened again from
+    // the history it gets its plan back, so sets can be added and removed
+    const ex1 = s.exercises.find((e) => e.deletedAt === null)!.id;
+    await addExerciseToSession(deps, { sessionId: empty, exerciseId: ex1, sets: 1 });
+    await abandonWorkout(deps, empty);
+    await reopenWorkout(deps, empty);
+    view = await loadWorkout(deps, empty);
+    expect(view.custom).toBe(true);
+    expect(view.exercises[0]!.plan).toHaveLength(1);
+    await addSetToExercise(deps, view.exercises[0]!.se.id);
+    expect((await loadWorkout(deps, empty)).exercises[0]!.plan).toHaveLength(2);
     await abandonWorkout(deps, empty);
     // a finished workout from the history is opened again, corrected and saved: its finish time stays
     const before = (await deps.uow.run((r) => r.workouts.getSession(sid)))!;
@@ -721,5 +735,26 @@ describe('app flow on the real storage', () => {
     await deleteCustomFood(deps, mine);
     expect((await loadSnapshot(deps)).foods.find((f) => f.id === mine)?.deletedAt).not.toBeNull();
     await expect(deleteCustomFood(deps, egg.id)).rejects.toThrow();
+  });
+});
+
+describe('InBody', () => {
+  it('a test from the QR code is saved, adds the weight and body fat of the day, and can be changed and deleted', async () => {
+    const { deps } = await setup();
+    const QR = 'https://qrcode.inbody.com?IBData=570-11!!!!!!!!!!!!!!!!!!!!!!!18100290M2026103123351002930251030701700154018801270109013304160375045901790087017304630405049505980520063606320551067408110613082911250363105516560248022103821114107803791104106802951077104209490996096309440990095803670750743-0068-0068!000012000001014820010149401012215002312280023122017350100008000900810113042003600440033602990340310831500318338334282742278602672865290923372372020524552500000000000PASS0';
+    const id = await saveInBodyTest(deps, { id: null, values: parseInBodyQr(QR) });
+    let s = await loadSnapshot(deps);
+    expect(s.inbodyTests).toHaveLength(1);
+    expect(s.inbodyTests[0]).toMatchObject({ weightKg: 81.1, bodyFatPct: 22.1, skeletalMuscleKg: 36.3, source: 'qr' });
+    const day = s.metrics.filter((m) => m.measuredOn === '2026-10-31' && m.deletedAt === null);
+    expect(day.map((m) => [m.type, m.value]).sort()).toEqual([['body_fat', 22.1], ['weight', 81.1]]);
+    const { createdAt, updatedAt, deletedAt, deviceId, id: _id, ...values } = s.inbodyTests[0]!;
+    void createdAt; void updatedAt; void deletedAt; void deviceId; void _id;
+    await saveInBodyTest(deps, { id, values: { ...values, score: 76 } });
+    s = await loadSnapshot(deps);
+    expect(s.inbodyTests[0]!.score).toBe(76);
+    expect(s.metrics.filter((m) => m.measuredOn === '2026-10-31' && m.deletedAt === null)).toHaveLength(2); // an edit adds no new measurements
+    await deleteInBodyTest(deps, id);
+    expect((await loadSnapshot(deps)).inbodyTests).toHaveLength(0);
   });
 });

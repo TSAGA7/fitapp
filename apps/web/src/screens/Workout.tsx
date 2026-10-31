@@ -696,6 +696,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
               <div className="wk-set-head">
                 <span className="wk-num"><Icon name="check" size={15} strokeWidth={2.8} /></span>
                 <span className="wk-row-text"><b>Доп. подход {l.setNo}</b><span className="wk-fact">{factText(l)}</span></span>
+                {!readOnly && <IconButton icon="close" label={`Удалить доп. подход ${l.setNo}`} tone="ghost" disabled={busy} onClick={() => void mutate((d) => undoSet(d, se.id, l.setNo))} />}
               </div>
             </div>
           ))}
@@ -713,6 +714,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
                 <button type="button" className="wk-tool" onClick={() => setInfoOpen(true)}><Icon name="info" size={18} /><span>Техника</span></button>
                 <button type="button" className="wk-tool" onClick={() => setSwapOpen(true)}><Icon name="swap" size={18} /><span>Заменить</span></button>
                 <button type="button" className="wk-tool danger" onClick={() => setPainOpen(true)}><Icon name="alert" size={18} /><span>Боль</span></button>
+                {!hasCurrent && <Button block size="sm" variant="secondary" icon="plus" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}>Добавить подход</Button>}
               </div>
             ) : (<>
             <div className="wk-tools">

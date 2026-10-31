@@ -5,6 +5,7 @@ import { CustomWorkout, OwnSchedule } from './customWorkout';
 import { DailyLog, FoodLog, MealPlan, PlannedItem } from './nutritionLog';
 import { Equipment, UserEquipment } from './equipment';
 import { CardioSession } from './cardio';
+import { InBodyTest } from './inbody';
 import { Exercise, ExerciseNote, UserExercise } from './exercise';
 import { Food, NutritionTargetsRecord, UserFood } from './food';
 import { Goal } from './goals';
@@ -37,6 +38,7 @@ export const ENTITY_SCHEMAS = {
   userExercises: UserExercise,
   exerciseNotes: ExerciseNote,
   cardioSessions: CardioSession,
+  inbodyTests: InBodyTest,
   foods: Food,
   userFoods: UserFood,
   nutritionTargets: NutritionTargetsRecord,
@@ -64,4 +66,4 @@ export type StoreName = keyof typeof ENTITY_SCHEMAS;
 export const STORE_NAMES = Object.keys(ENTITY_SCHEMAS) as StoreName[];
 
 /** Bump together with a Dexie migration. */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;

@@ -22,6 +22,7 @@ import { ImportPanel } from './ImportPanel';
 import { CardioGuideScreen } from './Cardio';
 import { TvaGuideScreen } from './TvaGuide';
 import { EquipmentScreen, FoodsScreen, InjuriesScreen, VersionsScreen } from './ProfileMore';
+import { InBodyCard, InBodyScreen } from './InBody';
 import { AddMeasurementSheet, AddWeightSheet, DateField, parseDecimal, RebuildOffer, ScreenHeader } from './shared';
 
 export function Profile({ route }: { route: string[] }) {
@@ -61,6 +62,8 @@ export function Profile({ route }: { route: string[] }) {
       return <TvaGuideScreen />;
     case 'cardio':
       return <CardioGuideScreen />;
+    case 'inbody':
+      return <InBodyScreen />;
     default:
       return <ProfileHome />;
   }
@@ -116,6 +119,7 @@ function ProfileHome() {
         </div>
       </Card>
       <VacationButton />
+      <InBodyCard />
       <CycleTile />
       <BackupReminder />
       <div className="grid-3">

@@ -344,7 +344,9 @@ export async function loadWorkout(deps: AppDeps, sessionId: string): Promise<Wor
   return deps.uow.run(async (r) => {
     const session = await r.workouts.getSession(sessionId);
     if (!session) throw new Error('Тренировка не найдена');
-    const ps = session.plannedSessionId ? await r.plannedSessions.get(session.plannedSessionId) : undefined;
+    let ps = session.plannedSessionId ? await r.plannedSessions.get(session.plannedSessionId) : undefined;
+    // A workout being edited whose calendar entry was removed when it was interrupted: without it there is no plan to add sets to.
+    if (!ps && session.plannedSessionId && session.status === 'in_progress') ps = await r.plannedSessions.restore(session.plannedSessionId);
     const version = await r.programs.getVersion(session.versionId);
     const template = version?.training.workouts.find((w) => w.key === ps?.workoutKey);
     const planned = ps ? await r.plannedSessions.listSets(ps.id) : [];
@@ -722,6 +724,8 @@ export async function reopenWorkout(deps: AppDeps, sessionId: string): Promise<v
   await deps.uow.run(async (r) => {
     const session = await r.workouts.getSession(sessionId);
     if (!session) throw new Error('Тренировка не найдена');
+    // An interrupted own workout lost its calendar entry: bring it back, it holds the planned sets.
+    if (session.plannedSessionId) await r.plannedSessions.restore(session.plannedSessionId);
     if (session.status === 'in_progress') return;
     await r.workouts.putSession({ ...session, status: 'in_progress', endedAt: session.endedAt ?? deps.clock.now() });
   });

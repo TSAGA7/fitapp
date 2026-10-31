@@ -25,6 +25,7 @@ import {
   customWorkoutIdOf,
   autoWorkoutName,
   isAdHocWorkoutKey,
+  type InBodyTest,
   isCustomWorkoutKey,
   type NutritionTargetsRecord,
   type PainEvent,
@@ -107,6 +108,8 @@ export interface Snapshot {
   userFoods: UserFood[];
   userExercises: UserExercise[];
   cardioSessions: CardioSession[];
+  /** InBody tests, newest first. */
+  inbodyTests: InBodyTest[];
   mealTemplates: MealTemplate[];
   /** Own workouts from the builder, most used first. */
   customWorkouts: CustomWorkout[];
@@ -233,6 +236,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
       customWorkouts,
       ownSchedule,
       mealTemplates: (await r.mealTemplates.listAll()).filter((t) => t.deletedAt === null).sort((a, b) => b.useCount - a.useCount || a.name.localeCompare(b.name)),
+      inbodyTests: (await r.inbodyTests.listAll()).filter((t) => t.deletedAt === null).sort((a, b) => (a.measuredOn + (a.measuredAt ?? '') < b.measuredOn + (b.measuredAt ?? '') ? 1 : -1)),
       cardioSessions: (await r.cardioSessions.listAll()).filter((c) => c.deletedAt === null).sort((a, b) => (a.date === b.date ? (a.createdAt < b.createdAt ? 1 : -1) : a.date < b.date ? 1 : -1)),
       exerciseNotes: await r.exerciseNotes.listAll(),
       foodLogs: logs,

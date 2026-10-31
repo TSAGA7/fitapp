@@ -31,6 +31,7 @@ import type {
   UserFood,
   UserExercise,
   CardioSession,
+  InBodyTest,
   MealTemplate,
   CustomWorkout,
   OwnSchedule,
@@ -90,6 +91,7 @@ export interface FoodRepo extends Repo<Food> {
 export type UserFoodRepo = Repo<UserFood>;
 export type UserExerciseRepo = Repo<UserExercise>;
 export type CardioSessionRepo = Repo<CardioSession>;
+export type InBodyTestRepo = Repo<InBodyTest>;
 export type MealTemplateRepo = Repo<MealTemplate>;
 export type CustomWorkoutRepo = Repo<CustomWorkout>;
 export type OwnScheduleRepo = Repo<OwnSchedule>;
@@ -128,6 +130,8 @@ export interface PlannedSessionRepo extends Repo<PlannedSession> {
   listByDateRange(range: DateRange): Promise<PlannedSession[]>;
   listSets(plannedSessionId: string): Promise<PlannedSet[]>;
   putSets(sets: readonly PlannedSet[]): Promise<void>;
+  /** Brings back a soft-deleted entry (an own workout opened again from the history). */
+  restore(id: string): Promise<PlannedSession | undefined>;
 }
 export interface WorkoutRepo {
   getSession(id: string): Promise<WorkoutSession | undefined>;
@@ -161,6 +165,7 @@ export interface Repositories {
   exercises: ExerciseRepo;
   userExercises: UserExerciseRepo;
   cardioSessions: CardioSessionRepo;
+  inbodyTests: InBodyTestRepo;
   exerciseNotes: ExerciseNoteRepo;
   foods: FoodRepo;
   userFoods: UserFoodRepo;

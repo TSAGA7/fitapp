@@ -142,3 +142,4 @@ export async function addWater(deps: AppDeps, date: string, deltaMl: number): Pr
     else await r.dailyLogs.put({ ...base(deps), date, waterMl: next, note: null });
   });
 }
+export * from './inbody';
