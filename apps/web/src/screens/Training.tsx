@@ -20,7 +20,7 @@ import { WorkoutBuilder } from './WorkoutBuilder';
 import { StartWorkoutButton } from './StartWorkout';
 import { isReplacedByOwn, REPLACED_BY_OWN } from '@fitapp/domain';
 
-type View = 'week' | 'month' | 'program' | 'history';
+type View = 'day' | 'week' | 'month' | 'program' | 'history';
 
 const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
@@ -72,12 +72,13 @@ export function Training({ route = [] }: { route?: string[] }) {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
-      <StartWorkoutButton />
       <div className="row between"><div className="grow"><PlaceSwitch /></div><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
       <CardioSheet open={cardioOpen} onClose={() => setCardioOpen(false)} />
       <OwnWorkoutsSheet open={ownOpen} onClose={() => setOwnOpen(false)} />
-      <Segmented<View> label="Раздел" value={view} onChange={setView} options={[{ value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
+      <Segmented<View> label="Раздел" value={view} onChange={setView} fit options={[{ value: 'day', label: 'День' }, { value: 'week', label: 'Неделя' }, { value: 'month', label: 'Месяц' }, { value: 'program', label: 'Программа' }, { value: 'history', label: 'История' }]} />
+      <StartWorkoutButton />
       {banner}
+      {view === 'day' && <p className="t-small">Тренировка на сегодня: нажми «Начать тренировку» и выбери — из программы или собрать по ходу. Начатую, но не законченную тренировку найдёшь там же.</p>}
       {view === 'week' && (own ? <OwnModeView onProgram={() => setView('program')} /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
       {view === 'month' && <MonthView own={own} />}
       {view === 'program' && (own ? <OwnPlanSection /> : <ProgramView />)}

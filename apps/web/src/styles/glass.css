@@ -402,3 +402,7 @@ input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; d
 .chip.chip-loved { display: inline-flex; align-items: center; gap: 6px; }
 .chip.chip-loved svg { color: #e11d48; }
 .chip.chip-loved[aria-pressed='true'] svg { color: #fff; }
+
+/* Many tabs: each as wide as its label, so «Программа» is not cut on a phone. */
+.segmented.fit { gap: 0; padding: 4px; }
+.segmented.fit button { flex: 1 1 auto; padding: 0 4px; font-size: 13px; text-overflow: clip; }

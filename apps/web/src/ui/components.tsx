@@ -93,9 +93,9 @@ export function Switch({ checked, onChange, label, hint }: { checked: boolean; o
   );
 }
 
-export function Segmented<T extends string>({ options, value, onChange, small, label }: { options: ReadonlyArray<{ value: T; label: string }>; value: T; onChange: (v: T) => void; small?: boolean; label?: string }) {
+export function Segmented<T extends string>({ options, value, onChange, small, fit, label }: { options: ReadonlyArray<{ value: T; label: string }>; value: T; onChange: (v: T) => void; small?: boolean; /** Each tab as wide as its label (many tabs): no label gets cut. */ fit?: boolean; label?: string }) {
   return (
-    <div className={`segmented ${small ? 'small' : ''}`} role="tablist" aria-label={label}>
+    <div className={`segmented ${small ? 'small' : ''} ${fit ? 'fit' : ''}`} role="tablist" aria-label={label}>
       {options.map((o) => (
         <button key={o.value} type="button" role="tab" aria-selected={o.value === value} onClick={() => onChange(o.value)}>
           {o.label}

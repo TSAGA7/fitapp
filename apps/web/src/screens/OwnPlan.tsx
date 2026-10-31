@@ -7,7 +7,7 @@ import { go } from '../app/router';
 import { setOwnMode } from '../app/prefs';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, Sheet, SwipeToDelete } from '../ui';
-import { BuildCartSheet } from './OwnMode';
+import { BuildCartSheet, OwnWorkoutsSheet } from './OwnMode';
 import { DateField, ScreenHeader } from './shared';
 
 const exWord = (n: number) => `${n} ${plural(n, ['упражнение', 'упражнения', 'упражнений'])}`;
@@ -58,6 +58,7 @@ const STATE_BADGE: Record<DayState, { text: string; tone: 'default' | 'neutral' 
 export function OwnPlanSection() {
   const { snapshot: s } = useData();
   const [editing, setEditing] = useState(false);
+  const [offPlan, setOffPlan] = useState(false);
   if (s.customWorkouts.length === 0) {
     return (
       <Card flat>
@@ -70,8 +71,14 @@ export function OwnPlanSection() {
       </Card>
     );
   }
-  if (!s.ownSchedule || editing) return <OwnPlanForm onDone={() => setEditing(false)} canCancel={!!s.ownSchedule} />;
-  return <OwnPlanView onEdit={() => setEditing(true)} />;
+  return (
+    <>
+      {!s.ownSchedule || editing ? <OwnPlanForm onDone={() => setEditing(false)} canCancel={!!s.ownSchedule} /> : <OwnPlanView onEdit={() => setEditing(true)} />}
+      <Button block variant="secondary" icon="play" onClick={() => setOffPlan(true)}>Тренировка не по плану</Button>
+      <Button block variant="text" icon="edit" onClick={() => go('profile/builder')}>Конструктор тренировок</Button>
+      <OwnWorkoutsSheet open={offPlan} onClose={() => setOffPlan(false)} />
+    </>
+  );
 }
 
 function OwnPlanForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean }) {
