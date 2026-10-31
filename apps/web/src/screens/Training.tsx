@@ -17,6 +17,7 @@ import { ExerciseInfoSheet } from './ExerciseInfo';
 import { AREA_LABELS } from './ProfileMore';
 import { ScreenHeader } from './shared';
 import { WorkoutBuilder } from './WorkoutBuilder';
+import { StartWorkoutBar } from './StartWorkout';
 import { isReplacedByOwn, REPLACED_BY_OWN } from '@fitapp/domain';
 
 type View = 'week' | 'month' | 'program' | 'history';
@@ -71,6 +72,7 @@ export function Training({ route = [] }: { route?: string[] }) {
   return (
     <main className="screen">
       <ScreenHeader title="Тренировки" />
+      <StartWorkoutBar />
       <div className="row between"><div className="grow"><PlaceSwitch /></div><Chip pressed={false} onClick={() => setCardioOpen(true)}>Кардио</Chip></div>
       <CardioSheet open={cardioOpen} onClose={() => setCardioOpen(false)} />
       <OwnWorkoutsSheet open={ownOpen} onClose={() => setOwnOpen(false)} />
@@ -126,14 +128,6 @@ function Week({ onOwnList }: { onOwnList: () => void }) {
       {adaptation && (
         <Card flat>
           <div className="row"><Badge tone="warning">Адаптация</Badge><span className="t-small">Первые {version.training.adaptationWeeks} нед.: запас 2–3 повторения, без отказа.</span></div>
-        </Card>
-      )}
-      {open && (
-        <Card>
-          <div className="stack">
-            <div className="t-h3">Тренировка не закончена</div>
-            <Button icon="play" onClick={() => go(`workout/${open.id}`)}>Продолжить</Button>
-          </div>
         </Card>
       )}
       <CycleTrainingHint busy={busy} onLight={nextPlanned && !open ? () => void begin(nextPlanned.id, true) : undefined} />

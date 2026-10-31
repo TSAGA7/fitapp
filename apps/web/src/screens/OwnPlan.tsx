@@ -17,7 +17,7 @@ const weekLabel = (w: number) => (w === 4 ? '4 нед · месяц' : `${w} н�
 type DayState = 'done' | 'running' | 'today' | 'missed' | 'ahead' | 'rest';
 
 /** Done / running own workouts by date, to mark the planned days. */
-function useDayStatus() {
+export function useDayStatus() {
   const { snapshot: s } = useData();
   return useMemo(() => {
     const done = new Map<string, Set<string>>();

@@ -85,6 +85,13 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       return next;
     });
   }, [view]);
+  // An empty workout («Собрать по ходу»): the exercise list opens right away, once.
+  const autoPickRef = useRef(false);
+  useEffect(() => {
+    if (!view || autoPickRef.current) return;
+    autoPickRef.current = true;
+    if (view.session.status === 'in_progress' && view.custom && view.exercises.length === 0) setPicking(true);
+  }, [view]);
   const toggle = (id: string) => setOpenIds((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else { n.add(id); setActiveId(id); } return n; });
 
   const reload = useCallback(async () => {

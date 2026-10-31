@@ -609,7 +609,7 @@ describe('app flow on the real storage', () => {
     // an empty one: exercises are added on the go; abandoned, it leaves nothing in the calendar
     const empty = await startCustomWorkout(deps, null);
     view = await loadWorkout(deps, empty);
-    expect(view.label).toBe('Своя тренировка');
+    expect(view.label).toBe('Тренировка по ходу');
     expect(view.exercises).toHaveLength(0);
     await abandonWorkout(deps, empty);
     const rows = await deps.uow.run((r) => r.plannedSessions.listByDateRange({ from: '2026-09-01', to: '2026-12-31' }));

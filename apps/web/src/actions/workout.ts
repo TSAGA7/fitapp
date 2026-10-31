@@ -376,7 +376,7 @@ export async function loadWorkout(deps: AppDeps, sessionId: string): Promise<Wor
     }
     const customId = ps ? customWorkoutIdOf(ps.workoutKey) : null;
     const custom = customId ? await r.customWorkouts.get(customId) : undefined;
-    const label = ps?.workoutKey === BODYWEIGHT_KEY ? 'Дома' : ps && isCustomWorkoutKey(ps.workoutKey) ? (custom?.name ?? 'Своя тренировка') : (template?.label ?? 'Тренировка');
+    const label = ps?.workoutKey === BODYWEIGHT_KEY ? 'Дома' : ps && isCustomWorkoutKey(ps.workoutKey) ? (custom?.name ?? (customId ? 'Своя тренировка' : exercises.length > 0 ? autoWorkoutName(exercises.map((e) => ({ name: e.exercise.name, primaryMuscles: e.exercise.primaryMuscles }))) : 'Тренировка по ходу')) : (template?.label ?? 'Тренировка');
     return { session, plannedSession: ps, version, label, custom: ps ? isCustomWorkoutKey(ps.workoutKey) : false, customWorkoutId: custom && custom.deletedAt === null ? custom.id : null, exercises };
   });
 }

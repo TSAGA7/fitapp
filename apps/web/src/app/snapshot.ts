@@ -66,6 +66,8 @@ export interface WorkoutSummary {
   customWorkoutId: string | null;
   /** Started and not finished yet. */
   inProgress: boolean;
+  /** The calendar entry it was started from (program, own or empty), if any. */
+  plannedSessionId: string | null;
 }
 export interface FoodDay {
   date: LocalDate;
@@ -173,7 +175,7 @@ export async function loadSnapshot(deps: AppDeps): Promise<Snapshot> {
         }
       }
       if (workouts.length < 120) {
-        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed', inProgress: s.status === 'in_progress', tonnageKg: Math.round(tonnage), ...ownOf(s.plannedSessionId, ses.map((e) => e.exerciseId)) });
+        workouts.push({ id: s.id, date, exercises: ses.length, sets: setCount, names: ses.map((e) => exerciseNames[e.exerciseId] ?? e.exerciseId), note: s.note, completed: s.status === 'completed', inProgress: s.status === 'in_progress', plannedSessionId: s.plannedSessionId, tonnageKg: Math.round(tonnage), ...ownOf(s.plannedSessionId, ses.map((e) => e.exerciseId)) });
       }
     }
 

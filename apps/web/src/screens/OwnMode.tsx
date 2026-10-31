@@ -68,17 +68,9 @@ export function BuildCartSheet({ open, title = 'Собрать трениров�
   );
 }
 
-/** «Своя → Неделя»: the planned own workouts and a workout off the plan. The plan is set up in «Программа». */
+/** «Своя → Неделя»: the planned own workouts (one off the plan starts from «Начать тренировку»). The plan is set up in «Программа». */
 export function OwnModeView({ onProgram }: { onProgram: () => void }) {
-  const { snapshot: s } = useData();
-  const [choosing, setChoosing] = useState(false);
-  return (
-    <>
-      <OwnWeek onProgram={onProgram} />
-      {s.customWorkouts.length > 0 && <Button block variant="secondary" icon="play" onClick={() => setChoosing(true)}>Тренировка не по плану</Button>}
-      <OwnWorkoutsSheet open={choosing} onClose={() => setChoosing(false)} />
-    </>
-  );
+  return <OwnWeek onProgram={onProgram} />;
 }
 
 /**
