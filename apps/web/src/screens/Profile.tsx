@@ -77,7 +77,7 @@ const TILES: ReadonlyArray<{ icon: IconName; name: string; to?: string }> = [
   { icon: 'gear', name: 'Тренажёры', to: 'profile/equipment' },
   { icon: 'edit', name: 'Конструктор тренировок', to: 'profile/builder' },
   { icon: 'training', name: 'Каталог упражнений', to: 'profile/exercises' },
-  { icon: 'scale', name: 'InBody', to: 'profile/inbody' },
+  { icon: 'body', name: 'InBody', to: 'profile/inbody' },
   { icon: 'leaf', name: 'Поперечная мышца', to: 'profile/tva' },
   { icon: 'heart', name: 'Кардио', to: 'profile/cardio' },
   { icon: 'shield', name: 'Болевые точки', to: 'profile/injuries' },

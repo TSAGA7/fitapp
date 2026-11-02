@@ -7,28 +7,31 @@ import { getWeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { Button, Card, EmptyState, Icon, IconButton, LineChart, ListItem, MetricCard, Segmented, type ChartSeries } from '../ui';
 import { AddMeasurementSheet, AddWeightSheet, ScreenHeader } from './shared';
+import { InBodyTab } from './InBodyProgress';
 
 const NBSP = '\u00a0';
-type Tab = 'weight' | 'measurements' | 'strength' | 'analytics';
+type Tab = 'weight' | 'measurements' | 'strength' | 'inbody' | 'analytics';
 const TABS: ReadonlyArray<{ value: Tab; label: string }> = [
   { value: 'weight', label: 'Вес' },
   { value: 'measurements', label: 'Замеры' },
   { value: 'strength', label: 'Сила' },
+  { value: 'inbody', label: 'InBody' },
   { value: 'analytics', label: 'Аналитика' },
 ];
 
 export function Progress({ route }: { route: string[] }) {
-  const tab: Tab = route[1] === 'measurements' || route[1] === 'strength' || route[1] === 'analytics' ? route[1] : 'weight';
+  const tab: Tab = route[1] === 'measurements' || route[1] === 'strength' || route[1] === 'inbody' || route[1] === 'analytics' ? route[1] : 'weight';
   const detail = route[2] ? decodeURIComponent(route[2]) : null;
   if (tab === 'measurements' && detail) return <MeasurementDetail type={detail as MetricType} />;
   if (tab === 'strength' && detail) return <StrengthDetail exerciseId={detail} />;
   return (
     <main className="screen">
       <ScreenHeader title="Прогресс" />
-      <Segmented options={TABS} value={tab} onChange={(v) => go(`progress/${v}`)} label="Раздел прогресса" />
+      <Segmented fit options={TABS} value={tab} onChange={(v) => go(`progress/${v}`)} label="Раздел прогресса" />
       {tab === 'weight' && <WeightTab />}
       {tab === 'measurements' && <MeasurementsTab />}
       {tab === 'strength' && <StrengthTab />}
+      {tab === 'inbody' && <InBodyTab />}
       {tab === 'analytics' && <AnalyticsTab />}
     </main>
   );

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { InBodyTest } from '../../model/inbody';
 import { InBodyQrError, parseInBodyQr } from './parseQr';
+import { analyzeInBody } from './analyze';
 
 // The QR code of a real InBody570 sheet (31.10.2026 23:35): every value below is printed on it.
 const QR =
@@ -49,5 +50,28 @@ describe('InBody QR', () => {
   it('refuses a code it cannot read instead of saving wrong numbers', () => {
     expect(() => parseInBodyQr('https://example.com')).toThrow(InBodyQrError);
     expect(() => parseInBodyQr(QR.replace('0811', '0911'))).toThrow(InBodyQrError);
+  });
+});
+
+describe('InBody analysis', () => {
+  const base = parseInBodyQr(QR);
+  it('a single test: the state against the norms of the sheet', () => {
+    const a = analyzeInBody([base], 'male', 1865)!;
+    const ids = a.findings.map((f) => `${f.id}:${f.tone}`);
+    expect(ids[0]).toBe('trend:info'); // first test
+    expect(ids).toContain('fat:warn'); // 22.1% for a man: a bit over 20
+    expect(ids).toContain('visceral:warn'); // level 8
+    expect(ids).toContain('whr:warn'); // 1.00
+    expect(ids).toContain('trunkfat:warn'); // 221%
+    expect(ids).toContain('legs:warn'); // arms 111%, legs 99%
+    expect(ids).toContain('water:good'); // 0.367
+    expect(a.findings.find((f) => f.id === 'fat')!.text).toContain('1,7'); // 17.9 − 20% × 81.1
+  });
+  it('a later test: the trend between tests comes first', () => {
+    const later = { ...base, measuredOn: '2026-11-28', weightKg: 79.8, bodyFatKg: 16.2, bodyFatPct: 20.3, skeletalMuscleKg: 36.7 };
+    const a = analyzeInBody([later, base], 'male', 1600)!;
+    expect(a.sincePrev).toMatchObject({ days: 28, muscleKg: 0.4, fatKg: -1.7 });
+    expect(a.findings[0]).toMatchObject({ id: 'trend', tone: 'good', title: 'Рекомпозиция идёт' });
+    expect(a.findings.find((f) => f.id === 'bmr')!.tone).toBe('warn'); // 1600 < 1735
   });
 });

@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { addDays, ownScheduleDays, weekdayOf, type PlannedSession } from '@fitapp/domain';
-import { startBodyweightWorkout, startCustomWorkout, startWorkout } from '../actions';
+import { addExerciseToSession, startBodyweightWorkout, startCustomWorkout, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { useBodyweightMode, useHomeEquipment, useOwnMode } from '../app/prefs';
 import { useCommand } from '../app/useCommand';
 import { Button, Icon, ListItem, Sheet } from '../ui';
+import { ExercisePickerSheet } from './ExercisePicker';
 import { OwnWorkoutsSheet } from './OwnMode';
 import { useDayStatus } from './OwnPlan';
 
@@ -166,6 +167,55 @@ function FromPlanSheet({ open, onBack, onClose }: { open: boolean; onBack: () =>
         </div>
       </Sheet>
       <OwnWorkoutsSheet open={ownList} onClose={() => { setOwnList(false); onClose(); }} />
+    </>
+  );
+}
+
+/**
+ * «Тренировки → Сегодня» in «Своя»: a big «+». Tap it, pick the first exercise, and the workout starts with it;
+ * more exercises are added inside, «Завершить тренировку» at the end. Workouts left unfinished are listed above.
+ */
+export function TodayPlus() {
+  const { snapshot: s } = useData();
+  const { run, banner, busy } = useCommand();
+  const [picking, setPicking] = useState(false);
+  const running = s.workouts.filter((w) => w.inProgress);
+  const start = async (exerciseId: string) => {
+    if (busy) return;
+    const id = await run(async (d) => {
+      const sid = await startCustomWorkout(d, null);
+      await addExerciseToSession(d, { sessionId: sid, exerciseId, sets: 1 });
+      return sid;
+    });
+    if (id) {
+      setPicking(false);
+      go(`workout/${id}`);
+    }
+  };
+  return (
+    <>
+      {banner}
+      {running.length > 0 && (
+        <div className="list">
+          {running.map((w) => (
+            <ListItem
+              key={w.id}
+              icon="play"
+              lime
+              title={w.title && w.exercises > 0 ? w.title : 'Тренировка не закончена'}
+              subtitle={`${w.date === s.today ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(w.date)]}, ${formatDateShort(w.date)}`} · ${w.exercises === 0 ? 'упражнений пока нет' : exWord(w.exercises)}`}
+              trailing={<span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>Продолжить</span>}
+              onClick={() => go(`workout/${w.id}`)}
+            />
+          ))}
+        </div>
+      )}
+      <div className="today-plus">
+        <button type="button" className="plus-ring" aria-label="Начать тренировку: выбрать упражнение" disabled={busy} onClick={() => setPicking(true)}>
+          <Icon name="plus" size={64} strokeWidth={2.4} />
+        </button>
+      </div>
+      <ExercisePickerSheet open={picking} title="Первое упражнение" onPick={(e) => void start(e.id)} onClose={() => setPicking(false)} />
     </>
   );
 }
