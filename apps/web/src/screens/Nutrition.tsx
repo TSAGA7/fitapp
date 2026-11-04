@@ -22,6 +22,7 @@ import {
   setManualNutrition,
   applyDietMode,
   regenerateDay,
+  buildDayMenu,
   regenerateMeal,
   removePlannedItem,
   repairDay,
@@ -346,8 +347,8 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
         );
       })}
 
-      {items.length === 0 && !isPast && <Button block icon="check" disabled={busy} onClick={() => void run((d) => generateWeekPlan(d, startOfWeek(date, s.profile?.weekStartsOn ?? 'monday'), variation()))}>Составить рацион на неделю</Button>}
       {!isPast && <Button variant="secondary" block icon="scan" onClick={() => setSlotForAdd({ slot: 'snack', scan: true })}>Сканировать штрих-код</Button>}
+      {items.length === 0 && !isPast && <Button block icon="check" disabled={busy} onClick={() => void run((d) => buildDayMenu(d, date, variation()))}>Составить рацион на день</Button>}
       {!isPast && items.length > 0 && (
         <Button variant="secondary" block icon="history" disabled={busy} onClick={() => void run((d) => regenerateDay(d, date, variation()))}>Переделать день</Button>
       )}

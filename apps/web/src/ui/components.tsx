@@ -129,7 +129,16 @@ export function TextField({ label, hint, error, unit, labelIcon, className = '',
         {(clearable || unit) && (
           <span className="input-trail">
             {clearable && (
-              <button type="button" className="input-clear" aria-label={`Очистить: ${label}`} onMouseDown={(e) => e.preventDefault()} onClick={() => clearInput(ref.current)}>
+              <button
+                type="button"
+                className="input-clear"
+                aria-label={`Очистить: ${label}`}
+                // On iPhone with the keyboard open, the tap first closed the keyboard, the layout jumped and the click was lost:
+                // clear right on press (keeps the focus in the field), the click only serves the keyboard / screen reader.
+                onPointerDown={(e) => { e.preventDefault(); clearInput(ref.current); }}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => { if (e.detail === 0) clearInput(ref.current); }}
+              >
                 <Icon name="close" size={14} strokeWidth={2.6} />
               </button>
             )}

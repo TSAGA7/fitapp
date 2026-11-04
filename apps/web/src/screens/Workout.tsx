@@ -9,7 +9,6 @@ import { getRestTimer, getWeightUnit, useRestTimer, setWeightUnit, useWeightUnit
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, StepperField, TextField, WheelPicker } from '../ui';
-import { ThemeSheet } from './ThemePicker';
 import { ExerciseInfoSheet } from './ExerciseInfo';
 import { ExercisePickerSheet } from './ExercisePicker';
 import { TvaGuideBody } from './TvaGuide';
@@ -47,7 +46,6 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const [celebrate, setCelebrate] = useState(false);
   const [picking, setPicking] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
-  const [themeOpen, setThemeOpen] = useState(false);
   // The bottom bar («Перерыв») belongs to one open exercise: the one touched last, otherwise the first open one.
   const [dock, setDock] = useState<HTMLDivElement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -74,16 +72,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       // Opened (or reopened after a restart): all exercises folded, the user taps the one to do.
       return;
     }
-    const justDone = view.exercises.filter((e) => finished.get(e.se.id) && prev.get(e.se.id) === false);
-    if (justDone.length === 0) return;
-    setOpenIds((cur) => {
-      const next = new Set(cur);
-      for (const e of justDone) next.delete(e.se.id);
-      if (next.size > 0) return next;
-      const after = view.exercises.slice(view.exercises.indexOf(justDone[justDone.length - 1] as WorkoutExerciseView) + 1).find((e) => !finished.get(e.se.id)) ?? view.exercises.find((e) => !finished.get(e.se.id));
-      if (after) next.add(after.se.id);
-      return next;
-    });
+    // A finished exercise stays open: recording a set never folds the card, the user folds it himself.
   }, [view]);
   // An empty workout («Собрать по ходу»): the exercise list opens right away, once.
   const autoPickRef = useRef(false);
@@ -152,7 +141,6 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       <header className="wk-top">
         <IconButton icon="chevronLeft" label="К тренировкам" className="wk-round" onClick={() => go('training')} />
         <div className="wk-top-end">
-          <IconButton icon="palette" label="Оформление" className="wk-round" onClick={() => setThemeOpen(true)} />
           {readOnly
             ? <span className="wk-pill">{view.session.status === 'completed' ? 'Завершена' : 'Прервана'}</span>
             : editing ? <button type="button" className="wk-pill" aria-haspopup="dialog" onClick={() => { setConfirmWipe(false); setEditMenu(true); }}>Правка</button> : <span className="wk-pill" aria-label={`Выполнено ${doneSets} из ${totalSets} подходов`}><b>{doneSets}</b>/{totalSets} подх.</span>}
@@ -228,7 +216,6 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         onClose={() => setPicking(false)}
       />
       {rest !== null && <RestPanel rest={rest} onChange={setRest} onDone={() => setRest(null)} />}
-      <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />
       <Sheet open={exPick} title="Упражнения" onClose={() => { setExPick(false); setConfirmDel(null); }}>
         <div className="list">
           {view.exercises.map((e, i) => {
@@ -403,7 +390,7 @@ function FinishSheet({ open, busy, onClose, doneSets, totalSets, onFinish, onDis
         <p className="t-body">Выполнено {doneSets} из {totalSets} подходов. Следующий вес рассчитается по фактическим данным.</p>
         <TextField label="Заметка (необязательно)" value={note} onChange={(e) => setNote(e.target.value)} />
         <Button block icon="check" disabled={busy} onClick={() => void onFinish(note.trim() || null)}>Записать в журнал</Button>
-        <Button block variant="text" disabled={busy} onClick={() => void onDiscard()}>Без сохранения результатов</Button>
+        <Button block variant="secondary" disabled={busy} onClick={() => void onDiscard()}>Без сохранения результатов</Button>
       </div>
     </Sheet>
   );

@@ -1,4 +1,4 @@
-import { ThemeGrid } from './ThemePicker';
+import { ThemeSheet } from './ThemePicker';
 import { ConstructorScreen } from './OwnPlan';
 import { ChangelogSheet } from './WhatsNew';
 import { WorkoutBuilder } from './WorkoutBuilder';
@@ -93,6 +93,7 @@ function ProfileHome() {
   const own = goal?.targetWeightKg ?? null;
   const recommended = goal && own === null && s.weight.currentKg !== null ? recommendTargetWeight({ sex: p.sex, heightCm: p.heightCm, weightKg: s.weight.currentKg, goal: goal.type, waistCm: [...s.metrics].filter((m) => m.type === 'waist' && m.deletedAt === null).sort((a, b) => (a.measuredOn < b.measuredOn ? 1 : -1))[0]?.value ?? null }).kg : null;
   const target = own ?? recommended;
+  const [themeOpen, setThemeOpen] = useState(false);
   return (
     <main className="screen">
       <ScreenHeader title="Профиль" />
@@ -103,9 +104,11 @@ function ProfileHome() {
             <div className="t-h2">{name || 'Мой профиль'}</div>
             <div className="t-caption">{age} {plural(age, ['год', 'года', 'лет'])} · {fmt(p.heightCm, 0)} см{s.weight.currentKg !== null ? ` · ${kg(s.weight.currentKg)}` : ''}</div>
           </div>
+          <IconButton icon="palette" label="Оформление" onClick={() => setThemeOpen(true)} />
           <IconButton icon="gear" label="Настройки" onClick={() => go('profile/settings')} />
         </div>
       </Card>
+      <ThemeSheet open={themeOpen} onClose={() => setThemeOpen(false)} />
       <Card onClick={() => go('profile/goals')}>
         <div className="goal-card">
           <span className="li-icon lime"><Icon name="target" /></span>
@@ -262,16 +265,6 @@ function BackupReminder() {
   );
 }
 
-/** Appearance: follow the phone (day / night) or pick a theme. Applied at once, no need to press "Сохранить". */
-function ThemePicker() {
-  return (
-    <div className="field">
-      <span className="lbl">Оформление</span>
-      <ThemeGrid />
-    </div>
-  );
-}
-
 /** How an open workout shows its sets. */
 function LayoutPicker() {
   const layout = useWorkoutLayout();
@@ -326,7 +319,6 @@ function SettingsScreen() {
     <main className="screen no-nav">
       <ScreenHeader title="Настройки" back="profile" />
       <div className="stack-lg">
-        <ThemePicker />
         <LayoutPicker />
         <ActivityBarPicker />
         <RestTimerPicker />

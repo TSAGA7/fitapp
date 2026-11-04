@@ -72,8 +72,13 @@ function WeightTab() {
   return (
     <>
       <Card>
-        <div className="t-num">{wnum(w.currentKg)}<span className="t-h3 muted"> {wUnit()}</span></div>
-        <div className={`t-caption tone-${tone}`} style={{ marginTop: 2 }}>{delta}</div>
+        <div className="row between" style={{ alignItems: 'flex-start' }}>
+          <div>
+            <div className="t-num">{wnum(w.currentKg)}<span className="t-h3 muted"> {wUnit()}</span></div>
+            <div className={`t-caption tone-${tone}`} style={{ marginTop: 2 }}>{delta}</div>
+          </div>
+          <Button size="sm" icon="plus" style={{ flex: 'none', whiteSpace: 'nowrap' }} onClick={() => setOpen(true)}>Записать вес</Button>
+        </div>
         <div className="range" style={{ margin: '12px 0 4px' }} role="group" aria-label="Период графика">
           {([[30, '30 дн'], [90, '90 дн'], [0, 'Всё']] as Array<[Range, string]>).map(([v, label]) => (
             <button key={v} type="button" aria-pressed={range === v} onClick={() => setRange(v)}>{label}</button>
@@ -88,7 +93,6 @@ function WeightTab() {
         <MetricCard icon="trendDown" label="Темп в неделю" value={w.rateKgPerWeek !== null && w.rateReliable ? signedKg(w.rateKgPerWeek) : '—'} delta={!w.rateReliable ? 'Нужно 4+ записи за неделю' : undefined} />
         <MetricCard icon="calendar" label="Записей" value={String(w.count)} delta={w.asOf ? `Последняя ${formatDay(w.asOf)}` : undefined} />
       </div>
-      <Button block icon="plus" onClick={() => setOpen(true)}>Записать вес</Button>
       <div className="section-title"><h2 className="t-h3">Последние записи</h2></div>
       <Card flat>
         {history.map((m) => (

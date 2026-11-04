@@ -87,7 +87,7 @@ export function Training({ route = [] }: { route?: string[] }) {
       {banner}
       <SwipePager index={VIEWS.indexOf(view)} count={VIEWS.length} onIndex={(i) => setView(VIEWS[i] as View)}>
         {view === 'day' && own && <TodayPlus />}
-        {view !== 'history' && !(view === 'day' && own) && <StartWorkoutButton />}
+        {view === 'day' && !own && <StartWorkoutButton />}
         {view === 'week' && (own ? <OwnModeView onProgram={() => setView('program')} /> : bodyweight ? <BodyweightCard /> : <Week onOwnList={() => setOwnOpen(true)} />)}
         {view === 'month' && <MonthView own={own} />}
         {view === 'program' && (own ? <OwnPlanSection /> : <ProgramView />)}

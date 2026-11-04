@@ -214,6 +214,14 @@ export async function applyDietMode(deps: AppDeps, variation: number): Promise<v
   });
 }
 
+/**
+ * «Составить рацион на день»: builds one day. What is already logged that day (eaten from the plan or added by hand)
+ * counts against the daily КБЖУ, so the meals still to eat are fitted to what remains; meals with own food stay as they are.
+ */
+export async function buildDayMenu(deps: AppDeps, date: string, variation: number): Promise<void> {
+  await deps.uow.run(async (r) => fillDay(r, deps, await context(r, deps), date, variation));
+}
+
 export async function regenerateDay(deps: AppDeps, date: string, variation: number): Promise<void> {
   await deps.uow.run(async (r) => fillDay(r, deps, await context(r, deps), date, variation, undefined, undefined, 'redo'));
 }
