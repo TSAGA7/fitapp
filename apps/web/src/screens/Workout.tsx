@@ -165,6 +165,17 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         {!readOnly && totalSets > 0 && <p className="wk-sub">{doneSets === 0 ? `${view.exercises.length} ${plural(view.exercises.length, ['упражнение', 'упражнения', 'упражнений'])} · ${totalSets} ${plural(totalSets, ['подход', 'подхода', 'подходов'])}` : doneSets >= totalSets ? 'Все запланированные подходы сделаны' : `Сделано ${doneSets} из ${totalSets} подходов`}</p>}
         {!readOnly && <ProgressBar value={totalSets > 0 ? doneSets / totalSets : 0} label="Прогресс тренировки" />}
       </div>
+      {editing && (
+        <div className="wk-finish">
+          <Button block icon="check" disabled={busy} onClick={async () => { if (await ok((d) => finishWorkout(d, sessionId, view.session.note))) go('training'); }}>Сохранить изменения</Button>
+        </div>
+      )}
+      {!readOnly && !editing && (
+        <div className="wk-finish">
+          <Button block icon="check" onClick={() => setFinishing(true)}>Завершить тренировку</Button>
+          <Button block variant="text" disabled={busy} onClick={async () => { if (await ok((d) => abandonWorkout(d, sessionId))) go('training'); }}>Прервать без сохранения итогов</Button>
+        </div>
+      )}
       {barOn && !readOnly && <ActivityBar view={view} doneSets={doneSets} totalSets={totalSets} />}
       {readOnly && view.session.status === 'completed' && <WorkoutSummaryCard sessionId={sessionId} />}
       {banner}
@@ -187,17 +198,6 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       ))}
 
       {!readOnly && !focusMode && <Button block variant="secondary" icon="plus" onClick={() => setPicking(true)}>Добавить упражнение</Button>}
-      {editing && (
-        <div className="wk-finish">
-          <Button block icon="check" disabled={busy} onClick={async () => { if (await ok((d) => finishWorkout(d, sessionId, view.session.note))) go('training'); }}>Сохранить изменения</Button>
-        </div>
-      )}
-      {!readOnly && !editing && (
-        <div className="wk-finish">
-          <Button block icon="check" onClick={() => setFinishing(true)}>Завершить тренировку</Button>
-          <Button block variant="text" disabled={busy} onClick={async () => { if (await ok((d) => abandonWorkout(d, sessionId))) go('training'); }}>Прервать без сохранения итогов</Button>
-        </div>
-      )}
       {readOnly && view.session.status === 'completed' && doneSets > 0 && <Button block variant="secondary" icon="history" onClick={() => setSaveOpen(true)}>Сохранить как свою, чтобы повторять</Button>}
       {readOnly && <Button block icon="edit" disabled={busy} onClick={async () => { if (await ok((d) => reopenWorkout(d, sessionId))) await reload(); }}>Редактировать</Button>}
       {readOnly && <Button block variant="secondary" onClick={() => go('training')}>К тренировкам</Button>}
