@@ -52,12 +52,11 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const [dock, setDock] = useState<HTMLDivElement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const barOn = useActivityBar();
-  const layout = useWorkoutLayout();
   const [exPick, setExPick] = useState(false);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
   const [editMenu, setEditMenu] = useState(false);
   const [confirmWipe, setConfirmWipe] = useState(false);
-  // Exercise blocks: any number can be open at once. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
+  // Exercise blocks: one open at a time. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const settledRef = useRef<Map<string, boolean> | null>(null);
   useEffect(() => {
@@ -82,6 +81,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
     setOpenIds((cur) => {
       const next = new Set(cur);
       for (const e of justDone) next.delete(e.se.id);
+      if (next.size > 0) return next;
       const after = view.exercises.slice(view.exercises.indexOf(justDone[justDone.length - 1] as WorkoutExerciseView) + 1).find((e) => !finished.get(e.se.id)) ?? view.exercises.find((e) => !finished.get(e.se.id));
       if (after) next.add(after.se.id);
       return next;
@@ -94,7 +94,15 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
     autoPickRef.current = true;
     if (view.session.status === 'in_progress' && view.custom && view.exercises.length === 0) setPicking(true);
   }, [view]);
-  const toggle = (id: string) => setOpenIds((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else { n.add(id); setActiveId(id); } return n; });
+  // One card open at a time: tapping an exercise opens its sets and folds the rest.
+  const toggle = (id: string) => {
+    const opening = !openIds.has(id);
+    setOpenIds(opening ? new Set([id]) : new Set());
+    if (opening) {
+      setActiveId(id);
+      setTimeout(() => document.getElementById(`ex-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+    }
+  };
 
   const reload = useCallback(async () => {
     try {
@@ -116,7 +124,8 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   // A workout from the history opened again to correct it: it already has a finish time.
   const editing = !readOnly && view.session.endedAt !== null;
   const openList = view.exercises.filter((e) => openIds.has(e.se.id)).map((e) => e.se.id);
-  const focusMode = layout === 'focus' && view.exercises.length > 0;
+  // Exercises are always a column of cards; «Фокус» only turns the sets inside a card into slides.
+  const focusMode = false as boolean;
   const focusEv = focusMode ? (view.exercises.find((e) => e.se.id === (activeId && openIds.has(activeId) ? activeId : openList[0])) ?? view.exercises.find((e) => !(e.plan.length > 0 && settledSets(e) >= e.plan.length)) ?? view.exercises[0]) : undefined;
   const dockOwner = readOnly ? null : focusEv ? focusEv.se.id : activeId && openIds.has(activeId) ? activeId : (openList[0] ?? null);
   const pickExercise = (id: string) => { setOpenIds(new Set([id])); setActiveId(id); setExPick(false); window.scrollTo({ top: 0 }); };
@@ -217,7 +226,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
           const id = await run((d) => addExerciseToSession(d, { sessionId, exerciseId: e.id, sets: view.custom ? 1 : undefined }));
           if (id) {
             await reload();
-            setOpenIds((cur) => (focusMode ? new Set([id]) : new Set([...cur, id])));
+            setOpenIds(new Set([id]));
             if (focusMode) { setActiveId(id); setPicking(false); }
             if (view.custom) {
               setPicking(false);
