@@ -22,29 +22,19 @@ import { isReplacedByOwn, REPLACED_BY_OWN } from '@fitapp/domain';
 
 type View = 'day' | 'week' | 'month' | 'program' | 'history';
 const VIEWS: readonly View[] = ['day', 'week', 'month', 'program', 'history'];
-const VIEW_KEY = 'fitapp.trainingView';
+let lastView: View = 'day';
 
 const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
 export function Training({ route = [] }: { route?: string[] }) {
   const { snapshot: s } = useData();
   const { run, banner, busy } = useCommand();
-  // The open section is remembered while the app runs: «Назад» from a workout returns to the same one (e.g. «История»).
-  const [view, setViewState] = useState<View>(() => {
-    try {
-      const v = sessionStorage.getItem(VIEW_KEY) as View | null;
-      return v && VIEWS.includes(v) ? v : 'week';
-    } catch {
-      return 'week';
-    }
-  });
+  // The open section is remembered only while the app runs (in memory): «Назад» from a workout returns to the same one,
+  // and a fresh start of the app always opens «Сегодня». sessionStorage survives an app restart on iOS, so it is not used.
+  const [view, setViewState] = useState<View>(() => lastView);
   const setView = (v: View) => {
+    lastView = v;
     setViewState(v);
-    try {
-      sessionStorage.setItem(VIEW_KEY, v);
-    } catch {
-      /* private mode: not remembered */
-    }
   };
   const bodyweight = useBodyweightMode();
   const own = useOwnMode();

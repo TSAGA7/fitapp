@@ -5,7 +5,7 @@ import { abandonWorkout, deleteWorkout, reopenWorkout, addExerciseToSession, add
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt, fromLift, liftUnit, plural, toLift } from '../app/format';
-import { getRestTimer, getWeightUnit, setWeightUnit, useWeightUnit, useWorkoutLayout, type WeightUnit } from '../app/prefs';
+import { getRestTimer, getWeightUnit, useRestTimer, setWeightUnit, useWeightUnit, useWorkoutLayout, type WeightUnit } from '../app/prefs';
 import { go } from '../app/router';
 import { useCommand } from '../app/useCommand';
 import { Badge, Button, Card, Chip, EmptyState, Icon, IconButton, ListItem, ProgressBar, Sheet, StepperField, TextField, WheelPicker } from '../ui';
@@ -71,9 +71,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         setTimeout(() => document.getElementById(`ex-${focus}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
         return;
       }
-      // Open the first exercise that is not done yet (in an own workout: its planned sets not all logged), from the top.
-      const first = view.exercises.find((e) => !finished.get(e.se.id)) ?? view.exercises[0];
-      if (first) setOpenIds(new Set([first.se.id]));
+      // Opened (or reopened after a restart): all exercises folded, the user taps the one to do.
       return;
     }
     const justDone = view.exercises.filter((e) => finished.get(e.se.id) && prev.get(e.se.id) === false);
@@ -161,21 +159,14 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         </div>
       </header>
       <div className="wk-hero">
-        <h1 className="wk-title">{view.label}</h1>
+        <div className="wk-title-row">
+          <h1 className="wk-title">{view.label}</h1>
+          {editing && <Button size="sm" icon="check" className="wk-finish-btn" disabled={busy} onClick={async () => { if (await ok((d) => finishWorkout(d, sessionId, view.session.note))) go('training'); }}>Сохранить</Button>}
+          {!readOnly && !editing && <Button size="sm" icon="check" className="wk-finish-btn" onClick={() => setFinishing(true)}>Завершить</Button>}
+        </div>
         {!readOnly && totalSets > 0 && <p className="wk-sub">{doneSets === 0 ? `${view.exercises.length} ${plural(view.exercises.length, ['упражнение', 'упражнения', 'упражнений'])} · ${totalSets} ${plural(totalSets, ['подход', 'подхода', 'подходов'])}` : doneSets >= totalSets ? 'Все запланированные подходы сделаны' : `Сделано ${doneSets} из ${totalSets} подходов`}</p>}
         {!readOnly && <ProgressBar value={totalSets > 0 ? doneSets / totalSets : 0} label="Прогресс тренировки" />}
       </div>
-      {editing && (
-        <div className="wk-finish">
-          <Button block icon="check" disabled={busy} onClick={async () => { if (await ok((d) => finishWorkout(d, sessionId, view.session.note))) go('training'); }}>Сохранить изменения</Button>
-        </div>
-      )}
-      {!readOnly && !editing && (
-        <div className="wk-finish">
-          <Button block icon="check" onClick={() => setFinishing(true)}>Завершить тренировку</Button>
-          <Button block variant="text" disabled={busy} onClick={async () => { if (await ok((d) => abandonWorkout(d, sessionId))) go('training'); }}>Прервать без сохранения итогов</Button>
-        </div>
-      )}
       {barOn && !readOnly && <ActivityBar view={view} doneSets={doneSets} totalSets={totalSets} />}
       {readOnly && view.session.status === 'completed' && <WorkoutSummaryCard sessionId={sessionId} />}
       {banner}
@@ -268,7 +259,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
         </div>
       </Sheet>
       {!readOnly && <div className="wk-dock" ref={setDock} />}
-      <FinishSheet open={finishing} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} />
+      <FinishSheet open={finishing} busy={busy} onClose={() => setFinishing(false)} doneSets={doneSets} totalSets={totalSets} onFinish={async (note) => { if (await ok((d) => finishWorkout(d, sessionId, note))) { setFinishing(false); setRest(null); setCelebrate(true); } }} onDiscard={async () => { if (await ok((d) => abandonWorkout(d, sessionId))) { setFinishing(false); setRest(null); go('training'); } }} />
     </main>
   );
 }
@@ -403,14 +394,16 @@ function RestPanel({ rest, onChange, onDone }: { rest: RestState; onChange: (r: 
   );
 }
 
-function FinishSheet({ open, onClose, doneSets, totalSets, onFinish }: { open: boolean; onClose: () => void; doneSets: number; totalSets: number; onFinish: (note: string | null) => Promise<void> }) {
+/** «Завершить»: a dialog in the middle of the screen — record the workout to the journal, or close it without the results. */
+function FinishSheet({ open, busy, onClose, doneSets, totalSets, onFinish, onDiscard }: { open: boolean; busy: boolean; onClose: () => void; doneSets: number; totalSets: number; onFinish: (note: string | null) => Promise<void>; onDiscard: () => Promise<void> }) {
   const [note, setNote] = useState('');
   return (
-    <Sheet open={open} title="Завершить тренировку" onClose={onClose}>
+    <Sheet open={open} center title="Завершить тренировку?" onClose={onClose}>
       <div className="stack">
-        <p className="t-body">Выполнено {doneSets} из {totalSets} рабочих подходов. Следующий вес рассчитается по фактическим данным, а не по плану.</p>
+        <p className="t-body">Выполнено {doneSets} из {totalSets} подходов. Следующий вес рассчитается по фактическим данным.</p>
         <TextField label="Заметка (необязательно)" value={note} onChange={(e) => setNote(e.target.value)} />
-        <Button block onClick={() => void onFinish(note.trim() || null)}>Сохранить и завершить</Button>
+        <Button block icon="check" disabled={busy} onClick={() => void onFinish(note.trim() || null)}>Записать в журнал</Button>
+        <Button block variant="text" disabled={busy} onClick={() => void onDiscard()}>Без сохранения результатов</Button>
       </div>
     </Sheet>
   );
@@ -542,11 +535,22 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
   const base = { sessionExerciseId: se.id, exerciseId: exercise.id, variantKey: se.variantKey, contextKey, plannedSetId: target?.id ?? null };
 
   /** Records the set; in a journal a set after the last planned one first becomes a planned set of its own. */
-  const record = async (d: Parameters<Parameters<CardProps['mutate']>[0]>[0], rest: number | null) => {
+  const record = async (d: Parameters<Parameters<CardProps['mutate']>[0]>[0], rest: number | null, rirV: number | null = rir) => {
     const extra = journal === true && nextNo > plan.length;
     if (extra) await addSetToExercise(d, se.id);
-    await logSet(d, { ...base, plannedSetId: extra ? null : base.plannedSetId, setNo: nextNo, weightKg: w, reps: r, rir, restSec: rest });
+    await logSet(d, { ...base, plannedSetId: extra ? null : base.plannedSetId, setNo: nextNo, weightKg: w, reps: r, rir: rirV, restSec: rest });
   };
+  // Rest timer off in the settings: no «Перерыв» bar — the set is recorded the moment RIR is chosen.
+  const timerOn = useRestTimer();
+  const pickRir = (v: number) => {
+    setRir(v);
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    const valid = !readOnly && !busy && Number.isFinite(r) && r >= 1 && (weight.trim() === '' || (w !== null && Number.isFinite(w) && w >= 0));
+    if (!timerOn && hasCurrentRef.current && valid) void mutate((d) => record(d, null, v));
+  };
+  const hasCurrentRef = useRef(false);
+  const rirPress = useRef<{ x: number; y: number } | null>(null);
+  const rirTapped = useRef(false);
   const [restOverride, setRestOverride] = useState<number | null>(null);
   useEffect(() => setRestOverride(null), [nextNo]);
   const timed = exercise.progressionType === 'time';
@@ -579,6 +583,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
 
   const factText = (l: (typeof working)[number]): string => `${l.actualWeightKg === null ? '' : `${fmt(toLift(l.actualWeightKg), 2)} × `}${l.actualReps}${unit} · RIR ${l.actualRir}`;
   const hasCurrent = !readOnly && nextNo <= plan.length;
+  hasCurrentRef.current = hasCurrent || (journal === true && !readOnly);
   const layout = useWorkoutLayout();
   // Sets are swiped only while there is a set to do; a finished exercise is easier to read as a list.
   const carousel = layout === 'focus' && hasCurrent;
@@ -632,10 +637,25 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
       />
       <div className="rir-block">
         <div className="t-caption">Сколько повторений ещё мог бы сделать (RIR)</div>
+        {/* With the keyboard open, the first tap only closed it and the layout jumped, so the chip never got its click.
+            The choice is taken on pointer-up of the same chip (touch keeps the pointer captured), a scroll cancels it. */}
         <div className="chips wk-rir" role="group" aria-label="RIR">
-          {RIR_OPTIONS.map((o) => <Chip key={o.value} pressed={rir === o.value} onClick={() => setRir(o.value)}>{o.label}</Chip>)}
+          {RIR_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              className="chip"
+              aria-pressed={rir === o.value}
+              onPointerDown={(e) => { rirPress.current = { x: e.clientX, y: e.clientY }; }}
+              onPointerCancel={() => { rirPress.current = null; }}
+              onPointerUp={(e) => { const p = rirPress.current; rirPress.current = null; if (p && Math.abs(e.clientX - p.x) < 12 && Math.abs(e.clientY - p.y) < 12) { e.preventDefault(); rirTapped.current = true; setTimeout(() => { rirTapped.current = false; }, 700); pickRir(o.value); } }}
+              onClick={() => { if (rirTapped.current) { rirTapped.current = false; return; } pickRir(o.value); }}
+            >
+              {o.label}
+            </button>
+          ))}
         </div>
-        {rir === null && <p className="t-small">Выбери запас — без него подход не записать.</p>}
+        {rir === null && <p className="t-small">{timerOn ? 'Выбери запас — без него подход не записать.' : 'Выбери запас — подход запишется сразу.'}</p>}
       </div>
     </div>
   );
@@ -665,10 +685,12 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
             <div className="wk-stat wide"><span className="wk-stat-l">{timed ? 'Подх. × сек' : 'Подх. × повт'}</span><span className="wk-stat-v">{plan.length} × {target.repMin === target.repMax ? target.repMin : `${target.repMin}–${target.repMax}`}</span></div>
             <div className="wk-stat"><span className="wk-stat-l">Вес</span><span className="wk-stat-v">{target.targetWeightKg === null || exercise.loadUnit === 'seconds' ? (exercise.loadUnit === 'bodyweight' ? 'свой' : '—') : `${fmt(toLift(target.targetWeightKg), 2)}`}<small>{target.targetWeightKg !== null && exercise.loadUnit !== 'seconds' ? ` ${liftUnit()}` : ''}</small></span></div>
             <div className="wk-stat"><span className="wk-stat-l">Запас</span><span className="wk-stat-v">{target.targetRir.min}–{target.targetRir.max}</span></div>
-            <button type="button" className="wk-stat edit" aria-label={`Отдых ${clock(restSec)}. Изменить`} onClick={() => setRestEditOpen(true)}>
-              <span className="wk-stat-l">Отдых <Icon name="edit" size={12} /></span>
-              <span className="wk-stat-v">{clock(restSec)}</span>
-            </button>
+            {timerOn && (
+              <button type="button" className="wk-stat edit" aria-label={`Отдых ${clock(restSec)}. Изменить`} onClick={() => setRestEditOpen(true)}>
+                <span className="wk-stat-l">Отдых <Icon name="edit" size={12} /></span>
+                <span className="wk-stat-v">{clock(restSec)}</span>
+              </button>
+            )}
           </div>
         )}
         {exercise.variants.length > 1 && (
@@ -743,13 +765,13 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
                 {!hasCurrent && <Button block size="sm" variant="secondary" icon="plus" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}>Добавить подход</Button>}
               </div>
             ) : (<>
-            <div className="wk-tools">
-              {hasCurrent && <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}><Icon name="skip" size={18} /><span>Пропустить подход</span></button>}
-              <button type="button" className="wk-tool" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}><Icon name="plus" size={18} /><span>Добавить подход</span></button>
+            <div className="wk-tools main">
+              <button type="button" className="wk-tool add" disabled={busy} onClick={() => void mutate((d) => addSetToExercise(d, se.id))}><Icon name="plus" size={20} /><span>Добавить подход</span></button>
               <button type="button" className="wk-tool" onClick={() => setSwapOpen(true)}><Icon name="swap" size={18} /><span>Заменить</span></button>
               <button type="button" className="wk-tool danger" onClick={() => setPainOpen(true)}><Icon name="alert" size={18} /><span>Боль</span></button>
             </div>
             <div className="wk-links">
+              {hasCurrent && <Button size="sm" variant="text" icon="skip" disabled={busy} onClick={() => void mutate((d) => skipSet(d, { ...base, setNo: nextNo, reason: 'fatigue' }))}>Пропустить подход</Button>}
               <Button size="sm" variant="text" icon="info" onClick={() => setInfoOpen(true)}>Техника</Button>
               <Button size="sm" variant="text" icon="edit" onClick={() => setNoteOpen(true)}>Заметка</Button>
               {VACUUM_KEYS.has(exercise.key) && <Button size="sm" variant="text" icon="info" onClick={() => setGuideOpen(true)}>Как это работает</Button>}
@@ -760,7 +782,7 @@ function ExerciseCard({ focusMode = false, index, ev, warmPosition, readOnly, bu
         )}
       </div>
 
-      {dock && open && hasCurrent && createPortal(
+      {timerOn && dock && open && hasCurrent && createPortal(
         <div className="wk-dock-in">
           <button type="button" className="wk-dock-main" disabled={!canLog} onClick={() => void mutate((d) => record(d, restSec), restSec, restOverride === null ? suggestion.reason : 'вручную', nextLabel)}>
             <Icon name="clock" size={22} />

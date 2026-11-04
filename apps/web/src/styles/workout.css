@@ -242,3 +242,12 @@ button.wk-pill:active { transform: scale(0.97); }
 .plan-pick.del-confirm .grow { width: 100%; }
 .plan-pick.del-confirm .row { justify-content: flex-end; margin-left: 0; }
 .wk-tools.three > .btn { grid-column: 1 / -1; }
+/* Title with «Завершить» on the right. */
+.wk-title-row { display: flex; align-items: center; gap: 12px; }
+.wk-title-row .wk-title { flex: 1; min-width: 0; }
+.wk-finish-btn { flex: none; white-space: nowrap; }
+/* «Добавить подход» takes the row, «Заменить» and «Боль» stay small on the right. */
+.wk-tools.main { grid-template-columns: minmax(0, 1fr) 70px 70px; }
+.wk-tool.add { display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px 10px; font-size: 14px; line-height: 20px; white-space: nowrap; background: var(--solid); color: var(--on-solid); border-color: transparent; }
+.wk-tool.add svg { color: var(--on-solid); }
+@media (max-width: 350px) { .wk-tools.main { grid-template-columns: minmax(0, 1fr) 62px 62px; } .wk-tool.add { font-size: 13px; } }

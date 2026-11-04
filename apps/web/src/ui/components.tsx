@@ -277,7 +277,7 @@ export function EmptyState({ icon, title, text, action }: { icon: IconName; titl
   );
 }
 
-export function Sheet({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
+export function Sheet({ open, title, onClose, children, center }: { open: boolean; title: string; onClose: () => void; children: ReactNode; /** A dialog in the middle of the screen instead of a sheet from the bottom. */ center?: boolean }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -303,9 +303,9 @@ export function Sheet({ open, title, onClose, children }: { open: boolean; title
   }, [open]);
   if (!open) return null;
   return createPortal(
-    <div className="sheet-backdrop" style={kb > 0 ? { bottom: kb } : undefined} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className={`sheet-backdrop ${center ? 'center' : ''}`} style={kb > 0 ? { bottom: kb } : undefined} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="grab" />
+        {!center && <div className="grab" />}
         <div className="row between sheet-head" style={{ marginBottom: 14 }}>
           <h2 className="t-h2">{title}</h2>
           <IconButton icon="close" label="Закрыть" tone="ghost" onClick={onClose} />
