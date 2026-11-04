@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { REST_FINISH_MESSAGE, REST_PHRASES, rankSubstitutes, restCue, suggestRestSeconds, warmupSets, type WarmupPosition, type BodyArea, type PainAdvice, type ReplacementReason, type Side } from '@fitapp/domain';
-import { abandonWorkout, reopenWorkout, addExerciseToSession, addSetToExercise, editSet, removeLastSet, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
+import { abandonWorkout, deleteWorkout, reopenWorkout, addExerciseToSession, addSetToExercise, editSet, removeLastSet, removeExerciseFromSession, saveSessionAsCustomWorkout, changeExerciseVariant, finishWorkout, loadWorkout, logSet, reportPain, replaceExerciseInSession, saveExerciseNote, skipSet, undoSet, type WorkoutExerciseView, type WorkoutView } from '../actions';
 import { useData } from '../app/DataContext';
 import { safetyContext } from '../app/derive';
 import { fmt, fromLift, liftUnit, plural, toLift } from '../app/format';
@@ -55,6 +55,8 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
   const layout = useWorkoutLayout();
   const [exPick, setExPick] = useState(false);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
+  const [editMenu, setEditMenu] = useState(false);
+  const [confirmWipe, setConfirmWipe] = useState(false);
   // Exercise blocks: any number can be open at once. The first unfinished one (from the top) is open at the start; a finished one folds and the next opens.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const settledRef = useRef<Map<string, boolean> | null>(null);
@@ -146,7 +148,7 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
           <IconButton icon="palette" label="Оформление" className="wk-round" onClick={() => setThemeOpen(true)} />
           {readOnly
             ? <span className="wk-pill">{view.session.status === 'completed' ? 'Завершена' : 'Прервана'}</span>
-            : editing ? <span className="wk-pill">Правка</span> : <span className="wk-pill" aria-label={`Выполнено ${doneSets} из ${totalSets} подходов`}><b>{doneSets}</b>/{totalSets} подх.</span>}
+            : editing ? <button type="button" className="wk-pill" aria-haspopup="dialog" onClick={() => { setConfirmWipe(false); setEditMenu(true); }}>Правка</button> : <span className="wk-pill" aria-label={`Выполнено ${doneSets} из ${totalSets} подходов`}><b>{doneSets}</b>/{totalSets} подх.</span>}
         </div>
       </header>
       <div className="wk-hero">
@@ -191,6 +193,21 @@ export function Workout({ sessionId, focus }: { sessionId: string; /** Exercise 
       {readOnly && <Button block icon="edit" disabled={busy} onClick={async () => { if (await ok((d) => reopenWorkout(d, sessionId))) await reload(); }}>Редактировать</Button>}
       {readOnly && <Button block variant="secondary" onClick={() => go('training')}>К тренировкам</Button>}
       <SaveOwnSheet open={saveOpen} view={view} onClose={() => setSaveOpen(false)} />
+      <Sheet open={editMenu} title="Правка тренировки" onClose={() => setEditMenu(false)}>
+        <div className="stack">
+          <p className="t-body">Ты исправляешь уже завершённую тренировку: меняй подходы, веса и упражнения. Дата и время окончания остаются прежними.</p>
+          <Button block icon="check" disabled={busy} onClick={async () => { setEditMenu(false); if (await ok((d) => finishWorkout(d, sessionId, view.session.note))) go('training'); }}>Сохранить изменения</Button>
+          {confirmWipe ? (
+            <>
+              <p className="t-small">Тренировка и все её подходы удалятся из истории и перестанут учитываться в прогрессе.</p>
+              <Button block variant="danger" icon="trash" disabled={busy} onClick={async () => { setEditMenu(false); if (await ok((d) => deleteWorkout(d, sessionId))) go('training'); }}>Да, удалить тренировку</Button>
+              <Button block variant="text" onClick={() => setConfirmWipe(false)}>Не удалять</Button>
+            </>
+          ) : (
+            <Button block variant="text" icon="trash" onClick={() => setConfirmWipe(true)}>Удалить тренировку</Button>
+          )}
+        </div>
+      </Sheet>
       <ExercisePickerSheet
         open={picking}
         title="Добавить в тренировку"

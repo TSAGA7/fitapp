@@ -15,6 +15,8 @@
 .icon-btn.wk-round { width: 46px; height: 46px; background: var(--glass); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06); }
 .wk-pill { display: inline-flex; align-items: center; gap: 2px; height: 46px; padding: 0 18px; border-radius: var(--r-pill); font-size: 15px; font-weight: 500; color: var(--text); background: var(--glass); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .wk-pill b { font-weight: 700; }
+button.wk-pill { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button.wk-pill:active { transform: scale(0.97); }
 .wk-hero { display: grid; gap: 8px; padding: 0 2px; }
 .wk-title { font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.02em; overflow-wrap: anywhere; }
 .wk-sub { font-size: 16px; line-height: 22px; color: var(--muted); }

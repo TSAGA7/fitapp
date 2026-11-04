@@ -35,11 +35,19 @@ export const GROUPS: Record<Exclude<Filter, 'all' | 'like' | 'dislike' | 'bodywe
 export const norm = (t: string): string => t.toLowerCase().replace(/ё/g, 'е');
 export const tokens = (q: string): string[] => norm(q).split(/[^a-zа-я0-9]+/).filter(Boolean);
 /** Every word of the query must start some word of the name, by its stem: «жим ногами» finds «Жим платформы ногами». */
+/** Words people use for the same movement: «подъёмы гантелей в стороны» = «махи гантелей в стороны». */
+const SYNONYMS: ReadonlyArray<readonly string[]> = [['мах', 'подъем', 'разведен', 'развод']];
+const stem = (w: string): string => (w.length > 5 ? w.slice(0, w.length - 2) : w.length > 3 ? w.slice(0, w.length - 1) : w);
+const variantsOf = (t: string): string[] => {
+  const st = stem(t);
+  const group = SYNONYMS.find((g) => g.some((r) => st.startsWith(r) || (st.length >= 4 && r.startsWith(st))));
+  return group ? [st, ...group] : [st];
+};
+/** Every word of the query must start some word of the name, by its stem: «жим ногами» finds «Жим платформы ногами». */
 export const matchesQuery = (name: string, q: readonly string[]): boolean => {
   if (q.length === 0) return true;
   const words = norm(name).split(/[^a-zа-я0-9]+/).filter(Boolean);
-  const stem = (w: string): string => (w.length > 5 ? w.slice(0, w.length - 2) : w.length > 3 ? w.slice(0, w.length - 1) : w);
-  return q.every((t) => words.some((w) => w.startsWith(stem(t)) || stem(w).startsWith(stem(t))));
+  return q.every((t) => variantsOf(t).some((v) => words.some((w) => w.startsWith(v) || stem(w).startsWith(v))));
 };
 
 export function ExerciseCatalogScreen() {

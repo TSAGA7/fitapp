@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { addDays, ownScheduleDays, weekdayOf, type PlannedSession } from '@fitapp/domain';
-import { addExerciseToSession, startBodyweightWorkout, startCustomWorkout, startWorkout } from '../actions';
+import { addExerciseToSession, deleteWorkout, startBodyweightWorkout, startCustomWorkout, startWorkout } from '../actions';
 import { useData } from '../app/DataContext';
 import { formatDateShort, plural, WEEKDAY_SHORT } from '../app/format';
 import { go } from '../app/router';
 import { useBodyweightMode, useHomeEquipment, useOwnMode } from '../app/prefs';
 import { useCommand } from '../app/useCommand';
-import { Button, Icon, ListItem, Sheet } from '../ui';
+import { Button, Icon, ListItem, Sheet, SwipeToDelete } from '../ui';
 import { ExercisePickerSheet } from './ExercisePicker';
 import { OwnWorkoutsSheet } from './OwnMode';
 import { useDayStatus } from './OwnPlan';
@@ -197,19 +197,24 @@ export function TodayPlus() {
       {banner}
       {running.length > 0 && (
         <div className="list">
-          {running.map((w) => (
-            <ListItem
-              key={w.id}
-              icon="play"
-              lime
-              title={w.title && w.exercises > 0 ? w.title : 'Тренировка не закончена'}
-              subtitle={`${w.date === s.today ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(w.date)]}, ${formatDateShort(w.date)}`} · ${w.exercises === 0 ? 'упражнений пока нет' : exWord(w.exercises)}`}
-              trailing={<span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>Продолжить</span>}
-              onClick={() => go(`workout/${w.id}`)}
-            />
-          ))}
+          {running.map((w) => {
+            const title = w.title && w.exercises > 0 ? w.title : 'Тренировка не закончена';
+            return (
+              <SwipeToDelete key={w.id} label={`Удалить тренировку: ${title}`} disabled={busy} onDelete={() => void run((d) => deleteWorkout(d, w.id))}>
+                <ListItem
+                  icon="play"
+                  lime
+                  title={title}
+                  subtitle={`${w.date === s.today ? 'Сегодня' : `${WEEKDAY_SHORT[weekdayOf(w.date)]}, ${formatDateShort(w.date)}`} · ${w.exercises === 0 ? 'упражнений пока нет' : exWord(w.exercises)}`}
+                  trailing={<span className="t-small" style={{ color: 'var(--primary)', fontWeight: 600 }}>Продолжить</span>}
+                  onClick={() => go(`workout/${w.id}`)}
+                />
+              </SwipeToDelete>
+            );
+          })}
         </div>
       )}
+      {running.length > 0 && <p className="t-small" style={{ textAlign: 'center' }}>Смахни карточку влево, чтобы удалить тренировку.</p>}
       <div className="today-plus">
         <button type="button" className="plus-ring" aria-label="Начать тренировку: выбрать упражнение" disabled={busy} onClick={() => setPicking(true)}>
           <Icon name="plus" size={64} strokeWidth={2.4} />
